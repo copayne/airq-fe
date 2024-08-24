@@ -1,29 +1,34 @@
 # Create T3 App
+# Hudson Air Quality Frontend
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+## About
+The Hudson Air Quality Frontend is a UI dashboard for managing and analyzing air quality data from the Hudson Air Quality project. It is built using [T3 Stack](https://create.t3.gg/), bootstrapped with `create-t3-app`. It utilizes apollo to handle fetching data from the graphql endpoint and is styled using Tailwind.
 
-## What's next? How do I make an app with this?
+## TODO: SCREENSHOTS
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+## Initialize Frontend on a new machine
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+### Setup SSH key with github on machine
+Run ```ssh-keygen``` on machine
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+Navigate to file (/.ssh by default)
 
-## Learn More
+Run ```cat id_rsa.pub``` and copy contents
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+Create new key under settings/SSH and GPG Keys
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+Copy contents to github key and save
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+### Clone repository on machine
+```git clone git@github.com:copayne/airq-fe.git```
 
-## How do I deploy this?
+### Install Dependencies
+```npm install```
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+### Run App
+```npm run dev```
+
+### Check Status
+- Ensure API server is running and database has been setup
+- Open browser tab and navigate to http://localhost:3000
+- Should successfully open dashboard

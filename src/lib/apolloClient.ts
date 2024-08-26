@@ -1,6 +1,6 @@
 import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
 
-const IP_ADDRESS = 'http://10.201.1.106';
+const IP_ADDRESS = 'http://10.201.1.115';
 const PORT = '5000';
 
 const httpLink = new HttpLink({

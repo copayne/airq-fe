@@ -14,6 +14,7 @@ const DashboardGrid = dynamic(() => import ('../dashboard/DashboardGrid'), {
 
 const AirQualityDashboard = () => {
   const { data: sensorReadings } = useQuery(GET_SENSOR_READINGS);
+  console.log(sensorReadings);
   // const sensorData = useSensorData();
 
   // const memoizedSensorCards = useMemo(() => sensorData
@@ -23,7 +24,6 @@ const AirQualityDashboard = () => {
 
   return (
     <Layout>
-      <h1>Hudson Air Quality Project</h1>
       <div id="sensor-grid">
         To-do
       </div>

@@ -6,21 +6,38 @@ import React, {
 import { useQuery } from '@apollo/client';
 import dynamic from 'next/dynamic';
 import Layout from '../layout/Layout';
-import { GET_SENSOR_READINGS } from '../../graphql/SensorReading';
+import { GET_SENSORS } from '../../graphql/Sensor';
+import { useSensorData } from '~/hooks/useSensorData';
+import Heatmap, { formatHeatmapData } from '../charts/Heatmap';
+import LineChart from '../charts/LineChart';
+import { useSensorDataContext } from '~/context/SensorDataContext';
 
 const DashboardGrid = dynamic(() => import ('../dashboard/DashboardGrid'), {
   loading: () => <p>Loading dashboard...</p>
 });
 
 const AirQualityDashboard = () => {
-  const { data: sensorReadings } = useQuery(GET_SENSOR_READINGS);
+  const {
+    error,
+    loading,
+    sensorReadings,
+    updateCriteria,
+  } = useSensorData();
+  const { data: sensorData } = useQuery(GET_SENSORS);
+  const { state } = useSensorDataContext();
+  const { criteria } = state;
+  console.log(criteria);
   console.log(sensorReadings);
-  // const sensorData = useSensorData();
 
-  // const memoizedSensorCards = useMemo(() => sensorData
-  //   .map(sensor => <SensorCard key={sensor.id} {...sensor} />),
-  //   [sensorData]
-  // );
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error.message}</p>;
+
+
+  const series = !!sensorData && !!sensorReadings
+    ? formatHeatmapData(sensorData.sensors, sensorReadings)
+    : [];
+
+  const handleUpdateCriteria = () => updateCriteria({ maxCO2: 700 });
 
   return (
     <Layout>
@@ -31,7 +48,13 @@ const AirQualityDashboard = () => {
         <DashboardGrid>
           {/* Add data tables and visualizations here */}
           <div>
-            Dashboard elements to come here...
+            <LineChart />
+            <Heatmap series={series} />
+          </div>
+          <div>
+            <button onClick={handleUpdateCriteria}>
+              Test button
+            </button>
           </div>
         </DashboardGrid>
       </Suspense>

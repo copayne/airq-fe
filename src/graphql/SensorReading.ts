@@ -1,8 +1,8 @@
 import { gql } from '@apollo/client';
 
-export const GET_SENSOR_READINGS = gql`
-  query GetSensorReadings {
-    sensorReadings {
+export const GET_FILTERED_SENSOR_READINGS = gql`
+  query GetFilteredSensorReadings($input: SensorDataFilterInput!) {
+    filteredSensorReadings(filters: $input) {
       id
       readingTime
       sensor {

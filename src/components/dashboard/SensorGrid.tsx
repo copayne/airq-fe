@@ -12,7 +12,12 @@ const SensorGrid: React.FC = () => {
     sensors,
   } = useSensorData();
 
-  if (loading) return <p>Loading sensors...</p>; // TODO: create more elegant loading solution
+  if (loading) return (
+    <div className="flex flex-wrap bg-white bg-opacity-60 rounded-md shadow-md mt-4 mb-4 p-6 mx-auto max-w-screen-2xl">
+      <p>Loading sensors...</p>
+    </div>
+  );
+
   if (error) return <p>Error: {error.message}</p>;
 
   return (

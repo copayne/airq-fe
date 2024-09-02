@@ -55,15 +55,15 @@ const SensorCard: React.FC<SensorCardProps> = ({ sensor }) => {
           <p className="mb-2 ml-6 text-xs font-light">{new Date(lastReading.readingTime).toLocaleString()}</p>
         </div>
         <div className="flex justify-evenly h-5">
-          <div className={`flex justify-center items-center flex-grow bg-green-700 ${co2 === '--' ? 'bg-gray-500' : ''} ${(co2 > 800 && co2 < 1000) ? 'bg-yellow-400' : ''}  ${co2 > 1000 ? 'bg-red-600' : ''}`}>
+          <div className={`flex justify-center items-center flex-grow bg-gray-500 ${co2 < 800 ? 'bg-green-700' : ''} ${(co2 > 800 && co2 < 1000) ? 'bg-yellow-400' : ''}  ${co2 > 1000 ? 'bg-red-600' : ''}`}>
             <p className="text-xs">{co2}ppm</p>
           </div>
           <div className="w-[1px] bg-gray-800" />
-          <div className={`flex justify-center items-center flex-grow bg-green-700 ${!temp ? 'bg-gray-500' : ''} ${(temp > 75 && temp < 82) ? 'bg-yellow-400' : ''}  ${temp > 82 ? 'bg-red-600' : ''}`}>
+          <div className={`flex justify-center items-center flex-grow bg-gray-500 ${temp < 20 ? 'bg-green-700' : ''} ${(temp > 20 && temp < 27) ? 'bg-yellow-400' : ''}  ${temp > 27 ? 'bg-red-600' : ''}`}>
             <p className="text-xs">{temperatureFahrenheit}f/{tempCelsius}c</p>
           </div>
           <div className="w-[1px] h-full bg-gray-800" />
-          <div className={`flex justify-center items-center flex-grow bg-green-700 ${humidity === '--' ? 'bg-gray-500' : ''} ${((humidity > 25 && humidity < 30) || (humidity > 60 && humidity < 70)) ? 'bg-yellow-400' : ''}  ${humidity > 70 || humidity < 25 ? 'bg-red-600' : ''}`}>
+          <div className={`flex justify-center items-center flex-grow bg-gray-500 ${(humidity > 30 && humidity < 60) ? 'bg-green-700' : ''} ${((humidity > 25 && humidity < 30) || (humidity > 60 && humidity < 70)) ? 'bg-yellow-400' : ''}  ${humidity > 70 || humidity < 25 ? 'bg-red-600' : ''}`}>
             <p className="text-xs">hum {humidity}%</p>
           </div>
         </div>

@@ -1,69 +1,59 @@
 import { useQuery } from '@apollo/client';
-import { useCallback, useMemo } from 'react';
-import { GET_FILTERED_SENSOR_READINGS } from '../graphql/SensorReading';
-import { useSensorDataContext, SensorDataCriteria } from '../context/SensorDataContext';
-import { useDebouncedRefetch } from './useDebouncedRefetch';
+import { useMemo } from 'react';
+import { GET_SENSORS } from '../graphql/Sensor';
 
-interface SensorReading {
+export interface Sensor {
   id: string;
-  readingTime: string;
-  sensor: {
+  model: string;
+  name: string;
+  installationDate: Date;
+  isActive: boolean;
+  currentLocation: {
     id: string;
     name: string;
-  };
-  location: {
+  }
+  lastReading: {
     id: string;
-    name: string;
-  };
-  co2Reading: {
-    co2Ppm: number;
-  };
-  temperatureReading: {
-    temperatureCelsius: number;
-  };
-  humidityReading: {
-    humidityPercentage: number;
-  };
+    readingTime: string;
+    sensor: {
+      id: string;
+      name: string;
+    };
+    location: {
+      id: string;
+      name: string;
+    };
+    co2Reading: {
+      co2Ppm: number;
+    };
+    temperatureReading: {
+      temperatureCelsius: number;
+    };
+    humidityReading: {
+      humidityPercentage: number;
+    };
+    isSuccess: boolean;
+  }
+
 }
 
 export const useSensorData = () => {
-  const { state, updateCriteria } = useSensorDataContext();
-  const { criteria } = state;
-
-  const queryVariables = useMemo(() => ({
-    input: {
-      startDate: criteria.startDate,
-      endDate: criteria.endDate,
-      minCo2Ppm: criteria.minCO2,
-      maxCo2Ppm: criteria.maxCO2,
-      minTemperatureCelsius: criteria.minTemperature,
-      maxTemperatureCelsius: criteria.maxTemperature,
-      minHumidityPercentage: criteria.minHumidity,
-      maxHumidityPercentage: criteria.maxHumidity,
-      sensorIds: criteria.sensorIds,
-      locationIds: criteria.locationIds,
-    }
-  }), [criteria]);
-
-  const { loading, error, data, refetch } = useQuery(GET_FILTERED_SENSOR_READINGS, {
-    variables: queryVariables,
+  const {
+    loading,
+    error,
+    data,
+  } = useQuery(GET_SENSORS, {
     fetchPolicy: 'cache-and-network',
     notifyOnNetworkStatusChange: true,
   });
 
-  const triggerRefetch = useDebouncedRefetch(refetch, 300);
-
-  const updateCriteriaAndRefetch = useCallback((updates: Partial<SensorDataCriteria>) => {
-    updateCriteria(updates);
-    triggerRefetch();
-  }, [updateCriteria, triggerRefetch]);
-
   return useMemo(() => ({
     loading,
     error,
-    sensorReadings: data?.filteredSensorReadings as SensorReading[] | undefined,
-    refetch: triggerRefetch,
-    criteria,
-    updateCriteria: updateCriteriaAndRefetch,
-  }), [loading, error, data, triggerRefetch, criteria, updateCriteriaAndRefetch]);
+    sensors: data?.sensors as Sensor[] | undefined,
+  }), [
+    loading,
+    error,
+    data,
+  ]);
 };

@@ -7,7 +7,7 @@ import {
 
 const Header: React.FC = () => {
   return (
-    <header className="bg-white shadow-md">
+    <header className="bg-white shadow-md z-20">
       <div className="flex items-center justify-between px-6 py-4">
         <div className="flex items-center">
           <button className="text-gray-500 focus:outline-none focus:text-gray-700">

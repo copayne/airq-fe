@@ -7,19 +7,19 @@ import {
 
 const Header: React.FC = () => {
   return (
-    <header className="bg-white shadow-md z-20">
+    <header className="bg-default-textLight shadow-md z-20">
       <div className="flex items-center justify-between px-6 py-4">
         <div className="flex items-center">
-          <button className="text-gray-500 focus:outline-none focus:text-gray-700">
+          <button className="text-default-dark hover:text-default-contrast focus:outline-none">
             <MenuIcon className="h-6 w-6" />
           </button>
-          <h1 className="ml-4 text-xl font-semibold text-gray-800">Hudson Air Quality Dashboard</h1>
+          <h1 className="ml-4 text-xl font-semibold text-default-textDark">Hudson Air Quality</h1>
         </div>
         <div className="flex items-center">
-          <button className="text-gray-500 focus:outline-none focus:text-gray-700">
+          <button className="text-default-dark hover:text-default-contrast focus:outline-none">
             <BellIcon className="h-6 w-6" />
           </button>
-          <button className="text-gray-500 focus:outline-none focus:text-gray-700">
+          <button className="text-default-dark hover:text-default-contrast focus:outline-none">
             <UserIcon className="h-6 w-6" />
           </button>
         </div>

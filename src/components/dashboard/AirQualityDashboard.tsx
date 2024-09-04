@@ -23,12 +23,14 @@ const AirQualityDashboard = () => {
 
   return (
     <Layout>
-      <SensorGrid />
-      <Suspense fallback={<div>Loading Dashboard...</div>}>
-        <DashboardGrid>
-          To-do dashboard...
-        </DashboardGrid>
-      </Suspense>
+      <div className="flex flex-nowrap justify-center">
+        <SensorGrid />
+        <Suspense fallback={<div>Loading Dashboard...</div>}>
+          <DashboardGrid>
+            To-do dashboard...
+          </DashboardGrid>
+        </Suspense>
+      </div>
     </Layout>
   );
 };

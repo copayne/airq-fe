@@ -27,8 +27,15 @@ interface SensorReading {
 }
 
 export const useSensorReadingData = () => {
-  const { state, updateCriteria } = useSensorDataContext();
-  const { criteria } = state;
+  const {
+    state,
+    updateCriteria,
+    updateIsFetched,
+  } = useSensorDataContext();
+  const {
+    criteria,
+    isFetched,
+  } = state;
 
   const queryVariables = useMemo(() => ({
     input: {
@@ -51,6 +58,11 @@ export const useSensorReadingData = () => {
     notifyOnNetworkStatusChange: true,
   });
 
+  if (!isFetched && !!data?.filteredSensorReadings?.length) {
+    console.log('in fetch');
+    updateIsFetched(true);
+  }
+
   const triggerRefetch = useDebouncedRefetch(refetch, 300);
 
   const updateCriteriaAndRefetch = useCallback((updates: Partial<SensorDataCriteria>) => {
@@ -59,11 +71,20 @@ export const useSensorReadingData = () => {
   }, [updateCriteria, triggerRefetch]);
 
   return useMemo(() => ({
-    loading,
-    error,
-    sensorReadings: data?.filteredSensorReadings as SensorReading[] | undefined,
-    refetch: triggerRefetch,
     criteria,
+    error,
+    isFetched,
+    loading,
+    refetch: triggerRefetch,
+    sensorReadings: data?.filteredSensorReadings as SensorReading[] | undefined,
     updateCriteria: updateCriteriaAndRefetch,
-  }), [loading, error, data, triggerRefetch, criteria, updateCriteriaAndRefetch]);
+  }), [
+    criteria,
+    data,
+    error,
+    isFetched,
+    loading,
+    triggerRefetch,
+    updateCriteriaAndRefetch,
+  ]);
 };

@@ -12,7 +12,7 @@ export default {
         'default': {
           'dark': '#334538',
           'light': '#DCD3B8',
-          'contrast': '#A45A52',
+          'contrast': '#3B68AC',
           'textLight': '#F5F1E4',
           'textDark': '#1A2520',
         },
@@ -22,12 +22,24 @@ export default {
           'bad': '#D05039',
         },
       },
+      boxShadow: {
+        'card': '4px 4px 0 0 rgba(0, 0, 0, 1)',
+      },
       dropShadow: {
         'sticker': [
           '1px 0 1px rgba(0, 0, 0, .25)',
           '-1px 0 1px rgba(0, 0, 0, .25)',
         ],
-      }
+      },
+      height: {
+        'full-no-header': 'calc(100vh - 64px)',
+      },
+      maxHeight: {
+        'no-header': 'calc(100% - 64px)',
+      },
+      fontSize: {
+        'xxs': '10px',
+      },
     },
   },
   plugins: [],

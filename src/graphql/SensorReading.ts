@@ -37,9 +37,6 @@ export const CREATE_SENSOR_READING = gql`
         sensor {
           id
         }
-        location {
-          id
-        }
         humidityReading {
           humidityPercentage
         }

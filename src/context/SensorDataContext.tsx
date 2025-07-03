@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, ReactNode, useMemo, useCallback } from 'react';
+import React, { createContext, useContext, useReducer, type ReactNode, useMemo, useCallback } from 'react';
 
 export interface SensorDataCriteria {
   startDate?: Date;
@@ -20,6 +20,7 @@ interface SensorDataState {
 
 type SensorDataAction =
   | { type: 'UPDATE_CRITERIA'; payload: Partial<SensorDataCriteria> }
+  | { type: 'UPDATE_IS_FETCHED'; payload: boolean }
 
 interface SensorDataContextType {
   state: SensorDataState;
@@ -46,7 +47,7 @@ const initialState: SensorDataState = {
   isFetched: false,
 };
 
-function sensorDataReducer(state: SensorDataState, action): SensorDataState {
+function sensorDataReducer(state: SensorDataState, action: SensorDataAction): SensorDataState {
   switch (action.type) {
     case 'UPDATE_CRITERIA':
       return {
@@ -54,7 +55,6 @@ function sensorDataReducer(state: SensorDataState, action): SensorDataState {
         criteria: { ...state.criteria, ...action.payload },
       };
     case 'UPDATE_IS_FETCHED':
-      console.log('in action');
       return {
         ...state,
         isFetched: action.payload,

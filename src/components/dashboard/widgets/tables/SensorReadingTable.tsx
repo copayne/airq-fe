@@ -7,9 +7,17 @@ import {
   flexRender,
   createColumnHelper,
 } from '@tanstack/react-table';
-import { useSensorReadingData } from '../../hooks/useSensorReadingData';
+import { useSensorReadingData } from '../../../../hooks/useSensorReadingData';
 
-const columnHelper = createColumnHelper();
+interface TableData {
+  readingTime: string;
+  co2Ppm: string;
+  temperatureFahrenheit: string;
+  humidityPercentage: string;
+  locationName: string;
+}
+
+const columnHelper = createColumnHelper<TableData>();
 
 const SensorReadingTable = () => {
   const {
@@ -18,25 +26,24 @@ const SensorReadingTable = () => {
     loading,
     sensorReadings,
   } = useSensorReadingData();
-  console.log(sensorReadings);
   const columns = useMemo(
     () => [
-      columnHelper.accessor('id', {
-        header: 'ID',
-        cell: info => info.getValue(),
-        enableResizing: true,
-      }),
-      columnHelper.accessor('locationName', {
-        header: 'Location',
-        cell: info => info.getValue(),
-        enableResizing: true,
+      columnHelper.accessor('readingTime', {
+        header: 'Time',
+        cell: info => {
+          const timeValue = info.getValue();
+          const [datePart, timePart] = timeValue.split(', ');
+          
+          return (
+            <div>
+              <p className="text-sm">{timePart}</p>
+              <span className="text-xs p-0 m-0">{datePart}</span>
+            </div>
+          )
+        },
       }),
       columnHelper.accessor('co2Ppm', {
         header: 'CO2 PPM',
-        cell: info => info.getValue(),
-      }),
-      columnHelper.accessor('temperatureCelsius', {
-        header: 'Temp (°C)',
         cell: info => info.getValue(),
       }),
       columnHelper.accessor('temperatureFahrenheit', {
@@ -47,13 +54,10 @@ const SensorReadingTable = () => {
         header: 'Humidity %',
         cell: info => info.getValue(),
       }),
-      columnHelper.accessor('sensor', {
-        header: 'Sensor',
+      columnHelper.accessor('locationName', {
+        header: 'Location',
         cell: info => info.getValue(),
-      }),
-      columnHelper.accessor('readingTime', {
-        header: 'Time',
-        cell: info => info.getValue(),
+        enableResizing: true,
       }),
     ],
     []
@@ -61,11 +65,8 @@ const SensorReadingTable = () => {
   const data = useMemo(() => {
     if (!sensorReadings) return [];
     return sensorReadings.map(reading => ({
-      id: reading.id,
       co2Ppm: reading.co2Reading.co2Ppm.toFixed(0),
-      sensor: reading.sensor.name,
       locationName: reading.location.name,
-      temperatureCelsius: reading.temperatureReading.temperatureCelsius.toFixed(1),
       temperatureFahrenheit: ((reading.temperatureReading.temperatureCelsius* 9/5) + 32).toFixed(1),
       humidityPercentage: reading.humidityReading.humidityPercentage.toFixed(0),
       readingTime: new Intl.DateTimeFormat(
@@ -74,7 +75,7 @@ const SensorReadingTable = () => {
           dateStyle: 'short',
           timeStyle: 'medium',
         }
-      ).format(new Date(reading.readingTime)),
+      ).format(new Date(`${reading.readingTime}Z`)),
     }));
   }, [sensorReadings]);
 
@@ -86,14 +87,11 @@ const SensorReadingTable = () => {
     getFilteredRowModel: getFilteredRowModel(),
   });
 
-  console.log('fetch', isFetched);
-  console.log('load', loading);
-
   if (loading && !isFetched) return <div>Loading...</div>;
   if (error) return <div>Error: {error.message}</div>;
 
   return (
-    <div className="w-full h-full overflow-auto border-default-dark border-[1px] rounded-sm rounded-ss-none">
+    <div className="w-full h-full overflow-auto rounded-sm rounded-ss-none">
       <table className="w-full">
         <thead>
           {table.getHeaderGroups().map(headerGroup => (

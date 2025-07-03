@@ -1,9 +1,8 @@
 import React, {
-  ReactNode,
   Suspense,
 } from 'react';
 import { useSensorData } from '~/hooks/useSensorData';
-import SensorCard from '../cards/SensorCard';
+import SensorCard from './SensorCard';
 
 const SensorGrid: React.FC = () => {
   const {
@@ -27,7 +26,7 @@ const SensorGrid: React.FC = () => {
         {sensors?.map(sensor => (
           <SensorCard
             key={sensor.id}
-            sensor={sensor}
+            sensorId={sensor.id}
           />
         ))}
       </div>

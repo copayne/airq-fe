@@ -1,0 +1,53 @@
+{
+  "recommendations": [
+    // Essential Extensions - Language & Framework Support
+    "bradlc.vscode-tailwindcss",
+    "ms-vscode.vscode-typescript-next",
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "GraphQL.vscode-graphql",
+    
+    // React/Next.js Specific
+    "dsznajder.es7-react-js-snippets",
+    "formulahendry.auto-rename-tag",
+    
+    // Code Quality & Productivity - Code Analysis
+    "ms-vscode.vscode-json",
+    "streetsidesoftware.code-spell-checker",
+    "usernamehw.errorlens",
+    
+    // Git Integration
+    "eamodio.gitlens",
+    "mhutchie.git-graph",
+    "donjayamanne.githistory",
+    
+    // Development Tools
+    "christian-kohler.path-intellisense",
+    
+    // UI/UX & Theming - Visual Enhancements
+    "pkief.material-icon-theme",
+    "GitHub.github-vscode-theme",
+    "oderwat.indent-rainbow",
+    "mechatroner.rainbow-csv",
+    
+    // Brackets & Pairs
+    "CoenraadS.bracket-pair-colorizer-2",
+    
+    // Testing & Debugging
+    "ms-vscode.vscode-jest",
+    "hbenl.vscode-test-explorer",
+    "ms-vscode.js-debug",
+    "firefox-devtools.vscode-firefox-debug",
+    
+    // General Productivity - File Management
+    "alefragnani.project-manager",
+    
+    // Documentation
+    "yzhang.markdown-all-in-one",
+    "DavidAnson.vscode-markdownlint",
+    
+    // Utility
+    "christian-kohler.npm-intellisense",
+    "eg2.vscode-npm-script"
+  ]
+}

@@ -1,17 +1,99 @@
 import {
-  ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
+  ApolloClient, InMemoryCache, HttpLink, from } from '@apollo/client';
+import { onError } from '@apollo/client/link/error';
 
 const IP_ADDRESS = 'http://10.201.1.115';
 const PORT = '5000';
 
+// Error handling link
+const errorLink = onError(({ graphQLErrors, networkError }) => {
+  if (graphQLErrors) {
+    graphQLErrors.forEach(({ message, locations, path }) => {
+      console.error('GraphQL error:', {
+        message,
+        locations: locations ? JSON.stringify(locations) : undefined,
+        path: path ? JSON.stringify(path) : undefined
+      });
+    });
+  }
+
+  if (networkError) {
+    console.error('Network error:', networkError.message);
+    
+    // Handle specific network errors
+    if (networkError.message.includes('Failed to fetch')) {
+      console.error('Server appears to be unreachable');
+    }
+  }
+});
+
+// Simple retry logic using Apollo's built-in capabilities
+// We'll handle retries at the query level instead of link level
+
+// HTTP link
 const httpLink = new HttpLink({
   uri: `${IP_ADDRESS}:${PORT}/graphql`,
 });
 
-const cache = new InMemoryCache();
+// Enhanced cache configuration with type policies
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        sensors: {
+          merge: false, // Replace instead of merge to prevent stale data
+        },
+        filteredSensorReadings: {
+          merge: false, // Replace instead of merge for fresh results
+          keyArgs: ["filters"], // Cache different filter combinations separately
+        },
+      },
+    },
+    Sensor: {
+      keyFields: ["id"],
+      fields: {
+        lastReading: {
+          merge: true, // Merge nested reading data for updates
+        },
+        currentLocation: {
+          merge: true, // Merge location updates
+        },
+      },
+    },
+    SensorReading: {
+      keyFields: ["id"],
+      fields: {
+        sensor: {
+          merge: true, // Merge sensor data updates
+        },
+        location: {
+          merge: true, // Merge location data updates
+        },
+      },
+    },
+    Location: {
+      keyFields: ["id"],
+    },
+    CO2Reading: {
+      merge: true, // Always merge measurement updates
+    },
+    TemperatureReading: {
+      merge: true, // Always merge measurement updates
+    },
+    HumidityReading: {
+      merge: true, // Always merge measurement updates
+    },
+  },
+});
+
+// Combine links: error handling -> http
+const link = from([
+  errorLink,
+  httpLink,
+]);
 
 const client = new ApolloClient({
-  link: httpLink,
+  link,
   cache,
   resolvers: {},
   typeDefs: `

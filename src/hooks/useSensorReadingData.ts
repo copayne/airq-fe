@@ -1,7 +1,7 @@
-import { useQuery } from '@apollo/client';
+import { useQuery, type QueryResult } from '@apollo/client';
 import { useCallback, useMemo } from 'react';
 import { GET_FILTERED_SENSOR_READINGS } from '../graphql/SensorReading';
-import { useSensorDataContext, SensorDataCriteria } from '../context/SensorDataContext';
+import { useSensorDataContext, type SensorDataCriteria } from '../context/SensorDataContext';
 import { useDebouncedRefetch } from './useDebouncedRefetch';
 
 interface SensorReading {
@@ -24,6 +24,10 @@ interface SensorReading {
   humidityReading: {
     humidityPercentage: number;
   };
+}
+
+interface GetFilteredSensorReadingsData {
+  filteredSensorReadings: SensorReading[];
 }
 
 export const useSensorReadingData = () => {
@@ -52,22 +56,21 @@ export const useSensorReadingData = () => {
     }
   }), [criteria]);
 
-  const { loading, error, data, refetch } = useQuery(GET_FILTERED_SENSOR_READINGS, {
+  const { loading, error, data, refetch }: QueryResult<GetFilteredSensorReadingsData> = useQuery(GET_FILTERED_SENSOR_READINGS, {
     variables: queryVariables,
     fetchPolicy: 'cache-and-network',
     notifyOnNetworkStatusChange: true,
   });
 
   if (!isFetched && !!data?.filteredSensorReadings?.length) {
-    console.log('in fetch');
     updateIsFetched(true);
   }
 
-  const triggerRefetch = useDebouncedRefetch(refetch, 300);
+  const triggerRefetch = useDebouncedRefetch(() => void refetch(), 300);
 
   const updateCriteriaAndRefetch = useCallback((updates: Partial<SensorDataCriteria>) => {
     updateCriteria(updates);
-    triggerRefetch();
+    void triggerRefetch();
   }, [updateCriteria, triggerRefetch]);
 
   return useMemo(() => ({
@@ -76,7 +79,7 @@ export const useSensorReadingData = () => {
     isFetched,
     loading,
     refetch: triggerRefetch,
-    sensorReadings: data?.filteredSensorReadings as SensorReading[] | undefined,
+    sensorReadings: data?.filteredSensorReadings,
     updateCriteria: updateCriteriaAndRefetch,
   }), [
     criteria,

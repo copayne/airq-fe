@@ -41,3 +41,9 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+
+# IDE and editor settings
+.vscode/
+
+# Project documentation
+CLAUDE.md

@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery, type QueryResult } from '@apollo/client';
 import { useMemo } from 'react';
 import { GET_SENSORS } from '../graphql/Sensor';
 
@@ -34,7 +34,10 @@ export interface Sensor {
     };
     isSuccess: boolean;
   }
+}
 
+interface GetSensorsData {
+  sensors: Sensor[];
 }
 
 export const useSensorData = () => {
@@ -42,7 +45,7 @@ export const useSensorData = () => {
     loading,
     error,
     data,
-  } = useQuery(GET_SENSORS, {
+  }: QueryResult<GetSensorsData> = useQuery(GET_SENSORS, {
     fetchPolicy: 'cache-and-network',
     notifyOnNetworkStatusChange: true,
   });
@@ -50,7 +53,7 @@ export const useSensorData = () => {
   return useMemo(() => ({
     loading,
     error,
-    sensors: data?.sensors as Sensor[] | undefined,
+    sensors: data?.sensors,
   }), [
     loading,
     error,

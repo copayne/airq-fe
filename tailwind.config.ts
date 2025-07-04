@@ -23,7 +23,7 @@ export default {
         },
       },
       boxShadow: {
-        'card': '4px 4px 0 0 rgba(0, 0, 0, 1)',
+        'card': '3px 3px 0 0 rgba(0, 0, 0, 1)',
       },
       dropShadow: {
         'sticker': [

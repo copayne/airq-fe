@@ -1,3 +1,16 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Global styles to override react-grid-layout defaults */
+.react-grid-item.react-grid-placeholder {
+    background-color: blue,
+}
+
+/* Prevent text selection during drag */
+.react-draggable-dragging * {
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+}

@@ -1,5 +1,5 @@
 import React, {
-  ReactNode,
+  type ReactNode,
 } from 'react';
 import Header from './Header';
 
@@ -9,7 +9,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
-    <div className="bg-default-textLight relative">
+    <div className="bg-default-light relative">
       <div className="flex flex-col min-h-screen">
         <Header />
         <main className="h-full-no-header flex-1 overflow-x-hidden overflow-y-auto relative z-10">

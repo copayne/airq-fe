@@ -1,13 +1,8 @@
 // Dashboard.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, memo, useMemo, useCallback } from 'react';
 import { Responsive, WidthProvider, type Layout, type Layouts } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
-
-// Import widget components
-import SensorCard from './widgets/cards/SensorCard';
-import SensorReadingTable from './widgets/tables/SensorReadingTable';
-// import ChartWidget from './widgets/ChartWidget';
 
 // Create a responsive grid layout with width provider
 const ResponsiveGridLayout = WidthProvider(Responsive);
@@ -27,23 +22,98 @@ interface WidgetWrapperProps {
 }
 
 // Dashboard component
-const DashboardCanvas = () => {
-  // Widget types enum
-  const WIDGET_TYPES = {
+const DashboardCanvas = memo(() => {
+  // Widget types enum - memoized to prevent recreation
+  const WIDGET_TYPES = useMemo(() => ({
     SENSOR_CARD: 'SENSOR_CARD',
     TABLE: 'TABLE',
     TEMPERATURE_CHART: 'TEMPERATURE_CHART',
     CO2_CHART: 'CO2_CHART',
     HUMIDITY_CHART: 'HUMIDITY_CHART',
+  }), []);
+
+  // Dynamic widget component imports for code splitting - memoized
+  const WIDGET_COMPONENTS = useMemo(() => ({
+    [WIDGET_TYPES.SENSOR_CARD]: React.lazy(() => 
+      import('./widgets/cards/SensorCard')
+    ),
+    [WIDGET_TYPES.TABLE]: React.lazy(() => 
+      import('./widgets/tables/SensorReadingTable')
+    ),
+    // [WIDGET_TYPES.TEMPERATURE_CHART]: React.lazy(() => import('./widgets/charts/TemperatureChart')),
+    // [WIDGET_TYPES.CO2_CHART]: React.lazy(() => import('./widgets/charts/CO2Chart')),
+    // [WIDGET_TYPES.HUMIDITY_CHART]: React.lazy(() => import('./widgets/charts/HumidityChart')),
+  }), [WIDGET_TYPES]);
+
+  // Widget loading skeleton component
+  const WidgetLoadingSkeleton: React.FC<{ type: string }> = ({ type }) => {
+    const skeletonConfig = {
+      [WIDGET_TYPES.SENSOR_CARD]: { 
+        height: '200px', 
+        content: (
+          <>
+            <div className="h-4 bg-gray-300 rounded mb-2 w-1/3"></div>
+            <div className="h-8 bg-gray-300 rounded mb-4"></div>
+            <div className="flex justify-between">
+              <div className="h-6 bg-gray-300 rounded w-1/4"></div>
+              <div className="h-6 bg-gray-300 rounded w-1/4"></div>
+              <div className="h-6 bg-gray-300 rounded w-1/4"></div>
+            </div>
+          </>
+        )
+      },
+      [WIDGET_TYPES.TABLE]: { 
+        height: '400px',
+        content: (
+          <>
+            <div className="h-6 bg-gray-300 rounded mb-4 w-1/2"></div>
+            <div className="space-y-2">
+              <div className="h-4 bg-gray-300 rounded"></div>
+              <div className="h-4 bg-gray-300 rounded"></div>
+              <div className="h-4 bg-gray-300 rounded"></div>
+              <div className="h-4 bg-gray-300 rounded"></div>
+            </div>
+          </>
+        )
+      },
+    };
+    
+    const config = skeletonConfig[type] ?? { 
+      height: '150px', 
+      content: <div className="h-4 bg-gray-300 rounded"></div> 
+    };
+    
+    return (
+      <div 
+        className="w-full animate-pulse bg-gray-100" 
+        style={{ height: config.height }}
+      >
+        <div className="p-4">
+          {config.content}
+        </div>
+      </div>
+    );
   };
 
-  // Map widget types to their components
-  const WIDGET_COMPONENTS = {
-    [WIDGET_TYPES.SENSOR_CARD]: SensorCard,
-    [WIDGET_TYPES.TABLE]: SensorReadingTable,
-    // [WIDGET_TYPES.TEMPERATURE_CHART]: props => <ChartWidget type="temperature" {...props} />,
-    // [WIDGET_TYPES.CO2_CHART]: props => <ChartWidget type="co2" {...props} />,
-    // [WIDGET_TYPES.HUMIDITY_CHART]: props => <ChartWidget type="humidity" {...props} />,
+  // Widget renderer with error boundary and suspense
+  const WidgetRenderer: React.FC<{ widget: Widget }> = ({ widget }) => {
+    const WidgetComponent = WIDGET_COMPONENTS[widget.type as keyof typeof WIDGET_COMPONENTS];
+    
+    if (!WidgetComponent) {
+      return (
+        <div className="w-full h-full flex items-center justify-center bg-red-50 border-2 border-red-200">
+          <p className="text-red-600">Unknown widget type: {widget.type}</p>
+        </div>
+      );
+    }
+    
+    return (
+      <Suspense fallback={<WidgetLoadingSkeleton type={widget.type} />}>
+        <WidgetComponent
+          {...(widget.props ?? {} as Record<string, unknown>)}
+        />
+      </Suspense>
+    );
   };
 
   // Default layouts for different breakpoints
@@ -137,13 +207,13 @@ const DashboardCanvas = () => {
     localStorage.setItem('dashboard-widgets', JSON.stringify(widgets));
   }, [widgets]);
 
-  // Handle layout change
-  const handleLayoutChange = (currentLayout: Layout[], allLayouts: Layouts) => {
+  // Handle layout change - memoized callback
+  const handleLayoutChange = useCallback((currentLayout: Layout[], allLayouts: Layouts) => {
     setLayouts(allLayouts);
-  };
+  }, []);
 
-  // Remove a widget
-  const removeWidget = (id: string) => {
+  // Remove a widget - memoized callback
+  const removeWidget = useCallback((id: string) => {
     setWidgets(widgets.filter(widget => widget.id !== id));
     
     // Remove from layouts
@@ -155,7 +225,7 @@ const DashboardCanvas = () => {
     });
     
     setLayouts(newLayouts);
-  };
+  }, [widgets, layouts]);
 
   // Widget wrapper component
   const WidgetWrapper: React.FC<WidgetWrapperProps> = ({ id, children }) => {
@@ -206,25 +276,18 @@ const DashboardCanvas = () => {
         resizeHandles={['se']}
         draggableHandle=".widget-drag-handle"
       >
-        {widgets.map(widget => {
-          const WidgetComponent = WIDGET_COMPONENTS[widget.type as keyof typeof WIDGET_COMPONENTS] as React.ComponentType<unknown>;
-
-          if (!WidgetComponent) return null;
-
-          return (
-            <div key={widget.id}>
-              <WidgetWrapper id={widget.id}>
-                <WidgetComponent
-                  config={widget.config}
-                  {...(widget.props ?? {})}
-                />
-              </WidgetWrapper>
-            </div>
-          );
-        })}
+        {widgets.map(widget => (
+          <div key={widget.id}>
+            <WidgetWrapper id={widget.id}>
+              <WidgetRenderer widget={widget} />
+            </WidgetWrapper>
+          </div>
+        ))}
       </ResponsiveGridLayout>
     </div>
   );
-};
+});
+
+DashboardCanvas.displayName = 'DashboardCanvas';
 
 export default DashboardCanvas;

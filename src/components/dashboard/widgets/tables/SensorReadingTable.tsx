@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { memo, useMemo } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -19,7 +19,7 @@ interface TableData {
 
 const columnHelper = createColumnHelper<TableData>();
 
-const SensorReadingTable = () => {
+const SensorReadingTable = memo(() => {
   const {
     error,
     isFetched,
@@ -62,6 +62,11 @@ const SensorReadingTable = () => {
     ],
     []
   );
+  const dateFormatter = useMemo(() => new Intl.DateTimeFormat('en-US', {
+    dateStyle: 'short',
+    timeStyle: 'medium',
+  }), []);
+
   const data = useMemo(() => {
     if (!sensorReadings) return [];
     return sensorReadings.map(reading => ({
@@ -69,15 +74,9 @@ const SensorReadingTable = () => {
       locationName: reading.location.name,
       temperatureFahrenheit: ((reading.temperatureReading.temperatureCelsius* 9/5) + 32).toFixed(1),
       humidityPercentage: reading.humidityReading.humidityPercentage.toFixed(0),
-      readingTime: new Intl.DateTimeFormat(
-        'en-US',
-        {
-          dateStyle: 'short',
-          timeStyle: 'medium',
-        }
-      ).format(new Date(`${reading.readingTime}Z`)),
+      readingTime: dateFormatter.format(new Date(`${reading.readingTime}Z`)),
     }));
-  }, [sensorReadings]);
+  }, [sensorReadings, dateFormatter]);
 
   const table = useReactTable({
     data,
@@ -121,6 +120,8 @@ const SensorReadingTable = () => {
       </table>
     </div>
   );
-};
+});
+
+SensorReadingTable.displayName = 'SensorReadingTable';
 
 export default SensorReadingTable;

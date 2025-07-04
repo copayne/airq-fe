@@ -13,6 +13,17 @@ export interface SensorDataCriteria {
   locationIds?: string[];
 }
 
+// Split contexts to reduce unnecessary re-renders
+interface SensorDataCriteriaContextType {
+  criteria: SensorDataCriteria;
+  updateCriteria: (updates: Partial<SensorDataCriteria>) => void;
+}
+
+interface SensorDataStatusContextType {
+  isFetched: boolean;
+  updateIsFetched: (isFetched: boolean) => void;
+}
+
 interface SensorDataState {
   criteria: SensorDataCriteria;
   isFetched: boolean;
@@ -29,11 +40,13 @@ interface SensorDataContextType {
 }
 
 const SensorDataContext = createContext<SensorDataContextType | undefined>(undefined);
+const SensorDataCriteriaContext = createContext<SensorDataCriteriaContextType | undefined>(undefined);
+const SensorDataStatusContext = createContext<SensorDataStatusContextType | undefined>(undefined);
 
 // Define default criteria
 const defaultCriteria: SensorDataCriteria = {
-  startDate: null, // Last 90 days
-  endDate: null,
+  startDate: undefined, // Last 90 days
+  endDate: undefined,
   minCO2: 0,
   maxCO2: 5000,
   minTemperature: -20,
@@ -76,10 +89,24 @@ export const SensorDataProvider: React.FC<{ children: ReactNode }> = ({ children
   }, []);
 
   const contextValue = useMemo(() => ({ state, updateCriteria, updateIsFetched }), [state, updateCriteria, updateIsFetched]);
+  
+  const criteriaContextValue = useMemo(() => ({ 
+    criteria: state.criteria, 
+    updateCriteria 
+  }), [state.criteria, updateCriteria]);
+  
+  const statusContextValue = useMemo(() => ({ 
+    isFetched: state.isFetched, 
+    updateIsFetched 
+  }), [state.isFetched, updateIsFetched]);
 
   return (
     <SensorDataContext.Provider value={contextValue}>
-      {children}
+      <SensorDataCriteriaContext.Provider value={criteriaContextValue}>
+        <SensorDataStatusContext.Provider value={statusContextValue}>
+          {children}
+        </SensorDataStatusContext.Provider>
+      </SensorDataCriteriaContext.Provider>
     </SensorDataContext.Provider>
   );
 };
@@ -88,6 +115,23 @@ export const useSensorDataContext = () => {
   const context = useContext(SensorDataContext);
   if (context === undefined) {
     throw new Error('useSensorDataContext must be used within a SensorDataProvider');
+  }
+  return context;
+};
+
+// Split hooks for better performance
+export const useSensorDataCriteria = () => {
+  const context = useContext(SensorDataCriteriaContext);
+  if (context === undefined) {
+    throw new Error('useSensorDataCriteria must be used within a SensorDataProvider');
+  }
+  return context;
+};
+
+export const useSensorDataStatus = () => {
+  const context = useContext(SensorDataStatusContext);
+  if (context === undefined) {
+    throw new Error('useSensorDataStatus must be used within a SensorDataProvider');
   }
   return context;
 };

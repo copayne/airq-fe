@@ -58,8 +58,14 @@ export const useSensorReadingData = () => {
 
   const { loading, error, data, refetch }: QueryResult<GetFilteredSensorReadingsData> = useQuery(GET_FILTERED_SENSOR_READINGS, {
     variables: queryVariables,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: 'cache-first', // More efficient caching strategy
     notifyOnNetworkStatusChange: true,
+    errorPolicy: 'all', // Show partial data on errors
+    pollInterval: 30000, // Poll every 30 seconds for real-time updates
+    retryPolicy: {
+      maxRetryAttempts: 3,
+      delayMs: (attempt: number) => Math.min(1000 * Math.pow(2, attempt), 30000),
+    },
   });
 
   if (!isFetched && !!data?.filteredSensorReadings?.length) {

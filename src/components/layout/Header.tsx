@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-    Menu,
+  Menu,
 } from 'lucide-react';
 
 const Header: React.FC = () => {

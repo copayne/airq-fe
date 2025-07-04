@@ -1,4 +1,5 @@
 import React, {
+  memo,
   useMemo,
 } from 'react';
 import { type Sensor, useSensorData } from '~/hooks/useSensorData';
@@ -52,7 +53,7 @@ const getSensorDetails = (sensor: Sensor | undefined) => {
   }
 }
 
-const SensorCard: React.FC<SensorCardProps> = ({ sensorId }) => {
+const SensorCard: React.FC<SensorCardProps> = memo(({ sensorId }) => {
   const {
     sensors,
   } = useSensorData();
@@ -96,6 +97,8 @@ const SensorCard: React.FC<SensorCardProps> = ({ sensorId }) => {
       </div>
     </div>
   )
-};
+});
+
+SensorCard.displayName = 'SensorCard';
 
 export default SensorCard;

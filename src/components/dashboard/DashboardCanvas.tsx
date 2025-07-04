@@ -1,5 +1,5 @@
 // Dashboard.tsx
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, memo, useMemo, useCallback } from 'react';
 import { Responsive, WidthProvider, type Layout, type Layouts } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
@@ -22,18 +22,18 @@ interface WidgetWrapperProps {
 }
 
 // Dashboard component
-const DashboardCanvas = () => {
-  // Widget types enum
-  const WIDGET_TYPES = {
+const DashboardCanvas = memo(() => {
+  // Widget types enum - memoized to prevent recreation
+  const WIDGET_TYPES = useMemo(() => ({
     SENSOR_CARD: 'SENSOR_CARD',
     TABLE: 'TABLE',
     TEMPERATURE_CHART: 'TEMPERATURE_CHART',
     CO2_CHART: 'CO2_CHART',
     HUMIDITY_CHART: 'HUMIDITY_CHART',
-  };
+  }), []);
 
-  // Dynamic widget component imports for code splitting
-  const WIDGET_COMPONENTS = {
+  // Dynamic widget component imports for code splitting - memoized
+  const WIDGET_COMPONENTS = useMemo(() => ({
     [WIDGET_TYPES.SENSOR_CARD]: React.lazy(() => 
       import('./widgets/cards/SensorCard')
     ),
@@ -43,7 +43,7 @@ const DashboardCanvas = () => {
     // [WIDGET_TYPES.TEMPERATURE_CHART]: React.lazy(() => import('./widgets/charts/TemperatureChart')),
     // [WIDGET_TYPES.CO2_CHART]: React.lazy(() => import('./widgets/charts/CO2Chart')),
     // [WIDGET_TYPES.HUMIDITY_CHART]: React.lazy(() => import('./widgets/charts/HumidityChart')),
-  };
+  }), [WIDGET_TYPES]);
 
   // Widget loading skeleton component
   const WidgetLoadingSkeleton: React.FC<{ type: string }> = ({ type }) => {
@@ -207,13 +207,13 @@ const DashboardCanvas = () => {
     localStorage.setItem('dashboard-widgets', JSON.stringify(widgets));
   }, [widgets]);
 
-  // Handle layout change
-  const handleLayoutChange = (currentLayout: Layout[], allLayouts: Layouts) => {
+  // Handle layout change - memoized callback
+  const handleLayoutChange = useCallback((currentLayout: Layout[], allLayouts: Layouts) => {
     setLayouts(allLayouts);
-  };
+  }, []);
 
-  // Remove a widget
-  const removeWidget = (id: string) => {
+  // Remove a widget - memoized callback
+  const removeWidget = useCallback((id: string) => {
     setWidgets(widgets.filter(widget => widget.id !== id));
     
     // Remove from layouts
@@ -225,7 +225,7 @@ const DashboardCanvas = () => {
     });
     
     setLayouts(newLayouts);
-  };
+  }, [widgets, layouts]);
 
   // Widget wrapper component
   const WidgetWrapper: React.FC<WidgetWrapperProps> = ({ id, children }) => {
@@ -286,6 +286,8 @@ const DashboardCanvas = () => {
       </ResponsiveGridLayout>
     </div>
   );
-};
+});
+
+DashboardCanvas.displayName = 'DashboardCanvas';
 
 export default DashboardCanvas;

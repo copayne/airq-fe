@@ -1,10 +1,11 @@
 import React, {
+  memo,
   Suspense,
 } from 'react';
 import { useSensorData } from '~/hooks/useSensorData';
 import SensorCard from './SensorCard';
 
-const SensorGrid: React.FC = () => {
+const SensorGrid: React.FC = memo(() => {
   const {
     error,
     loading,
@@ -31,6 +32,8 @@ const SensorGrid: React.FC = () => {
       </div>
     </Suspense>
   );
-};
+});
+
+SensorGrid.displayName = 'SensorGrid';
 
 export default SensorGrid;

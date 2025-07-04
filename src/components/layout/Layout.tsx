@@ -1,4 +1,5 @@
 import React, {
+  memo,
   type ReactNode,
 } from 'react';
 import Header from './Header';
@@ -7,7 +8,7 @@ interface LayoutProps {
   children: ReactNode;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children }) => {
+const Layout: React.FC<LayoutProps> = memo(({ children }) => {
   return (
     <div className="bg-default-light relative">
       <div className="flex flex-col min-h-screen">
@@ -18,6 +19,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </div>
     </div>
   );
-};
+});
+
+Layout.displayName = 'Layout';
 
 export default Layout;

@@ -7,12 +7,11 @@ import SensorCard from './SensorCard';
 const SensorGrid: React.FC = () => {
   const {
     error,
-    isFetched,
     loading,
     sensors,
   } = useSensorData();
 
-  if (!isFetched && loading) return (
+  if (loading) return (
     <div className="flex flex-wrap bg-white/30 shadow-md mt-4 mb-4 p-6 mx-auto">
       <p>Loading sensors...</p>
     </div>

@@ -32,8 +32,8 @@ const SensorDataContext = createContext<SensorDataContextType | undefined>(undef
 
 // Define default criteria
 const defaultCriteria: SensorDataCriteria = {
-  startDate: null, // Last 90 days
-  endDate: null,
+  startDate: undefined, // Last 90 days
+  endDate: undefined,
   minCO2: 0,
   maxCO2: 5000,
   minTemperature: -20,

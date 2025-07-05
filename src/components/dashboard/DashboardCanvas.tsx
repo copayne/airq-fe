@@ -35,10 +35,10 @@ const DashboardCanvas = memo(() => {
   // Dynamic widget component imports for code splitting - memoized
   const WIDGET_COMPONENTS = useMemo(() => ({
     [WIDGET_TYPES.SENSOR_CARD]: React.lazy(() => 
-      import('./widgets/cards/SensorCard')
+      import('./widgets/wrappers/SensorCardWrapper')
     ),
     [WIDGET_TYPES.TABLE]: React.lazy(() => 
-      import('./widgets/tables/SensorReadingTable')
+      import('./widgets/wrappers/SensorReadingTableWrapper')
     ),
     // [WIDGET_TYPES.TEMPERATURE_CHART]: React.lazy(() => import('./widgets/charts/TemperatureChart')),
     // [WIDGET_TYPES.CO2_CHART]: React.lazy(() => import('./widgets/charts/CO2Chart')),

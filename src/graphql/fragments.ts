@@ -2,7 +2,7 @@ import { gql } from '@apollo/client';
 
 // Core sensor information fragment
 export const SENSOR_CORE_FRAGMENT = gql`
-  fragment SensorCore on Sensor {
+  fragment SensorCore on SensorObject {
     id
     name
     model
@@ -13,7 +13,7 @@ export const SENSOR_CORE_FRAGMENT = gql`
 
 // Location information fragment
 export const LOCATION_FRAGMENT = gql`
-  fragment LocationInfo on Location {
+  fragment LocationInfo on LocationObject {
     id
     name
     description
@@ -22,7 +22,7 @@ export const LOCATION_FRAGMENT = gql`
 
 // Measurement readings fragment
 export const READING_MEASUREMENTS_FRAGMENT = gql`
-  fragment ReadingMeasurements on SensorReading {
+  fragment ReadingMeasurements on SensorReadingObject {
     co2Reading {
       co2Ppm
     }
@@ -37,7 +37,7 @@ export const READING_MEASUREMENTS_FRAGMENT = gql`
 
 // Basic sensor reading fragment
 export const SENSOR_READING_BASIC_FRAGMENT = gql`
-  fragment SensorReadingBasic on SensorReading {
+  fragment SensorReadingBasic on SensorReadingObject {
     id
     readingTime
     isSuccess
@@ -46,7 +46,7 @@ export const SENSOR_READING_BASIC_FRAGMENT = gql`
 
 // Complete sensor reading fragment
 export const SENSOR_READING_COMPLETE_FRAGMENT = gql`
-  fragment SensorReadingComplete on SensorReading {
+  fragment SensorReadingComplete on SensorReadingObject {
     ...SensorReadingBasic
     ...ReadingMeasurements
     sensor {
@@ -64,7 +64,7 @@ export const SENSOR_READING_COMPLETE_FRAGMENT = gql`
 
 // Sensor with last reading fragment
 export const SENSOR_WITH_LAST_READING_FRAGMENT = gql`
-  fragment SensorWithLastReading on Sensor {
+  fragment SensorWithLastReading on SensorObject {
     ...SensorCore
     currentLocation {
       id

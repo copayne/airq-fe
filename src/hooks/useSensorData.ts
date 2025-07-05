@@ -52,10 +52,6 @@ export const useSensorData = () => {
     fetchPolicy: 'cache-first', // More efficient caching strategy
     notifyOnNetworkStatusChange: true,
     errorPolicy: 'all', // Show partial data on errors
-    retryPolicy: {
-      maxRetryAttempts: 3,
-      delayMs: (attempt: number) => Math.min(1000 * Math.pow(2, attempt), 30000),
-    },
   });
 
   return useMemo(() => ({

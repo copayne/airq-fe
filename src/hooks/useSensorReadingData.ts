@@ -3,6 +3,7 @@ import { useCallback, useMemo } from 'react';
 import { GET_FILTERED_SENSOR_READINGS } from '../graphql/SensorReading';
 import { useSensorDataContext, type SensorDataCriteria } from '../context/SensorDataContext';
 import { useDebouncedRefetch } from './useDebouncedRefetch';
+import { env } from '~/env.js';
 
 interface SensorReading {
   id: string;
@@ -61,18 +62,14 @@ export const useSensorReadingData = () => {
     fetchPolicy: 'cache-first', // More efficient caching strategy
     notifyOnNetworkStatusChange: true,
     errorPolicy: 'all', // Show partial data on errors
-    pollInterval: 30000, // Poll every 30 seconds for real-time updates
-    retryPolicy: {
-      maxRetryAttempts: 3,
-      delayMs: (attempt: number) => Math.min(1000 * Math.pow(2, attempt), 30000),
-    },
+    pollInterval: env.NEXT_PUBLIC_POLL_INTERVAL_MS, // Poll for real-time updates
   });
 
   if (!isFetched && !!data?.filteredSensorReadings?.length) {
     updateIsFetched(true);
   }
 
-  const triggerRefetch = useDebouncedRefetch(() => void refetch(), 300);
+  const triggerRefetch = useDebouncedRefetch(() => void refetch(), env.NEXT_PUBLIC_DEBOUNCE_DELAY_MS);
 
   const updateCriteriaAndRefetch = useCallback((updates: Partial<SensorDataCriteria>) => {
     updateCriteria(updates);

@@ -1,9 +1,11 @@
 import {
-  ApolloClient, InMemoryCache, HttpLink, from } from '@apollo/client';
+  ApolloClient,
+  HttpLink,
+  InMemoryCache,
+  from
+} from '@apollo/client';
 import { onError } from '@apollo/client/link/error';
-
-const IP_ADDRESS = 'http://10.201.1.115';
-const PORT = '5000';
+import { env } from '~/env.js';
 
 // Error handling link
 const errorLink = onError(({ graphQLErrors, networkError }) => {
@@ -32,7 +34,7 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
 
 // HTTP link
 const httpLink = new HttpLink({
-  uri: `${IP_ADDRESS}:${PORT}/graphql`,
+  uri: env.NEXT_PUBLIC_GRAPHQL_ENDPOINT,
 });
 
 // Enhanced cache configuration with type policies

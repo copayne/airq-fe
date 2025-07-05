@@ -5,9 +5,18 @@
   "type": "module",
   "scripts": {
     "build": "next build",
+    "build:analyze": "ANALYZE=true next build",
+    "build:staging": "NODE_ENV=staging next build",
+    "build:production": "NODE_ENV=production next build",
+    "analyze:client": "npx serve .next/analyze/client.html -s",
+    "analyze:server": "npx serve .next/analyze/nodejs.html -s", 
+    "analyze:edge": "npx serve .next/analyze/edge.html -s",
     "dev": "next dev",
+    "dev:staging": "NODE_ENV=staging next dev",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "start:staging": "NODE_ENV=staging next start",
+    "start:production": "NODE_ENV=production next start"
   },
   "dependencies": {
     "@apollo/client": "^3.13.8",
@@ -23,6 +32,7 @@
     "zod": "^3.23.3"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^15.3.5",
     "@types/eslint": "^8.56.2",
     "@types/node": "^20.11.20",
     "@types/react": "^18.2.57",

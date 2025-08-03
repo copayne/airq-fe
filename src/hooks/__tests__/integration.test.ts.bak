@@ -1,0 +1,337 @@
+/**
+ * Integration test file to verify all new hooks and API integrations work correctly.
+ * This file provides a foundation for testing the comprehensive API integration.
+ * 
+ * To run these tests, you'll need to set up a test environment with:
+ * - Jest or Vitest
+ * - React Testing Library
+ * - Apollo Client testing utilities
+ * - Mock GraphQL server
+ */
+
+import { describe, it, expect, beforeEach } from '@jest/globals';
+import { renderHook, waitFor } from '@testing-library/react';
+import { MockedProvider } from '@apollo/client/testing';
+import { ReactNode } from 'react';
+
+// Import all the new hooks
+import { useErrorLogs } from '../useErrorLogs';
+import { useSensorLocations } from '../useSensorLocations';
+import { useCO2Readings, useTemperatureReadings, useHumidityReadings } from '../useMeasurements';
+import { useUsers } from '../useUsers';
+import { useUserById } from '../useSingleEntities';
+import { useRecentSensorReadings } from '../useRecentSensorReadings';
+import { useCreateSensorReading } from '../useCreateSensorReading';
+
+// Import GraphQL operations
+import { GET_ERROR_LOGS } from '../../graphql/ErrorLog';
+import { GET_SENSOR_LOCATIONS } from '../../graphql/SensorLocation';
+import { GET_CO2_READINGS, GET_TEMPERATURE_READINGS, GET_HUMIDITY_READINGS } from '../../graphql/Measurements';
+import { GET_USERS, GET_USER } from '../../graphql/auth';
+import { GET_SENSOR_READINGS, CREATE_SENSOR_READING } from '../../graphql/SensorReading';
+
+// Mock data
+const mockErrorLogs = [
+  {
+    id: '1',
+    readingId: 1,
+    errorType: 'SENSOR_OFFLINE',
+    errorMessage: 'Sensor connection timeout',
+    createdAt: '2024-01-01T12:00:00Z'
+  }
+];
+
+const mockSensorLocations = [
+  {
+    id: '1',
+    sensorId: 1,
+    locationId: 1,
+    startTime: '2024-01-01T00:00:00Z',
+    endTime: null,
+    isCurrent: true,
+    sensor: {
+      id: '1',
+      name: 'Test Sensor',
+      model: 'SCD40',
+      isActive: true,
+      installationDate: '2024-01-01T00:00:00Z'
+    },
+    location: {
+      id: '1',
+      name: 'Office A',
+      description: 'Main office space'
+    }
+  }
+];
+
+const mockUsers = [
+  {
+    id: '1',
+    username: 'testuser',
+    email: 'test@example.com',
+    firstName: 'Test',
+    lastName: 'User',
+    fullName: 'Test User',
+    role: 'user',
+    isActive: true,
+    emailVerified: true,
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+    lastLogin: '2024-01-01T12:00:00Z'
+  }
+];
+
+const mockSensorReadings = [
+  {
+    id: '1',
+    readingTime: '2024-01-01T12:00:00Z',
+    isSuccess: true,
+    sensor: {
+      id: '1',
+      name: 'Test Sensor',
+      model: 'SCD40',
+      isActive: true,
+      installationDate: '2024-01-01T00:00:00Z'
+    },
+    location: {
+      id: '1',
+      name: 'Office A',
+      description: 'Main office space'
+    },
+    co2Reading: { co2Ppm: 1200 },
+    temperatureReading: { temperatureCelsius: 23.5 },
+    humidityReading: { humidityPercentage: 65.2 }
+  }
+];
+
+// Create wrapper component for Apollo MockedProvider
+const createWrapper = (mocks: any[]) => {
+  return ({ children }: { children: ReactNode }) => (
+    <MockedProvider mocks={mocks} addTypename={false}>
+      {children}
+    </MockedProvider>
+  );
+};
+
+describe('API Integration Tests', () => {
+  describe('Error Logs', () => {
+    it('should fetch error logs successfully', async () => {
+      const mocks = [
+        {
+          request: { query: GET_ERROR_LOGS },
+          result: { data: { errorLogs: mockErrorLogs } }
+        }
+      ];
+
+      const wrapper = createWrapper(mocks);
+      const { result } = renderHook(() => useErrorLogs(), { wrapper });
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.errorLogs).toEqual([]);
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+        expect(result.current.errorLogs).toEqual(mockErrorLogs);
+      });
+    });
+  });
+
+  describe('Sensor Locations', () => {
+    it('should fetch sensor locations successfully', async () => {
+      const mocks = [
+        {
+          request: { query: GET_SENSOR_LOCATIONS },
+          result: { data: { sensorLocations: mockSensorLocations } }
+        }
+      ];
+
+      const wrapper = createWrapper(mocks);
+      const { result } = renderHook(() => useSensorLocations(), { wrapper });
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.sensorLocations).toEqual([]);
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+        expect(result.current.sensorLocations).toEqual(mockSensorLocations);
+      });
+    });
+  });
+
+  describe('Individual Measurements', () => {
+    it('should fetch CO2 readings successfully', async () => {
+      const mockCO2Readings = [{ id: '1', readingId: 1, co2Ppm: 1200 }];
+      const mocks = [
+        {
+          request: { query: GET_CO2_READINGS },
+          result: { data: { co2Readings: mockCO2Readings } }
+        }
+      ];
+
+      const wrapper = createWrapper(mocks);
+      const { result } = renderHook(() => useCO2Readings(), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+        expect(result.current.co2Readings).toEqual(mockCO2Readings);
+      });
+    });
+
+    it('should fetch temperature readings successfully', async () => {
+      const mockTempReadings = [{ id: '1', readingId: 1, temperatureCelsius: 23.5 }];
+      const mocks = [
+        {
+          request: { query: GET_TEMPERATURE_READINGS },
+          result: { data: { temperatureReadings: mockTempReadings } }
+        }
+      ];
+
+      const wrapper = createWrapper(mocks);
+      const { result } = renderHook(() => useTemperatureReadings(), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+        expect(result.current.temperatureReadings).toEqual(mockTempReadings);
+      });
+    });
+
+    it('should fetch humidity readings successfully', async () => {
+      const mockHumidityReadings = [{ id: '1', readingId: 1, humidityPercentage: 65.2 }];
+      const mocks = [
+        {
+          request: { query: GET_HUMIDITY_READINGS },
+          result: { data: { humidityReadings: mockHumidityReadings } }
+        }
+      ];
+
+      const wrapper = createWrapper(mocks);
+      const { result } = renderHook(() => useHumidityReadings(), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+        expect(result.current.humidityReadings).toEqual(mockHumidityReadings);
+      });
+    });
+  });
+
+  describe('User Management', () => {
+    it('should fetch all users successfully', async () => {
+      const mocks = [
+        {
+          request: { query: GET_USERS },
+          result: { data: { users: mockUsers } }
+        }
+      ];
+
+      const wrapper = createWrapper(mocks);
+      const { result } = renderHook(() => useUsers(), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+        expect(result.current.users).toEqual(mockUsers);
+      });
+    });
+
+    it('should fetch user by ID successfully', async () => {
+      const mocks = [
+        {
+          request: { query: GET_USER, variables: { id: 1 } },
+          result: { data: { user: mockUsers[0] } }
+        }
+      ];
+
+      const wrapper = createWrapper(mocks);
+      const { result } = renderHook(() => useUserById(1), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+        expect(result.current.user).toEqual(mockUsers[0]);
+      });
+    });
+  });
+
+  describe('Recent Sensor Readings', () => {
+    it('should fetch recent sensor readings successfully', async () => {
+      const mocks = [
+        {
+          request: { query: GET_SENSOR_READINGS },
+          result: { data: { sensorReadings: mockSensorReadings } }
+        }
+      ];
+
+      const wrapper = createWrapper(mocks);
+      const { result } = renderHook(() => useRecentSensorReadings(), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+        expect(result.current.sensorReadings).toEqual(mockSensorReadings);
+      });
+    });
+  });
+
+  describe('Create Sensor Reading', () => {
+    it('should create sensor reading successfully', async () => {
+      const input = {
+        sensorId: 1,
+        co2Ppm: 1200,
+        temperatureCelsius: 23.5,
+        humidityPercentage: 65.2
+      };
+
+      const mockResponse = {
+        success: true,
+        message: 'Sensor reading created successfully',
+        errors: [],
+        sensorReading: {
+          id: '1',
+          readingTime: '2024-01-01T12:00:00Z',
+          sensor: { id: '1', name: 'Test Sensor' },
+          co2Reading: { co2Ppm: 1200 },
+          temperatureReading: { temperatureCelsius: 23.5 },
+          humidityReading: { humidityPercentage: 65.2 }
+        }
+      };
+
+      const mocks = [
+        {
+          request: { query: CREATE_SENSOR_READING, variables: { input } },
+          result: { data: { createSensorReading: mockResponse } }
+        },
+        {
+          request: { query: GET_SENSOR_READINGS },
+          result: { data: { sensorReadings: [] } }
+        }
+      ];
+
+      const wrapper = createWrapper(mocks);
+      const { result } = renderHook(() => useCreateSensorReading(), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      const response = await result.current.createSensorReading(input);
+      expect(response).toEqual(mockResponse);
+    });
+  });
+});
+
+/**
+ * Setup Instructions:
+ * 
+ * 1. Install testing dependencies:
+ *    npm install --save-dev @testing-library/react @testing-library/jest-dom
+ *    npm install --save-dev @apollo/client @apollo/testing
+ * 
+ * 2. Configure Jest in your package.json or jest.config.js:
+ *    {
+ *      "testEnvironment": "jsdom",
+ *      "setupFilesAfterEnv": ["<rootDir>/src/setupTests.ts"]
+ *    }
+ * 
+ * 3. Create setupTests.ts:
+ *    import '@testing-library/jest-dom';
+ * 
+ * 4. Run tests:
+ *    npm test
+ */

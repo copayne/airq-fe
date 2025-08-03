@@ -1,5 +1,5 @@
 // Dashboard.tsx
-import React, { useState, useEffect, Suspense, memo, useMemo, useCallback } from 'react';
+import React, { Suspense, memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { Responsive, WidthProvider, type Layout, type Layouts } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
@@ -236,7 +236,7 @@ const DashboardCanvas = memo(() => {
     return (
       <div className="h-full w-full border-default-dark border-[1px] shadow-default-dark shadow-card flex flex-col overflow-hidden">
         <div className="bg-default-textLight text-default-textDark px-2 py-1 flex justify-between items-center border-b-[1px] border-default-dark">
-          <p className="text-xs font-semibold w-full h-full align-baseline widget-drag-handle cursor-grab">{widget.title}</p>
+          <p className="h-[18px] text-xs font-semibold w-full h-full align-baseline widget-drag-handle cursor-grab">{widget.title}</p>
           <div className="flex space-x-2">
             {/* <button 
               onClick={() => openWidgetSettings(widget)}

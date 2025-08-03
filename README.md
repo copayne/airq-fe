@@ -30,5 +30,5 @@ Copy contents to github key and save
 
 ### Check Status
 - Ensure API server is running and database has been setup
-- Open browser tab and navigate to http://localhost:3000
+- Open browser tab and navigate to http://mini:3000
 - Should successfully open dashboard

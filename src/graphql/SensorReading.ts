@@ -24,21 +24,39 @@ export const GET_FILTERED_SENSOR_READINGS_BASIC = gql`
   ${READING_MEASUREMENTS_FRAGMENT}
 `;
 
+// Get recent sensor readings (limited to 1000)
+export const GET_SENSOR_READINGS = gql`
+  query GetSensorReadings {
+    sensorReadings {
+      ...SensorReadingComplete
+    }
+  }
+  ${SENSOR_READING_COMPLETE_FRAGMENT}
+`;
+
 export const CREATE_SENSOR_READING = gql`
   mutation CreateSensorReading($input: CreateSensorReadingInput!) {
     createSensorReading(input: $input) {
+      success
+      message
+      errors
       sensorReading {
         id
+        readingTime
         sensor {
           id
+          name
         }
         humidityReading {
+          id
           humidityPercentage
         }
         temperatureReading {
+          id
           temperatureCelsius
         }
         co2Reading {
+          id
           co2Ppm
         }
       }

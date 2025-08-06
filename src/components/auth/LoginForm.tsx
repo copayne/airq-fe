@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import type { FormEvent } from 'react';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '~/context/AuthContext';
 import { useLogin } from '~/hooks/useAuthMutations';
 import type { AuthFormData } from '~/types/auth';
@@ -14,6 +15,7 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ onSuccess, redirectTo }: LoginFormProps) {
+  const router = useRouter();
   const [skipLogin, setSkip] = useState(false);
   const { error: authError, clearError } = useAuth();
   const { loginUser, loading } = useLogin();
@@ -42,7 +44,7 @@ export function LoginForm({ onSuccess, redirectTo }: LoginFormProps) {
     }
   };
 
-  const handleSubmit = async (e?: FormEvent) => {
+  const handleSubmit = useCallback(async (e?: FormEvent) => {
     e?.preventDefault();
     
     // Clear previous errors
@@ -67,13 +69,13 @@ export function LoginForm({ onSuccess, redirectTo }: LoginFormProps) {
       if (onSuccess) {
         onSuccess();
       } else if (redirectTo) {
-        window.location.href = redirectTo;
+        await router.push(redirectTo);
       }
     } catch (error) {
       // Error handling is done in the hook
       console.error('Login submission error:', error);
     } 
-  };
+  }, [formData, clearError, loginUser, onSuccess, redirectTo, router]);
 
   const usernameOrEmailError = getFieldError(validationErrors, 'usernameOrEmail');
   const passwordError = getFieldError(validationErrors, 'password');
@@ -95,7 +97,7 @@ export function LoginForm({ onSuccess, redirectTo }: LoginFormProps) {
 
   return (
     <div className="w-full max-w-md mx-auto shadow-card border border-default-dark">
-      <div className="bg-default-textLight text-default-textDark px-2 py-1 flex justify-between items-center border-b-[1px] border-default-dark">
+      <div className="bg-default-dark text-default-textLight px-2 py-1 flex justify-between items-center border-b-[1px] border-black/80">
         <p className="text-xs font-semibold w-full h-full align-baseline">sign in</p>
       </div>
       <div className="bg-default-textLight shadow-card px-8 py-6">

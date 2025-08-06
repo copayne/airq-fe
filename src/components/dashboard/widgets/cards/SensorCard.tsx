@@ -70,7 +70,7 @@ const SensorCard: React.FC<SensorCardProps> = memo(({ sensorId }) => {
   } = getSensorDetails(sensor);
 
   return !!sensor && (
-    <div aria-label="sensor-card-container" className="flex flex-col justify-between h-full bg-default-textLight">
+    <div aria-label="sensor-card-container" className="flex flex-col justify-between h-full bg-gray-100">
       <div className="flex flex-col w-full pr-2 pl-2">
         <div aria-label="id-status-container" className="flex items-center w-full justify-between pt-2">
           <div className="text-xs underline">

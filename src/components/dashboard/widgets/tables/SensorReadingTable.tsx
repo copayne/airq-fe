@@ -96,7 +96,7 @@ const SensorReadingTable = memo(() => {
           {table.getHeaderGroups().map(headerGroup => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map(header => (
-                <th key={header.id} className="sticky top-0 bg-default-dark text-default-textLight p-2 text-left">
+                <th key={header.id} className="sticky top-0 bg-gray-400 text-default-textDark p-2 text-left">
                   {flexRender(
                     header.column.columnDef.header,
                     header.getContext()
@@ -108,7 +108,7 @@ const SensorReadingTable = memo(() => {
         </thead>
         <tbody>
           {table.getRowModel().rows.map((row, i) => (
-            <tr key={row.id} className={`${i % 2 ? 'bg-default-textLight' : 'bg-default-light'}`}>
+            <tr key={row.id} className={`${i % 2 ? 'bg-gray-100' : 'bg-gray-200'}`}>
               {row.getVisibleCells().map(cell => (
                 <td key={cell.id} className="p-2 border-t">
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}

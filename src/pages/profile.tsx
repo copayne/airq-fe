@@ -104,19 +104,17 @@ function ProfileContent() {
             </div>
           </div>
           {/* Actions */}
-          <div className="px-8 py-6 border-t border-default-dark bg-default-contrast">
-            <div className="flex space-x-4 justify-end">
+          <div className="px-8 py-6 border-t border-default-dark bg-default-textLight">
+            <div className="flex space-x-4 justify-between">
               <button
-                disabled
-                className="shadow-card py-2 px-3 border border-default-dark rounded-sm text-sm font-medium text-default-textDark bg-default-light cursor-not-allowed opacity-50"
+                className="w-16 shadow-card py-2 px-3 border border-default-dark rounded-sm text-sm font-medium text-default-textDark bg-default-contrast"
               >
-                Edit Profile (Coming Soon)
+                edit
               </button>
               <button
-                disabled
-                className="shadow-card py-2 px-3 border border-default-dark rounded-sm text-sm font-medium text-default-textDark bg-default-light cursor-not-allowed opacity-50"
+                className="w-40 shadow-card py-2 px-3 border border-default-dark rounded-sm text-sm font-medium text-default-textDark bg-default-light"
               >
-                Change Password (Coming Soon)
+                change password
               </button>
             </div>
           </div>

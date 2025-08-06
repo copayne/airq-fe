@@ -14,23 +14,9 @@ export default function LoginPage() {
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
       const redirectTo = (router.query.redirect as string) || '/';
-      void router.replace(redirectTo);
+      void router.push(redirectTo);
     }
   }, [isAuthenticated, isLoading, router]);
-
-  // Show loading while checking authentication
-  if (isLoading) {
-    return (
-      <Layout>
-        <div className="h-full-no-header flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-default-contrast mx-auto"></div>
-            <p className="mt-4 text-default-textDark">Loading...</p>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
 
   // Don't render if authenticated (will redirect)
   if (isAuthenticated) {

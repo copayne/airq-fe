@@ -65,8 +65,8 @@ export function UserMenu({ user }: UserMenuProps) {
         <div className="absolute right-0 mt-2 w-56 bg-default-textLight shadow-card ring-1 ring-black ring-opacity-5 z-50">
           <div>
             {/* User info */}
-            <div className="px-4 py-3 border-b border-default-dark flex items-center bg-default-contrast">
-              <p className="text-sm font-medium text-default-textLight">
+            <div className="px-4 py-3 border-b border-default-dark flex items-center hover:bg-default-contrast/70 text-default-textDark hover:text-default-textLight">
+              <p className="text-sm font-medium ">
                 {user.fullName ?? user.username}
               </p>
               <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ml-2 ${getRoleColor(user.role)}`}>
@@ -85,7 +85,7 @@ export function UserMenu({ user }: UserMenuProps) {
                 Profile Settings
               </Link>
               
-              {user.role === 'admin' && (
+              {/* {user.role === 'admin' && (
                 <Link
                   href="/admin"
                   className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-default-contrast/70 hover:text-default-textLight active:bg-default-contrast/90"
@@ -94,7 +94,7 @@ export function UserMenu({ user }: UserMenuProps) {
                   <Settings className="w-4 h-4 mr-2" />
                   Admin Panel
                 </Link>
-              )}
+              )} */}
             </div>
             {/* Logout */}
             <div className="border-t border-default-dark">

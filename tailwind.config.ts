@@ -16,10 +16,14 @@ export default {
           'textLight': '#F5F1E4',
           'textDark': '#1A2520',
         },
-        'status': {
-          'good': '#32C487',
-          'mid': '#E4E068',
-          'bad': '#D05039',
+        'airq': {
+          'background': '#999',
+          'dark': '#28262C',
+          'light': '#F3F4FF',
+          'primary': '#137547',
+          'secondary': '#FFC914',
+          'tertiary': '#ED4C4C',
+          'contrast': '#2E2EAB',
         },
       },
       boxShadow: {

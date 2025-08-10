@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { useAuth } from '~/context/AuthContext';
+import { useEffect } from 'react';
 import Layout from '~/components/layout/Layout';
+import { useAuth } from '~/context/AuthContext';
 
 export default function Home() {
   const router = useRouter();
@@ -21,7 +21,7 @@ export default function Home() {
   return (
     <Layout>
       <div className="h-full-no-header flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-default-contrast"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-airq-contrast"></div>
       </div>
     </Layout>
   );

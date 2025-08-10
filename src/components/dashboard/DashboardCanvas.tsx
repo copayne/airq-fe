@@ -234,8 +234,8 @@ const DashboardCanvas = memo(() => {
     if (!widget) return null;
     
     return (
-      <div className="h-full w-full border-black border-[1px] shadow-default-dark shadow-card flex flex-col overflow-hidden">
-        <div className="bg-default-dark text-default-textLight px-2 py-1 flex justify-between items-center border-b-[1px] border-default-dark">
+      <div className="h-full w-full border-black border-[1px] shadow-airq-dark shadow-card flex flex-col overflow-hidden">
+        <div className="bg-airq-dark text-airq-light px-2 py-1 flex justify-between items-center border-b-[1px] border-airq-dark">
           <p className="h-[18px] text-xs font-semibold w-full align-baseline widget-drag-handle cursor-grab">{widget.title}</p>
           <div className="flex space-x-2">
             {/* <button 
@@ -247,7 +247,7 @@ const DashboardCanvas = memo(() => {
             </button> */}
             <button 
               onClick={() => removeWidget(id)}
-              className="text-default-textLight hover:text-default-light focus:outline-none"
+              className="text-airq-light hover:text-airq-light focus:outline-none"
               title="Remove"
             >
               <span>x</span>
@@ -260,9 +260,6 @@ const DashboardCanvas = memo(() => {
       </div>
     );
   };
-
-  console.log(layouts);
-  console.log(widgets);
 
   return (
     <div className="h-full">

@@ -1,12 +1,12 @@
-import React, { memo, useMemo } from 'react';
 import {
-  useReactTable,
-  getCoreRowModel,
-  getSortedRowModel,
-  getFilteredRowModel,
-  flexRender,
   createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getSortedRowModel,
+  useReactTable,
 } from '@tanstack/react-table';
+import { memo, useMemo } from 'react';
 import { useSensorReadingData } from '../../../../hooks/useSensorReadingData';
 
 interface TableData {
@@ -96,7 +96,7 @@ const SensorReadingTable = memo(() => {
           {table.getHeaderGroups().map(headerGroup => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map(header => (
-                <th key={header.id} className="sticky top-0 bg-gray-400 text-default-textDark p-2 text-left">
+                <th key={header.id} className="sticky top-0 bg-airq-background text-airq-dark p-2 text-left">
                   {flexRender(
                     header.column.columnDef.header,
                     header.getContext()
@@ -108,7 +108,7 @@ const SensorReadingTable = memo(() => {
         </thead>
         <tbody>
           {table.getRowModel().rows.map((row, i) => (
-            <tr key={row.id} className={`${i % 2 ? 'bg-gray-100' : 'bg-gray-200'}`}>
+            <tr key={row.id} className={`${i % 2 ? 'bg-airq-background/20' : 'bg-airq-light'}`}>
               {row.getVisibleCells().map(cell => (
                 <td key={cell.id} className="p-2 border-t">
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}

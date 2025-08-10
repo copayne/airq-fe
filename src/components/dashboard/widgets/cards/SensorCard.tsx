@@ -10,8 +10,8 @@ interface SensorCardProps {
 
 const StatusIndicator = ({ isActive }: { isActive: boolean }) => (
   <div 
-    className={`w-[10px] h-[10px] rounded-full mr-3 relative border-default-textDark border-[1px] ${
-      isActive ? 'bg-status-good' : 'bg-status-bad'
+    className={`w-[10px] h-[10px] rounded-full mr-3 relative border-airq-dark border-[1px] ${
+      isActive ? 'bg-airq-primary' : 'bg-airq-tertiary'
     }`}
     title={isActive ? 'online' : 'offline'}
   />
@@ -70,7 +70,7 @@ const SensorCard: React.FC<SensorCardProps> = memo(({ sensorId }) => {
   } = getSensorDetails(sensor);
 
   return !!sensor && (
-    <div aria-label="sensor-card-container" className="flex flex-col justify-between h-full bg-gray-100">
+    <div aria-label="sensor-card-container" className="flex flex-col justify-between h-full bg-airq-light">
       <div className="flex flex-col w-full pr-2 pl-2">
         <div aria-label="id-status-container" className="flex items-center w-full justify-between pt-2">
           <div className="text-xs underline">
@@ -82,16 +82,16 @@ const SensorCard: React.FC<SensorCardProps> = memo(({ sensorId }) => {
           <h3 className="text-3xl font-light">{currentLocation}</h3>
         </div>
       </div>
-      <div aria-label="latest-reading" className="flex justify-evenly border-t-[1px] border-default-dark">
-        <div className={`rounded-bl-sm flex justify-center items-center flex-grow bg-gray-500/80 ${co2 < 800 ? 'bg-status-good' : ''} ${(co2 > 800 && co2 < 1000) ? 'bg-status-mid text-default-textDark' : ''}  ${co2 > 1000 ? 'bg-status-bad' : ''}`}>
+      <div aria-label="latest-reading" className="flex justify-evenly border-t-[1px] border-airq-dark">
+        <div className={`rounded-bl-sm flex justify-center items-center flex-grow ${co2 <= 800 ? 'bg-airq-primary text-airq-light' : ''} ${(co2 > 800 && co2 < 1000) ? 'bg-airq-secondary text-airq-dark' : ''}  ${co2 >= 1000 ? 'bg-airq-tertiary' : ''}`}>
           <p className="text-md">{co2}ppm</p>
         </div>
-        <div className="w-[1px] bg-default-dark" />
-        <div className={`flex justify-center items-center flex-grow bg-gray-500/80 ${(tempRaw ?? 0) < 20 ? 'bg-status-good' : ''} ${((tempRaw ?? 0) > 20 && (tempRaw ?? 0) < 27) ? 'bg-status-mid text-default-textDark' : ''}  ${(tempRaw ?? 0) > 27 ? 'bg-status-bad' : ''}`}>
+        <div className="w-[1px] bg-airq-dark" />
+        <div className={`flex justify-center items-center flex-grow  ${(tempRaw ?? 0) < 20 ? 'bg-airq-primary text-airq-light' : ''} ${((tempRaw ?? 0) > 20 && (tempRaw ?? 0) < 27) ? 'bg-airq-secondary text-airq-dark' : ''}  ${(tempRaw ?? 0) > 27 ? 'bg-airq-tertiary' : ''}`}>
           <p className="text-md">{temperatureFahrenheit}f/{temp}c</p>
         </div>
-        <div className="w-[1px] bg-default-dark" />
-        <div className={`rounded-br-sm flex justify-center items-center flex-grow bg-gray-500/80 ${((humidityRaw ?? 0) > 30 && (humidityRaw ?? 0) < 60) ? 'bg-status-good' : ''} ${(((humidityRaw ?? 0) > 25 && (humidityRaw ?? 0) < 30) || ((humidityRaw ?? 0) > 60 && (humidityRaw ?? 0) < 70)) ? 'bg-status-mid' : ''}  ${(humidityRaw ?? 0) > 70 || (humidityRaw ?? 0) < 25 ? 'bg-status-bad' : ''}`}>
+        <div className="w-[1px] bg-airq-dark" />
+        <div className={`rounded-br-sm flex justify-center items-center flex-grow ${((humidityRaw ?? 0) > 30 && (humidityRaw ?? 0) < 60) ? 'bg-airq-primary text-airq-light' : ''} ${(((humidityRaw ?? 0) > 25 && (humidityRaw ?? 0) < 30) || ((humidityRaw ?? 0) > 60 && (humidityRaw ?? 0) < 70)) ? 'bg-airq-secondary' : ''}  ${(humidityRaw ?? 0) > 70 || (humidityRaw ?? 0) < 25 ? 'bg-airq-tertiary' : ''}`}>
           <p className="text-md">hum {humidity}%</p>
         </div>
       </div>

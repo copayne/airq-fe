@@ -91,19 +91,24 @@ export function LoginForm({ onSuccess, redirectTo }: LoginFormProps) {
 
   useEffect(() => {
     if (skipLogin) {
-      handleSubmit();
+      try {
+        handleSubmit()
+      } catch (error) {
+        console.error('Login submission error:', error);
+        setSkip(false)
+      }
     }
   }, [skipLogin])
 
   return (
-    <div className="w-full max-w-md mx-auto shadow-card border border-default-dark">
-      <div className="bg-default-dark text-default-textLight px-2 py-1 flex justify-between items-center border-b-[1px] border-black/80">
+    <div className="w-full max-w-md mx-auto shadow-card border border-airq-dark px-4 sm:px-0">
+      <div className="bg-airq-dark text-airq-light px-2 py-1 flex justify-between items-center border-b-[1px] border-black/80">
         <p className="text-xs font-semibold w-full h-full align-baseline">sign in</p>
       </div>
-      <div className="bg-default-textLight shadow-card px-8 py-6">
+      <div className="bg-airq-light shadow-card px-4 sm:px-8 py-6">
         {authError && (
-          <div className="mb-4 p-3 bg-status-bad/20 border border-status-bad shadow-card">
-            <p className="text-sm text-default-textDark font-medium">{authError}</p>
+          <div className="mb-4 p-3 bg-airq-tertiary/20 border border-airq-tertiary shadow-card">
+            <p className="text-sm text-airq-dark font-medium">{authError}</p>
           </div>
         )}
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -114,10 +119,10 @@ export function LoginForm({ onSuccess, redirectTo }: LoginFormProps) {
               name="usernameOrEmail"
               value={formData.usernameOrEmail ?? ''}
               onChange={handleInputChange}
-              className={`w-full px-3 py-2 border rounded-sm focus:outline-none focus:ring-2 focus:ring-default-contrast focus:border-default-contrast transition-colors ${
+              className={`w-full px-4 py-3 text-base border rounded-sm focus:outline-none focus:ring-2 focus:ring-airq-contrast focus:border-airq-contrast transition-colors ${
                 hasFieldError(validationErrors, 'usernameOrEmail') || authError
-                  ? 'border-status-bad bg-status-bad/10'
-                  : 'border-default-dark bg-white'
+                  ? 'border-airq-tertiary bg-airq-tertiary/10'
+                  : 'border-airq-dark bg-white'
               }`}
               placeholder="username"
               disabled={loading}
@@ -125,7 +130,7 @@ export function LoginForm({ onSuccess, redirectTo }: LoginFormProps) {
               required
             />
             {usernameOrEmailError && (
-              <p className="mt-1 text-sm text-status-bad font-medium">{usernameOrEmailError}</p>
+              <p className="mt-1 text-sm text-airq-tertiary font-medium">{usernameOrEmailError}</p>
             )}
           </div>
           <div>
@@ -136,10 +141,10 @@ export function LoginForm({ onSuccess, redirectTo }: LoginFormProps) {
                 name="password"
                 value={formData.password ?? ''}
                 onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-sm focus:outline-none focus:ring-2 focus:ring-default-contrast focus:border-default-contrast pr-10 transition-colors ${
+                className={`w-full px-4 py-3 text-base border rounded-sm focus:outline-none focus:ring-2 focus:ring-airq-contrast focus:border-airq-contrast pr-12 transition-colors ${
                   hasFieldError(validationErrors, 'password') || authError
-                    ? 'border-status-bad bg-status-bad/10'
-                    : 'border-default-dark bg-white'
+                    ? 'border-airq-tertiary bg-airq-tertiary/10'
+                    : 'border-airq-dark bg-white'
                 }`}
                 placeholder="password"
                 disabled={loading}
@@ -149,15 +154,15 @@ export function LoginForm({ onSuccess, redirectTo }: LoginFormProps) {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5 hover:text-default-contrast transition-colors"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5 hover:text-airq-contrast transition-colors"
                 disabled={loading}
               >
                 {showPassword ? (
-                  <svg className="h-5 w-5 text-default-textDark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-5 w-5 text-airq-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
                   </svg>
                 ) : (
-                  <svg className="h-5 w-5 text-default-textDark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-5 w-5 text-airq-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                   </svg>
@@ -165,14 +170,14 @@ export function LoginForm({ onSuccess, redirectTo }: LoginFormProps) {
               </button>
             </div>
             {passwordError && (
-              <p className="mt-1 text-sm text-status-bad font-medium">{passwordError}</p>
+              <p className="mt-1 text-sm text-airq-tertiary font-medium">{passwordError}</p>
             )}
           </div>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row gap-3 sm:justify-between">
             <button
               onClick={loginSkip}
               disabled={loading}
-              className="flex justify-center shadow-card active:shadow-none py-2 px-2 border border-default-dark rounded-sm text-sm font-medium text-white bg-status-bad hover:bg-status-bad/90 active:translate-y-0.5 active:translate-x-0.5 focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-status-bad"
+              className="w-full sm:w-auto flex justify-center shadow-card active:shadow-none py-3 px-6 border border-airq-dark rounded-sm text-base font-medium text-airq-light bg-airq-contrast hover:bg-airq-contrast/90 active:translate-y-0.5 active:translate-x-0.5 focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-airq-tertiary"
             >
               {loading ? (
                 <>
@@ -189,7 +194,7 @@ export function LoginForm({ onSuccess, redirectTo }: LoginFormProps) {
             <button
               type="submit"
               disabled={loading}
-              className="flex justify-center shadow-card active:shadow-none py-2 px-3 border border-default-dark rounded-sm text-sm font-medium text-white bg-status-good hover:bg-status-good/90 active:translate-y-0.5 active:translate-x-0.5 focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-status-good"
+              className="w-full sm:w-auto flex justify-center shadow-card active:shadow-none py-3 px-6 border border-airq-dark rounded-sm text-base font-medium text-airq-light bg-airq-primary hover:bg-airq-primary/90 active:translate-y-0.5 active:translate-x-0.5 focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-airq-primary"
             >
               {loading ? (
                 <>
@@ -206,8 +211,8 @@ export function LoginForm({ onSuccess, redirectTo }: LoginFormProps) {
           </div>
         </form>
         <div className="mt-6 text-center space-y-3">
-          <p className="text-sm text-default-textDark">
-            <Link href="/forgot-password" className="font-medium text-default-contrast hover:text-default-contrast/80 transition-colors">
+          <p className="text-sm text-airq-dark">
+            <Link href="/forgot-password" className="font-medium text-airq-contrast hover:text-airq-contrast/80 transition-colors">
               forgot?
             </Link>
           </p>

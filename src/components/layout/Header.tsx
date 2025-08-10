@@ -10,21 +10,15 @@ const Header: React.FC = memo(() => {
   const { isAuthenticated, user, isLoading } = useAuth();
 
   return (
-    <header className="bg-default-textLight border-b-default-dark border-b-[1px] z-20 h-16 drop-shadow-md">
-      <div className="flex items-center justify-between px-6 py-4">
-        <div className="flex items-center">
-          {/* <button className="text-default-textDark hover:text-default-contrast focus:outline-none">
-            <Menu className="h-6 w-6" />
-          </button> */}
-          <Link
-            href="/dash"
-          >
-            <h1 className="text-xl font-semibold text-default-textDark">hudson dash</h1>
-          </Link>
-        </div>
+    <header className="bg-airq-light border-b-airq-dark border-b-[1px] z-20 h-16 drop-shadow-md">
+      <div className="flex items-center justify-center px-6 relative h-full">
+        {/* Centered title */}
+        <Link href="/dash">
+          <h1 className="text-3xl text-airq-dark">Hudson Dash</h1>
+        </Link>
 
-        {/* Authentication UI */}
-        <div className="flex items-center space-x-4">
+        {/* Authentication UI - positioned absolute to the right */}
+        <div className="absolute right-6 flex items-center space-x-4">
           {isLoading ? (
             <div className="w-8 h-8 animate-pulse bg-gray-300 rounded-full"></div>
           ) : isAuthenticated && user ? (
@@ -43,7 +37,7 @@ const Header: React.FC = memo(() => {
             <div className="flex items-center space-x-2">
               <Link
                 href="/login"
-                className="flex items-center space-x-1 text-default-textDark hover:text-default-contrast focus:outline-none focus:ring-2 focus:ring-default-contrast focus:ring-offset-2 rounded-md px-3 py-1 text-sm font-medium"
+                className="flex items-center space-x-1 text-airq-dark hover:text-airq-contrast focus:outline-none focus:ring-2 focus:ring-airq-contrast focus:ring-offset-2 rounded-md px-3 py-1 text-sm font-medium"
               >
                 <LogIn className="w-4 h-4" />
                 <span>sign in</span>

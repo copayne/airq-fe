@@ -1,16 +1,21 @@
-import { type AppType } from "next/app";
 import { ApolloProvider } from '@apollo/client';
-import { SensorDataProvider } from '../context/SensorDataContext';
+import { type AppType } from "next/app";
+import { JetBrains_Mono, Crimson_Text } from 'next/font/google';
 import { AuthProvider } from '../context/AuthContext';
+import { SensorDataProvider } from '../context/SensorDataContext';
 import client from '../lib/apolloClient';
-import { Inconsolata } from 'next/font/google';
 
 import "~/styles/globals.css";
 
-const inconsolataFont = Inconsolata({
-  weight: ['200', '300', '400', '500', '600'],
+const jetBrainsFont = JetBrains_Mono({
+  weight: ['600', '500', '400', '300', '200'],
   style: 'normal',
-  subsets: ['latin'],
+  subsets: ['latin']
+});
+const crimsonTextFont = Crimson_Text({
+  weight: ['400', '600', '700'],
+  style: ['normal', 'italic'],
+  subsets: ['latin']
 });
 
 const MyApp: AppType = ({ Component, pageProps }) => {
@@ -18,7 +23,10 @@ const MyApp: AppType = ({ Component, pageProps }) => {
     <>
       <style jsx global>{`
         html {
-          font-family: ${inconsolataFont.style.fontFamily};
+          font-family: ${jetBrainsFont.style.fontFamily};
+        }
+        h1 {
+          font-family: ${crimsonTextFont.style.fontFamily};
         }
       `}</style>
       <ApolloProvider client={client}>

@@ -51,7 +51,7 @@ export function UserMenu({ user }: UserMenuProps) {
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 text-default-textDark hover:text-default-contrast focus:outline-none focus:ring-2 focus:ring-default-contrast focus:ring-offset-2 px-2 py-1"
+        className="flex items-center space-x-2 text-airq-dark hover:text-airq-contrast/80 py-1"
         aria-expanded={isOpen}
         aria-haspopup="true"
       >
@@ -62,11 +62,11 @@ export function UserMenu({ user }: UserMenuProps) {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-56 bg-default-textLight shadow-card ring-1 ring-black ring-opacity-5 z-50">
+        <div className="absolute right-0 top-full mt-2 w-56 bg-airq-light shadow-card ring-1 ring-black ring-opacity-5 z-50">
           <div>
             {/* User info */}
-            <div className="px-4 py-3 border-b border-default-dark flex items-center bg-default-contrast">
-              <p className="text-sm font-medium text-default-textLight">
+            <div className="px-4 py-3 border-b border-airq-dark flex items-center hover:bg-airq-contrast/70 text-airq-dark hover:text-airq-light">
+              <p className="text-sm font-medium ">
                 {user.fullName ?? user.username}
               </p>
               <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ml-2 ${getRoleColor(user.role)}`}>
@@ -78,30 +78,30 @@ export function UserMenu({ user }: UserMenuProps) {
             <div>
               <Link
                 href="/profile"
-                className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-default-contrast/70 hover:text-default-textLight active:bg-default-contrast/90"
+                className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-airq-contrast/70 hover:text-airq-light active:bg-airq-contrast/90"
                 onClick={() => setIsOpen(false)}
               >
                 <Settings className="w-4 h-4 mr-2" />
                 Profile Settings
               </Link>
               
-              {user.role === 'admin' && (
+              {/* {user.role === 'admin' && (
                 <Link
                   href="/admin"
-                  className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-default-contrast/70 hover:text-default-textLight active:bg-default-contrast/90"
+                  className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-airq-contrast/70 hover:text-airq-light active:bg-airq-contrast/90"
                   onClick={() => setIsOpen(false)}
                 >
                   <Settings className="w-4 h-4 mr-2" />
                   Admin Panel
                 </Link>
-              )}
+              )} */}
             </div>
             {/* Logout */}
-            <div className="border-t border-default-dark">
+            <div className="border-t border-airq-dark">
               <button
                 onClick={handleLogout}
                 disabled={logoutLoading}
-                className="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-default-contrast/70 active:bg-default-contrast/90 hover:text-default-textLight disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-airq-contrast/70 active:bg-airq-contrast/90 hover:text-airq-light disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {logoutLoading ? (
                   <svg className="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24">

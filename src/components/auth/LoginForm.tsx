@@ -91,14 +91,16 @@ export function LoginForm({ onSuccess, redirectTo }: LoginFormProps) {
 
   useEffect(() => {
     if (skipLogin) {
-      try {
-        handleSubmit()
-      } catch (error) {
-        console.error('Login submission error:', error);
-        setSkip(false)
-      }
+      void (async () => {
+        try {
+          await handleSubmit()
+        } catch (error) {
+          console.error('Login submission error:', error);
+          setSkip(false)
+        }
+      })();
     }
-  }, [skipLogin])
+  }, [skipLogin, handleSubmit])
 
   return (
     <div className="w-full max-w-md mx-auto shadow-card border border-airq-dark px-4 sm:px-0">

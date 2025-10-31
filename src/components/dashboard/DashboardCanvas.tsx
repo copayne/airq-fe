@@ -25,43 +25,29 @@ interface WidgetWrapperProps {
 const DashboardCanvas = memo(() => {
   // Widget types enum - memoized to prevent recreation
   const WIDGET_TYPES = useMemo(() => ({
-    SENSOR_CARD: 'SENSOR_CARD',
     TABLE: 'TABLE',
     TEMPERATURE_CHART: 'TEMPERATURE_CHART',
     CO2_CHART: 'CO2_CHART',
     HUMIDITY_CHART: 'HUMIDITY_CHART',
+    MULTI_METRIC_CHART: 'MULTI_METRIC_CHART',
+    METRICS_CARD: 'METRICS_CARD',
   }), []);
 
   // Dynamic widget component imports for code splitting - memoized
   const WIDGET_COMPONENTS = useMemo(() => ({
-    [WIDGET_TYPES.SENSOR_CARD]: React.lazy(() => 
-      import('./widgets/wrappers/SensorCardWrapper')
-    ),
-    [WIDGET_TYPES.TABLE]: React.lazy(() => 
+    [WIDGET_TYPES.TABLE]: React.lazy(() =>
       import('./widgets/wrappers/SensorReadingTableWrapper')
     ),
-    // [WIDGET_TYPES.TEMPERATURE_CHART]: React.lazy(() => import('./widgets/charts/TemperatureChart')),
-    // [WIDGET_TYPES.CO2_CHART]: React.lazy(() => import('./widgets/charts/CO2Chart')),
+    [WIDGET_TYPES.TEMPERATURE_CHART]: React.lazy(() => import('./widgets/wrappers/TemperatureChartWrapper')),
+    [WIDGET_TYPES.CO2_CHART]: React.lazy(() => import('./widgets/wrappers/CO2ChartWrapper')),
+    [WIDGET_TYPES.MULTI_METRIC_CHART]: React.lazy(() => import('./widgets/wrappers/MultiMetricChartWrapper')),
+    [WIDGET_TYPES.METRICS_CARD]: React.lazy(() => import('./widgets/wrappers/MetricsCardWrapper')),
     // [WIDGET_TYPES.HUMIDITY_CHART]: React.lazy(() => import('./widgets/charts/HumidityChart')),
   }), [WIDGET_TYPES]);
 
   // Widget loading skeleton component
   const WidgetLoadingSkeleton: React.FC<{ type: string }> = ({ type }) => {
     const skeletonConfig = {
-      [WIDGET_TYPES.SENSOR_CARD]: { 
-        height: '200px', 
-        content: (
-          <>
-            <div className="h-4 bg-gray-300 rounded mb-2 w-1/3"></div>
-            <div className="h-8 bg-gray-300 rounded mb-4"></div>
-            <div className="flex justify-between">
-              <div className="h-6 bg-gray-300 rounded w-1/4"></div>
-              <div className="h-6 bg-gray-300 rounded w-1/4"></div>
-              <div className="h-6 bg-gray-300 rounded w-1/4"></div>
-            </div>
-          </>
-        )
-      },
       [WIDGET_TYPES.TABLE]: { 
         height: '400px',
         content: (
@@ -117,59 +103,82 @@ const DashboardCanvas = memo(() => {
   };
 
   // Default layouts for different breakpoints
+  
+  // BACKUP - Original layouts (commented for potential revert)
+  // const originalLayouts = {
+  //   lg: [
+  //     { i: 'widget-1', x: 0, y: 0, w: 2, h: 1, isResizable: false },
+  //     { i: 'widget-2', x: 6, y: 0, w: 3, h: 2, minW: 2, minH: 1 },
+  //     { i: 'widget-3', x: 0, y: 2, w: 6, h: 4, minW: 4, minH: 3 },
+  //   ],
+  //   md: [
+  //     { i: 'widget-1', x: 0, y: 0, w: 2, h: 1, isResizable: false },
+  //     { i: 'widget-2', x: 4, y: 0, w: 3, h: 2, minW: 2, minH: 1 },
+  //     { i: 'widget-3', x: 0, y: 2, w: 8, h: 4, minW: 4, minH: 3 },
+  //   ],
+  //   sm: [
+  //     { i: 'widget-1', x: 0, y: 0, w: 2, h: 1, isResizable: false },
+  //     { i: 'widget-2', x: 0, y: 2, w: 6, h: 4, minW: 2, minH: 1 },
+  //     { i: 'widget-3', x: 0, y: 6, w: 6, h: 4, minW: 4, minH: 3 },
+  //   ],
+  // };
+
+  // RESPONSIVE SQUARE LAYOUT - Table and chart positioned optimally for each screen size
   const defaultLayouts = {
+    // Large screens (1100px+, 12 columns) - Side-by-side square widgets
     lg: [
-      { i: 'widget-1', x: 0, y: 0, w: 2, h: 1, isResizable: false },
-      { i: 'widget-2', x: 4, y: 0, w: 10, h: 6, minW: 4, minH: 4 },
-      { i: 'widget-3', x: 0, y: 3, w: 6, h: 4, minW: 2, minH: 2 },
-      { i: 'widget-4', x: 6, y: 3, w: 6, h: 4, minW: 2, minH: 2 },
+      // Metrics widget - top full width (2 rows tall)
+      { i: 'widget-1', x: 0, y: 0, w: 2, h: 2, isResizable: false },
+      // Latest readings table - left square (perfect square ratio)
+      { i: 'widget-2', x: 0, y: 2, w: 6, h: 4, minW: 4, minH: 3 },
+      // CO2 & Temperature chart - right square (perfect square ratio)
+      { i: 'widget-3', x: 6, y: 2, w: 6, h: 4, minW: 4, minH: 3 },
     ],
+
+    // Medium screens (900px-1099px, 8 columns) - Side-by-side square widgets
     md: [
-      { i: 'widget-1', x: 0, y: 0, w: 2, h: 1, isResizable: false },
-      { i: 'widget-2', x: 4, y: 0, w: 8, h: 3, minW: 2, minH: 2 },
-      { i: 'widget-3', x: 0, y: 3, w: 4, h: 4, minW: 2, minH: 2 },
-      { i: 'widget-4', x: 4, y: 3, w: 4, h: 4, minW: 2, minH: 2 },
+      // Metrics widget - top full width (2 rows tall)
+      { i: 'widget-1', x: 0, y: 0, w: 2, h: 2, minW: 4, minH: 2, isResizable: false },
+      // Table - left square (perfect square ratio)
+      { i: 'widget-2', x: 0, y: 2, w: 4, h: 4, minW: 3, minH: 3 },
+      // Chart - right square (perfect square ratio)
+      { i: 'widget-3', x: 4, y: 2, w: 4, h: 4, minW: 3, minH: 3 },
     ],
+
+    // Small screens (768px-899px, 6 columns) - Vertical stacking
     sm: [
-      { i: 'widget-1', x: 0, y: 0, w: 6, h: 1, isResizable: false },
-      { i: 'widget-2', x: 0, y: 3, w: 12, h: 4, minW: 2, minH: 2 },
-      { i: 'widget-3', x: 0, y: 6, w: 6, h: 4, minW: 2, minH: 2 },
-      { i: 'widget-4', x: 0, y: 10, w: 6, h: 4, minW: 2, minH: 2 },
+      // Metrics widget - top full width (2 rows tall)
+      { i: 'widget-1', x: 0, y: 0, w: 2, h: 2, minW: 4, minH: 2, isResizable: false },
+      // Chart first on mobile for quick trend viewing (wider, less tall)
+      { i: 'widget-3', x: 0, y: 2, w: 6, h: 3, minW: 4, minH: 2 },
+      // Table below on mobile (wider, accommodates more data)
+      { i: 'widget-2', x: 0, y: 5, w: 6, h: 4, minW: 4, minH: 3 },
     ],
   };
 
   // Initial widgets data
   const initialWidgets = [
-    { 
+    {
       id: 'widget-1',
-      title: 'Sensor', 
-      type: WIDGET_TYPES.SENSOR_CARD,
-      config: { showOffline: true },
-      props: {
-        sensorId: "3",
-      }
+      title: 'Metrics',
+      type: WIDGET_TYPES.METRICS_CARD,
+      config: {}
     },
-    { 
-      id: 'widget-2', 
-      title: 'Latest Readings', 
+    {
+      id: 'widget-2',
+      title: 'Latest Readings',
       type: WIDGET_TYPES.TABLE,
       config: { limit: 10 },
       props: {
         display: false,
       },
     },
-    // { 
-    //   id: 'widget-3', 
-    //   title: 'Temperature Trends', 
-    //   type: WIDGET_TYPES.TEMPERATURE_CHART,
-    //   config: { timeRange: '24h' }
-    // },
-    // { 
-    //   id: 'widget-4', 
-    //   title: 'CO2 Levels', 
-    //   type: WIDGET_TYPES.CO2_CHART,
-    //   config: { timeRange: '24h' }
-    // },
+    {
+      id: 'widget-3',
+      title: 'CO2 & Temperature Trends',
+      type: WIDGET_TYPES.MULTI_METRIC_CHART,
+      config: { timeRange: '24h' }
+    },
   ];
 
   // State
@@ -262,11 +271,11 @@ const DashboardCanvas = memo(() => {
   };
 
   return (
-    <div className="h-full">
+    <div className="flex-1 h-full p-4">
       <ResponsiveGridLayout
         className="layout"
         layouts={layouts}
-        breakpoints={{ lg: 1200, md: 996, sm: 768 }}
+        breakpoints={{ lg: 1100, md: 900, sm: 768 }}
         cols={{ lg: 12, md: 8, sm: 6 }}
         rowHeight={150}
         margin={[16, 16]}

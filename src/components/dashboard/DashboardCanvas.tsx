@@ -1,6 +1,7 @@
 // Dashboard.tsx
 import React, { Suspense, memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { Responsive, WidthProvider, type Layout, type Layouts } from 'react-grid-layout';
+import { useSensorData } from '~/hooks/useSensorData';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 
@@ -23,6 +24,9 @@ interface WidgetWrapperProps {
 
 // Dashboard component
 const DashboardCanvas = memo(() => {
+  // Get sensor data for dynamic sensor card widgets
+  const { sensors } = useSensorData();
+
   // Widget types enum - memoized to prevent recreation
   const WIDGET_TYPES = useMemo(() => ({
     TABLE: 'TABLE',
@@ -31,6 +35,7 @@ const DashboardCanvas = memo(() => {
     HUMIDITY_CHART: 'HUMIDITY_CHART',
     MULTI_METRIC_CHART: 'MULTI_METRIC_CHART',
     METRICS_CARD: 'METRICS_CARD',
+    SENSOR_CARD: 'SENSOR_CARD',
   }), []);
 
   // Dynamic widget component imports for code splitting - memoized
@@ -42,6 +47,7 @@ const DashboardCanvas = memo(() => {
     [WIDGET_TYPES.CO2_CHART]: React.lazy(() => import('./widgets/wrappers/CO2ChartWrapper')),
     [WIDGET_TYPES.MULTI_METRIC_CHART]: React.lazy(() => import('./widgets/wrappers/MultiMetricChartWrapper')),
     [WIDGET_TYPES.METRICS_CARD]: React.lazy(() => import('./widgets/wrappers/MetricsCardWrapper')),
+    [WIDGET_TYPES.SENSOR_CARD]: React.lazy(() => import('./widgets/wrappers/SensorCardWrapper')),
     // [WIDGET_TYPES.HUMIDITY_CHART]: React.lazy(() => import('./widgets/charts/HumidityChart')),
   }), [WIDGET_TYPES]);
 
@@ -123,89 +129,166 @@ const DashboardCanvas = memo(() => {
   //   ],
   // };
 
-  // RESPONSIVE SQUARE LAYOUT - Table and chart positioned optimally for each screen size
-  const defaultLayouts = {
-    // Large screens (1100px+, 12 columns) - Side-by-side square widgets
-    lg: [
-      // Metrics widget - top full width (2 rows tall)
-      { i: 'widget-1', x: 0, y: 0, w: 2, h: 2, isResizable: false },
-      // Latest readings table - left square (perfect square ratio)
-      { i: 'widget-2', x: 0, y: 2, w: 6, h: 4, minW: 4, minH: 3 },
-      // CO2 & Temperature chart - right square (perfect square ratio)
-      { i: 'widget-3', x: 6, y: 2, w: 6, h: 4, minW: 4, minH: 3 },
-    ],
+  // Generate layouts dynamically based on sensors
+  const generateDefaultLayouts = useMemo(() => {
+    const sensorCount = sensors?.length ?? 0;
+    const sensorCardLayouts = {
+      lg: [] as Layout[],
+      md: [] as Layout[],
+      sm: [] as Layout[],
+    };
 
-    // Medium screens (900px-1099px, 8 columns) - Side-by-side square widgets
-    md: [
-      // Metrics widget - top full width (2 rows tall)
-      { i: 'widget-1', x: 0, y: 0, w: 2, h: 2, minW: 4, minH: 2, isResizable: false },
-      // Table - left square (perfect square ratio)
-      { i: 'widget-2', x: 0, y: 2, w: 4, h: 4, minW: 3, minH: 3 },
-      // Chart - right square (perfect square ratio)
-      { i: 'widget-3', x: 4, y: 2, w: 4, h: 4, minW: 3, minH: 3 },
-    ],
+    // Generate sensor card layouts (4 columns wide, 2 rows tall each on doubled grid)
+    for (let i = 0; i < sensorCount; i++) {
+      // lg: 24 columns, 6 sensors per row
+      sensorCardLayouts.lg.push({
+        i: `sensor-${i}`,
+        x: (i % 6) * 4,
+        y: Math.floor(i / 6) * 2,
+        w: 4,
+        h: 1,
+        minW: 4,
+        minH: 2,
+      });
 
-    // Small screens (768px-899px, 6 columns) - Vertical stacking
-    sm: [
-      // Metrics widget - top full width (2 rows tall)
-      { i: 'widget-1', x: 0, y: 0, w: 2, h: 2, minW: 4, minH: 2, isResizable: false },
-      // Chart first on mobile for quick trend viewing (wider, less tall)
-      { i: 'widget-3', x: 0, y: 2, w: 6, h: 3, minW: 4, minH: 2 },
-      // Table below on mobile (wider, accommodates more data)
-      { i: 'widget-2', x: 0, y: 5, w: 6, h: 4, minW: 4, minH: 3 },
-    ],
-  };
+      // md: 16 columns, 4 sensors per row
+      sensorCardLayouts.md.push({
+        i: `sensor-${i}`,
+        x: (i % 4) * 4,
+        y: Math.floor(i / 4) * 2,
+        w: 4,
+        h: 1,
+        minW: 4,
+        minH: 2,
+      });
 
-  // Initial widgets data
-  const initialWidgets = [
-    {
-      id: 'widget-1',
-      title: 'Metrics',
-      type: WIDGET_TYPES.METRICS_CARD,
-      config: {}
-    },
-    {
-      id: 'widget-2',
-      title: 'Latest Readings',
-      type: WIDGET_TYPES.TABLE,
-      config: { limit: 10 },
+      // sm: 12 columns, 2 sensors per row
+      sensorCardLayouts.sm.push({
+        i: `sensor-${i}`,
+        x: (i % 2) * 6,
+        y: Math.floor(i / 2) * 2,
+        w: 6,
+        h: 1,
+        minW: 4,
+        minH: 2,
+      });
+    }
+
+    const sensorRowsMd = Math.ceil(sensorCount / 4) * 2;
+    const sensorRowsSm = Math.ceil(sensorCount / 2) * 2;
+
+    return {
+      lg: [
+        ...sensorCardLayouts.lg,
+        // Metrics widget (left side, below sensor cards)
+        { i: 'widget-1', x: 0, y: 2, w: 4, h: 4, isResizable: false },
+        // CO2 chart (top-middle)
+        { i: 'widget-3', x: 4, y: 0, w: 10, h: 5, minW: 6, minH: 4 },
+        // Temperature chart (top-right)
+        { i: 'widget-4', x: 14, y: 0, w: 10, h: 5, minW: 6, minH: 4 },
+        // Latest readings table (bottom)
+        { i: 'widget-2', x: 0, y: 6, w: 14, h: 6, minW: 8, minH: 4, maxH: 6 },
+      ],
+      md: [
+        ...sensorCardLayouts.md,
+        // Metrics widget
+        { i: 'widget-1', x: 0, y: sensorRowsMd, w: 4, h: 4, isResizable: false },
+        // CO2 chart
+        { i: 'widget-3', x: 4, y: sensorRowsMd, w: 6, h: 5, minW: 4, minH: 4 },
+        // Temperature chart
+        { i: 'widget-4', x: 10, y: sensorRowsMd, w: 6, h: 5, minW: 4, minH: 4 },
+        // Table
+        { i: 'widget-2', x: 0, y: sensorRowsMd + 6, w: 12, h: 6, minW: 6, minH: 4, maxH: 6 },
+      ],
+      sm: [
+        ...sensorCardLayouts.sm,
+        // Metrics widget
+        { i: 'widget-1', x: 0, y: sensorRowsSm, w: 12, h: 4, isResizable: false },
+        // CO2 chart
+        { i: 'widget-3', x: 0, y: sensorRowsSm + 4, w: 12, h: 5, minW: 8, minH: 4 },
+        // Temperature chart
+        { i: 'widget-4', x: 0, y: sensorRowsSm + 10, w: 12, h: 5, minW: 8, minH: 4 },
+        // Table
+        { i: 'widget-2', x: 0, y: sensorRowsSm + 16, w: 12, h: 6, minW: 8, minH: 4, maxH: 6 },
+      ],
+    };
+  }, [sensors]);
+
+  // Generate initial widgets dynamically based on sensors
+  const generateInitialWidgets = useMemo(() => {
+    const sensorWidgets: Widget[] = (sensors ?? []).map((sensor, index) => ({
+      id: `sensor-${index}`,
+      title: sensor.currentLocation.name.toLowerCase(),
+      type: WIDGET_TYPES.SENSOR_CARD,
+      config: {},
       props: {
-        display: false,
+        sensorId: sensor.id,
       },
-    },
-    {
-      id: 'widget-3',
-      title: 'CO2 & Temperature Trends',
-      type: WIDGET_TYPES.MULTI_METRIC_CHART,
-      config: { timeRange: '24h' }
-    },
-  ];
+    }));
+
+    return [
+      ...sensorWidgets,
+      {
+        id: 'widget-1',
+        title: 'Metrics',
+        type: WIDGET_TYPES.METRICS_CARD,
+        config: {}
+      },
+      {
+        id: 'widget-2',
+        title: 'Latest Readings',
+        type: WIDGET_TYPES.TABLE,
+        config: { limit: 10 },
+        props: {
+          display: false,
+        },
+      },
+      {
+        id: 'widget-3',
+        title: 'CO2 Trends',
+        type: WIDGET_TYPES.CO2_CHART,
+        config: { timeRange: '24h' }
+      },
+      {
+        id: 'widget-4',
+        title: 'Temperature Trends',
+        type: WIDGET_TYPES.TEMPERATURE_CHART,
+        config: { timeRange: '24h' }
+      },
+    ];
+  }, [sensors, WIDGET_TYPES]);
 
   // State
-  const [layouts, setLayouts] = useState<Layouts>(defaultLayouts);
-  const [widgets, setWidgets] = useState<Widget[]>(initialWidgets);
+  const [layouts, setLayouts] = useState<Layouts>(generateDefaultLayouts);
+  const [widgets, setWidgets] = useState<Widget[]>(generateInitialWidgets);
 
-  // Load saved layouts on component mount
+  // Update widgets and layouts when sensors change
   useEffect(() => {
-    const savedLayouts = localStorage.getItem('dashboard-layouts');
-    const savedWidgets = localStorage.getItem('dashboard-widgets');
-    
-    if (savedLayouts) {
-      try {
-        setLayouts(JSON.parse(savedLayouts) as Layouts);
-      } catch (e) {
-        console.error('Error loading saved layouts:', e);
-      }
-    }
-    
-    if (savedWidgets) {
-      try {
-        setWidgets(JSON.parse(savedWidgets) as Widget[]);
-      } catch (e) {
-        console.error('Error loading saved widgets:', e);
-      }
-    }
-  }, []);
+    setWidgets(generateInitialWidgets);
+    setLayouts(generateDefaultLayouts);
+  }, [generateInitialWidgets, generateDefaultLayouts]);
+
+  // Load saved layouts on component mount (disabled to use dynamic layouts)
+  // useEffect(() => {
+  //   const savedLayouts = localStorage.getItem('dashboard-layouts');
+  //   const savedWidgets = localStorage.getItem('dashboard-widgets');
+  //
+  //   if (savedLayouts) {
+  //     try {
+  //       setLayouts(JSON.parse(savedLayouts) as Layouts);
+  //     } catch (e) {
+  //       console.error('Error loading saved layouts:', e);
+  //     }
+  //   }
+  //
+  //   if (savedWidgets) {
+  //     try {
+  //       setWidgets(JSON.parse(savedWidgets) as Widget[]);
+  //     } catch (e) {
+  //       console.error('Error loading saved widgets:', e);
+  //     }
+  //   }
+  // }, []);
 
   // Save layouts and widgets when they change
   useEffect(() => {
@@ -217,7 +300,7 @@ const DashboardCanvas = memo(() => {
   }, [widgets]);
 
   // Handle layout change - memoized callback
-  const handleLayoutChange = useCallback((currentLayout: Layout[], allLayouts: Layouts) => {
+  const handleLayoutChange = useCallback((_currentLayout: Layout[], allLayouts: Layouts) => {
     setLayouts(allLayouts);
   }, []);
 
@@ -271,19 +354,21 @@ const DashboardCanvas = memo(() => {
   };
 
   return (
-    <div className="flex-1 h-full p-4">
+    <div className="flex-1 p-4 overflow-auto">
       <ResponsiveGridLayout
         className="layout"
         layouts={layouts}
         breakpoints={{ lg: 1100, md: 900, sm: 768 }}
-        cols={{ lg: 12, md: 8, sm: 6 }}
-        rowHeight={150}
+        cols={{ lg: 24, md: 16, sm: 12 }}
+        rowHeight={75}
         margin={[16, 16]}
         onLayoutChange={handleLayoutChange}
         isDraggable={true}
         isResizable={true}
         resizeHandles={['se']}
         draggableHandle=".widget-drag-handle"
+        compactType="vertical"
+        preventCollision={false}
       >
         {widgets.map(widget => (
           <div key={widget.id}>

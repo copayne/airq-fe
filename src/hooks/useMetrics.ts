@@ -1,5 +1,6 @@
 import { useQuery } from '@apollo/client';
 import { GET_METRICS } from '~/graphql/Metrics';
+import { env } from '~/env.js';
 
 export interface Metrics {
   co21dayAvg: number | null;
@@ -20,8 +21,8 @@ export function useMetrics() {
   const { data, loading, error, refetch } = useQuery<MetricsData>(GET_METRICS, {
     errorPolicy: 'all',
     notifyOnNetworkStatusChange: true,
-    fetchPolicy: 'cache-first', // Use cache first, only fetch if cache is empty
-    pollInterval: 60000, // Refresh every minute
+    fetchPolicy: 'cache-and-network', // Show cached data immediately, fetch fresh data in background
+    pollInterval: env.NEXT_PUBLIC_POLL_INTERVAL_MS, // Poll at configured interval
   });
 
   return {

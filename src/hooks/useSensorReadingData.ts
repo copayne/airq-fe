@@ -59,10 +59,10 @@ export const useSensorReadingData = () => {
 
   const { loading, error, data, refetch }: QueryResult<GetFilteredSensorReadingsData> = useQuery(GET_FILTERED_SENSOR_READINGS, {
     variables: queryVariables,
-    fetchPolicy: 'cache-first', // More efficient caching strategy
+    fetchPolicy: 'cache-and-network', // Show cached data immediately, fetch fresh data in background
     notifyOnNetworkStatusChange: true,
     errorPolicy: 'all', // Show partial data on errors
-    pollInterval: env.NEXT_PUBLIC_POLL_INTERVAL_MS, // Poll for real-time updates
+    pollInterval: env.NEXT_PUBLIC_POLL_INTERVAL_MS, // Poll at configured interval (10 minutes)
   });
 
   if (!isFetched && !!data?.filteredSensorReadings?.length) {

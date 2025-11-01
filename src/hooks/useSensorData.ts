@@ -49,7 +49,7 @@ export const useSensorData = () => {
     variables: {
       includeLastReading: true, // Can be made configurable
     },
-    fetchPolicy: 'cache-first', // More efficient caching strategy
+    fetchPolicy: 'cache-and-network', // Show cached data immediately, fetch fresh data in background
     notifyOnNetworkStatusChange: true,
     errorPolicy: 'all', // Show partial data on errors
   });

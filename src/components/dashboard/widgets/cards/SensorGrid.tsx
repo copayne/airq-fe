@@ -22,12 +22,13 @@ const SensorGrid: React.FC = memo(() => {
 
   return (
     <Suspense fallback={<div>Loading Sensors...</div>}>
-      <div id="sensor-grid" className="flex flex-col flex-wrap">
+      <div id="sensor-grid" className="w-full md:w-80 md:min-w-80 flex flex-row md:flex-col gap-4 p-4 pt-8 overflow-x-auto md:overflow-x-visible">
         {sensors?.map(sensor => (
-          <SensorCard
-            key={sensor.id}
-            sensorId={sensor.id}
-          />
+          <div key={sensor.id} className="h-36 w-64 md:w-auto flex-shrink-0">
+            <SensorCard
+              sensorId={sensor.id}
+            />
+          </div>
         ))}
       </div>
     </Suspense>

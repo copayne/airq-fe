@@ -96,7 +96,7 @@ const SensorReadingTable = memo(() => {
           {table.getHeaderGroups().map(headerGroup => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map(header => (
-                <th key={header.id} className="sticky top-0 bg-airq-background text-airq-dark p-2 text-left">
+                <th key={header.id} className="sticky top-0 bg-airq-background text-airq-dark p-2 text-left text-sm">
                   {flexRender(
                     header.column.columnDef.header,
                     header.getContext()
@@ -110,7 +110,7 @@ const SensorReadingTable = memo(() => {
           {table.getRowModel().rows.map((row, i) => (
             <tr key={row.id} className={`${i % 2 ? 'bg-airq-background/20' : 'bg-airq-light'}`}>
               {row.getVisibleCells().map(cell => (
-                <td key={cell.id} className="p-2 border-t">
+                <td key={cell.id} className="p-1 border-t text-xs">
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>
               ))}

@@ -36,6 +36,7 @@ const DashboardCanvas = memo(() => {
     MULTI_METRIC_CHART: 'MULTI_METRIC_CHART',
     METRICS_CARD: 'METRICS_CARD',
     SENSOR_CARD: 'SENSOR_CARD',
+    RING_SNAPSHOT: 'RING_SNAPSHOT',
   }), []);
 
   // Dynamic widget component imports for code splitting - memoized
@@ -48,6 +49,7 @@ const DashboardCanvas = memo(() => {
     [WIDGET_TYPES.MULTI_METRIC_CHART]: React.lazy(() => import('./widgets/wrappers/MultiMetricChartWrapper')),
     [WIDGET_TYPES.METRICS_CARD]: React.lazy(() => import('./widgets/wrappers/MetricsCardWrapper')),
     [WIDGET_TYPES.SENSOR_CARD]: React.lazy(() => import('./widgets/wrappers/SensorCardWrapper')),
+    [WIDGET_TYPES.RING_SNAPSHOT]: React.lazy(() => import('./widgets/wrappers/RingSnapshotWrapper')),
     // [WIDGET_TYPES.HUMIDITY_CHART]: React.lazy(() => import('./widgets/charts/HumidityChart')),
   }), [WIDGET_TYPES]);
 
@@ -188,6 +190,8 @@ const DashboardCanvas = memo(() => {
         { i: 'widget-4', x: 14, y: 0, w: 10, h: 5, minW: 6, minH: 4 },
         // Latest readings table (bottom)
         { i: 'widget-2', x: 0, y: 6, w: 14, h: 6, minW: 8, minH: 4, maxH: 6 },
+        // Ring snapshot (right side, below temperature chart)
+        { i: 'widget-5', x: 14, y: 6, w: 10, h: 6, minW: 6, minH: 4 },
       ],
       md: [
         ...sensorCardLayouts.md,
@@ -199,6 +203,8 @@ const DashboardCanvas = memo(() => {
         { i: 'widget-4', x: 10, y: sensorRowsMd, w: 6, h: 5, minW: 4, minH: 4 },
         // Table
         { i: 'widget-2', x: 0, y: sensorRowsMd + 6, w: 12, h: 6, minW: 6, minH: 4, maxH: 6 },
+        // Ring snapshot (below temperature chart)
+        { i: 'widget-5', x: 8, y: sensorRowsMd + 6, w: 8, h: 6, minW: 6, minH: 4 },
       ],
       sm: [
         ...sensorCardLayouts.sm,
@@ -210,6 +216,8 @@ const DashboardCanvas = memo(() => {
         { i: 'widget-4', x: 0, y: sensorRowsSm + 10, w: 12, h: 5, minW: 8, minH: 4 },
         // Table
         { i: 'widget-2', x: 0, y: sensorRowsSm + 16, w: 12, h: 6, minW: 8, minH: 4, maxH: 6 },
+        // Ring snapshot (below table)
+        { i: 'widget-5', x: 0, y: sensorRowsSm + 22, w: 12, h: 6, minW: 8, minH: 4 },
       ],
     };
   }, [sensors]);
@@ -254,6 +262,13 @@ const DashboardCanvas = memo(() => {
         title: 'Temperature Trends',
         type: WIDGET_TYPES.TEMPERATURE_CHART,
         config: { timeRange: '24h' }
+      },
+      {
+        id: 'widget-5',
+        title: 'Ring Camera',
+        type: WIDGET_TYPES.RING_SNAPSHOT,
+        config: {},
+        props: {},
       },
     ];
   }, [sensors, WIDGET_TYPES]);

@@ -1,13 +1,14 @@
 import React from 'react';
 import SensorCard from '../cards/SensorCard';
+import { type Sensor } from '~/hooks/useSensorData';
 
 interface SensorCardWrapperProps {
-  sensorId?: string;
+  sensor: Sensor;
   [key: string]: unknown;
 }
 
-const SensorCardWrapper: React.FC<SensorCardWrapperProps> = ({ sensorId = "1", ..._otherProps }) => {
-  return <SensorCard sensorId={sensorId} />;
+const SensorCardWrapper: React.FC<SensorCardWrapperProps> = ({ sensor, ..._otherProps }) => {
+  return <SensorCard sensor={sensor} />;
 };
 
 export default SensorCardWrapper;

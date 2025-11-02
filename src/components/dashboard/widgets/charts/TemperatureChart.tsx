@@ -58,6 +58,16 @@ const TemperatureChart: React.FC = memo(() => {
   const options = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
+    animation: {
+      duration: 0, // Disable all animations
+    },
+    transitions: {
+      active: {
+        animation: {
+          duration: 0
+        }
+      }
+    },
     plugins: {
       legend: {
         display: false
@@ -90,7 +100,9 @@ const TemperatureChart: React.FC = memo(() => {
     }
   }), []);
 
-  if (loading) {
+  // Only show loading spinner if we don't have any data yet
+  // This prevents the chart from flickering during re-renders or background refetches
+  if (loading && !sensorReadings?.length) {
     return (
       <div className="h-full flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-airq-contrast"></div>
@@ -98,7 +110,8 @@ const TemperatureChart: React.FC = memo(() => {
     );
   }
 
-  if (error) {
+  // Only show error if we don't have any cached data
+  if (error && !sensorReadings?.length) {
     return (
       <div className="h-full flex items-center justify-center text-airq-tertiary">
         Error loading temperature data
@@ -108,7 +121,11 @@ const TemperatureChart: React.FC = memo(() => {
 
   return (
     <div className="h-full p-4">
-      <Line data={chartData} options={options} />
+      <Line
+        data={chartData}
+        options={options}
+        redraw={false}
+      />
     </div>
   );
 });

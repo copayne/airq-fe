@@ -4,11 +4,11 @@ import { useRingSnapshot } from '~/hooks/useRingSnapshot';
 import { env } from '~/env.js';
 
 interface RingSnapshotCardProps {
-  deviceId?: string;
+  cameraId?: number;
 }
 
-const RingSnapshotCard: React.FC<RingSnapshotCardProps> = memo(({ deviceId }) => {
-  const { snapshot, loading, error, capturing, captureSnapshot } = useRingSnapshot(deviceId);
+const RingSnapshotCard: React.FC<RingSnapshotCardProps> = memo(({ cameraId }) => {
+  const { snapshot, loading, error, capturing, captureSnapshot } = useRingSnapshot(cameraId);
 
   // Extract backend base URL from GraphQL endpoint
   const backendBaseUrl = env.NEXT_PUBLIC_GRAPHQL_ENDPOINT.replace('/graphql', '');
@@ -80,7 +80,7 @@ const RingSnapshotCard: React.FC<RingSnapshotCardProps> = memo(({ deviceId }) =>
         )}
         <Image
           src={imageUrl}
-          alt={`Ring camera snapshot from ${snapshot.deviceName ?? snapshot.deviceId}`}
+          alt={`Ring camera snapshot from ${snapshot.camera.name}`}
           fill
           unoptimized={true}
           className="object-contain p-2"
@@ -90,7 +90,7 @@ const RingSnapshotCard: React.FC<RingSnapshotCardProps> = memo(({ deviceId }) =>
       <div className="border-t-[1px] border-airq-dark bg-airq-light p-3 flex justify-between items-center">
         <div className="flex flex-col">
           <p className="text-xs text-airq-dark/75 mb-0.5">
-            {snapshot.deviceName ?? snapshot.deviceId}
+            {snapshot.camera.name}
           </p>
           <p className="text-xs text-airq-dark font-medium">
             {formatTimestamp(snapshot.captureTimestamp)}

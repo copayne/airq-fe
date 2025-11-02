@@ -1,14 +1,20 @@
 import { useQuery, useMutation } from '@apollo/client';
 import { GET_LATEST_RING_SNAPSHOT, CAPTURE_RING_SNAPSHOT } from '~/graphql/RingSnapshot';
 
-export interface RingSnapshot {
+export interface Camera {
   id: string;
   deviceId: string;
-  deviceName: string | null;
+  name: string;
+  location: string | null;
+}
+
+export interface RingSnapshot {
+  id: string;
   imageUrl: string;
   captureTimestamp: string;
   fileSize: number | null;
   createdAt: string;
+  camera: Camera;
 }
 
 interface LatestRingSnapshotData {
@@ -24,14 +30,14 @@ interface CaptureRingSnapshotData {
 }
 
 interface CaptureRingSnapshotVariables {
-  deviceId?: string;
+  cameraId?: number;
 }
 
-export function useRingSnapshot(deviceId?: string) {
+export function useRingSnapshot(cameraId?: number) {
   const { data, loading, error, refetch } = useQuery<LatestRingSnapshotData>(
     GET_LATEST_RING_SNAPSHOT,
     {
-      variables: deviceId ? { deviceId } : {},
+      variables: cameraId ? { cameraId } : {},
       errorPolicy: 'all',
       notifyOnNetworkStatusChange: true,
       fetchPolicy: 'cache-and-network',
@@ -51,7 +57,7 @@ export function useRingSnapshot(deviceId?: string) {
 
   const captureSnapshot = async () => {
     try {
-      await captureMutation({ variables: deviceId ? { deviceId } : {} });
+      await captureMutation({ variables: cameraId ? { cameraId } : {} });
     } catch (err) {
       console.error('Error capturing snapshot:', err);
     }

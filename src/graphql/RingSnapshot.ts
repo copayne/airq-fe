@@ -1,46 +1,76 @@
 import { gql } from '@apollo/client';
 
 export const GET_LATEST_RING_SNAPSHOT = gql`
-  query GetLatestRingSnapshot($deviceId: String) {
-    latestRingSnapshot(deviceId: $deviceId) {
+  query GetLatestRingSnapshot($cameraId: Int) {
+    latestRingSnapshot(cameraId: $cameraId) {
       id
-      deviceId
-      deviceName
       imageUrl
       captureTimestamp
       fileSize
       createdAt
+      camera {
+        id
+        deviceId
+        name
+        location
+      }
     }
   }
 `;
 
 export const GET_RING_SNAPSHOTS = gql`
-  query GetRingSnapshots($deviceId: String, $limit: Int) {
-    ringSnapshots(deviceId: $deviceId, limit: $limit) {
+  query GetRingSnapshots($cameraId: Int, $limit: Int) {
+    ringSnapshots(cameraId: $cameraId, limit: $limit) {
       id
-      deviceId
-      deviceName
       imageUrl
       captureTimestamp
       fileSize
       createdAt
+      camera {
+        id
+        deviceId
+        name
+        location
+      }
     }
   }
 `;
 
 export const CAPTURE_RING_SNAPSHOT = gql`
-  mutation CaptureRingSnapshot($deviceId: String) {
-    captureRingSnapshot(deviceId: $deviceId) {
+  mutation CaptureRingSnapshot($cameraId: Int) {
+    captureRingSnapshot(cameraId: $cameraId) {
       success
       message
       snapshot {
         id
-        deviceId
-        deviceName
         imageUrl
         captureTimestamp
         fileSize
         createdAt
+        camera {
+          id
+          deviceId
+          name
+          location
+        }
+      }
+    }
+  }
+`;
+
+export const GET_CAMERAS = gql`
+  query GetCameras {
+    cameras {
+      id
+      deviceId
+      name
+      location
+      model
+      isActive
+      latestSnapshot {
+        id
+        captureTimestamp
+        imageUrl
       }
     }
   }

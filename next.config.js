@@ -12,7 +12,7 @@ const withBundleAnalyzer = bundleAnalyzer({
 
 /** @type {import("next").NextConfig} */
 const config = {
-  reactStrictMode: true,
+  reactStrictMode: false,
 
   /**
    * If you are using `appDir` then you must comment the below `i18n` config out.
@@ -24,13 +24,24 @@ const config = {
     defaultLocale: "en",
   },
   transpilePackages: ["geist"],
-  
+
   experimental: {
     optimizePackageImports: ['lucide-react'],
   },
-  
+
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
+  },
+
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'http',
+        hostname: 'mini',
+        port: '5000',
+        pathname: '/api/ring-snapshots/**',
+      },
+    ],
   },
 };
 

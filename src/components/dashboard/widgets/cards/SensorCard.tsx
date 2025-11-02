@@ -1,11 +1,10 @@
 import React, {
   memo,
-  useMemo,
 } from 'react';
-import { type Sensor, useSensorData } from '~/hooks/useSensorData';
+import { type Sensor } from '~/hooks/useSensorData';
 
 interface SensorCardProps {
-  sensorId: string
+  sensor: Sensor;
 }
 
 const StatusIndicator = ({ isActive }: { isActive: boolean }) => (
@@ -53,11 +52,7 @@ const getSensorDetails = (sensor: Sensor | undefined) => {
   }
 }
 
-const SensorCard: React.FC<SensorCardProps> = memo(({ sensorId }) => {
-  const {
-    sensors,
-  } = useSensorData();
-  const sensor = useMemo(() => sensors?.find(s => s.id === sensorId), [sensorId, sensors]);
+const SensorCard: React.FC<SensorCardProps> = memo(({ sensor }) => {
   const {
     co2,
     humidity,

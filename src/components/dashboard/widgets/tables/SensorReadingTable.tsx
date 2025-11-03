@@ -70,10 +70,12 @@ const SensorReadingTable = memo(() => {
   const data = useMemo(() => {
     if (!sensorReadings) return [];
     return sensorReadings.map(reading => ({
-      co2Ppm: reading.co2Reading.co2Ppm.toFixed(0),
-      locationName: reading.location.name,
-      temperatureFahrenheit: ((reading.temperatureReading.temperatureCelsius* 9/5) + 32).toFixed(1),
-      humidityPercentage: reading.humidityReading.humidityPercentage.toFixed(0),
+      co2Ppm: reading.co2Reading?.co2Ppm?.toFixed(0) ?? '--',
+      locationName: reading.location?.name ?? '--',
+      temperatureFahrenheit: reading.temperatureReading?.temperatureCelsius
+        ? ((reading.temperatureReading.temperatureCelsius * 9/5) + 32).toFixed(1)
+        : '--',
+      humidityPercentage: reading.humidityReading?.humidityPercentage?.toFixed(0) ?? '--',
       readingTime: dateFormatter.format(new Date(`${reading.readingTime}Z`)),
     }));
   }, [sensorReadings, dateFormatter]);

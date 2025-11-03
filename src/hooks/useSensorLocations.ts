@@ -1,5 +1,6 @@
 import { useQuery } from '@apollo/client';
 import { GET_SENSOR_LOCATIONS } from '~/graphql/SensorLocation';
+import { DEFAULT_QUERY_OPTIONS } from '~/lib/apolloDefaults';
 
 interface SensorLocation {
   id: string;
@@ -28,8 +29,7 @@ interface SensorLocationsData {
 
 export function useSensorLocations() {
   const { data, loading, error, refetch } = useQuery<SensorLocationsData>(GET_SENSOR_LOCATIONS, {
-    errorPolicy: 'all', // Return partial data with errors
-    notifyOnNetworkStatusChange: true,
+    ...DEFAULT_QUERY_OPTIONS,
   });
 
   return {

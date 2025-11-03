@@ -1,5 +1,6 @@
 import { useQuery } from '@apollo/client';
 import { GET_ERROR_LOGS } from '~/graphql/ErrorLog';
+import { DEFAULT_QUERY_OPTIONS } from '~/lib/apolloDefaults';
 
 interface ErrorLog {
   id: string;
@@ -15,8 +16,7 @@ interface ErrorLogsData {
 
 export function useErrorLogs() {
   const { data, loading, error, refetch } = useQuery<ErrorLogsData>(GET_ERROR_LOGS, {
-    errorPolicy: 'all', // Return partial data with errors
-    notifyOnNetworkStatusChange: true,
+    ...DEFAULT_QUERY_OPTIONS,
   });
 
   return {

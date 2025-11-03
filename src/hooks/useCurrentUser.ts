@@ -3,6 +3,7 @@ import { GET_ME } from '~/graphql/auth';
 import { useAuth } from '~/context/AuthContext';
 import type { User } from '~/types/auth';
 import { useEffect } from 'react';
+import { DEFAULT_QUERY_OPTIONS } from '~/lib/apolloDefaults';
 
 interface CurrentUserData {
   me: User | null;
@@ -13,8 +14,7 @@ export function useCurrentUser() {
 
   const { data, loading, error, refetch } = useQuery<CurrentUserData>(GET_ME, {
     skip: !isAuthenticated || !token,
-    errorPolicy: 'all',
-    notifyOnNetworkStatusChange: true,
+    ...DEFAULT_QUERY_OPTIONS,
     onError: (error) => {
       console.error('Current user query error:', error);
       

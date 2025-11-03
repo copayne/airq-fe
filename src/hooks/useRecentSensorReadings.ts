@@ -1,42 +1,11 @@
 import { useQuery } from '@apollo/client';
 import { GET_SENSOR_READINGS } from '~/graphql/SensorReading';
-
-interface SensorReading {
-  id: string;
-  readingTime: string;
-  isSuccess?: boolean;
-  sensor: {
-    id: string;
-    name: string;
-    model: string;
-    isActive: boolean;
-    installationDate: string;
-  };
-  location?: {
-    id: string;
-    name: string;
-    description?: string;
-  };
-  co2Reading?: {
-    co2Ppm: number;
-  };
-  temperatureReading?: {
-    temperatureCelsius: number;
-  };
-  humidityReading?: {
-    humidityPercentage: number;
-  };
-}
-
-interface RecentSensorReadingsData {
-  sensorReadings: SensorReading[];
-}
+import type { RecentSensorReadingsData } from '~/types/sensors';
+import { CACHE_AND_NETWORK_OPTIONS } from '~/lib/apolloDefaults';
 
 export function useRecentSensorReadings() {
   const { data, loading, error, refetch } = useQuery<RecentSensorReadingsData>(GET_SENSOR_READINGS, {
-    errorPolicy: 'all', // Return partial data with errors
-    notifyOnNetworkStatusChange: true,
-    fetchPolicy: 'cache-and-network', // Always fetch fresh data but use cache first
+    ...CACHE_AND_NETWORK_OPTIONS,
   });
 
   return {

@@ -4,32 +4,8 @@ import { GET_FILTERED_SENSOR_READINGS } from '../graphql/SensorReading';
 import { useSensorDataContext, type SensorDataCriteria } from '../context/SensorDataContext';
 import { useDebouncedRefetch } from './useDebouncedRefetch';
 import { env } from '~/env.js';
-
-interface SensorReading {
-  id: string;
-  readingTime: string;
-  sensor: {
-    id: string;
-    name: string;
-  };
-  location: {
-    id: string;
-    name: string;
-  };
-  co2Reading: {
-    co2Ppm: number;
-  };
-  temperatureReading: {
-    temperatureCelsius: number;
-  };
-  humidityReading: {
-    humidityPercentage: number;
-  };
-}
-
-interface GetFilteredSensorReadingsData {
-  filteredSensorReadings: SensorReading[];
-}
+import type { GetFilteredSensorReadingsData } from '~/types/sensors';
+import { CACHE_AND_NETWORK_OPTIONS } from '~/lib/apolloDefaults';
 
 export const useSensorReadingData = () => {
   const {
@@ -59,9 +35,7 @@ export const useSensorReadingData = () => {
 
   const { loading, error, data, refetch }: QueryResult<GetFilteredSensorReadingsData> = useQuery(GET_FILTERED_SENSOR_READINGS, {
     variables: queryVariables,
-    fetchPolicy: 'cache-and-network', // Show cached data immediately, fetch fresh data in background
-    notifyOnNetworkStatusChange: true,
-    errorPolicy: 'all', // Show partial data on errors
+    ...CACHE_AND_NETWORK_OPTIONS,
     pollInterval: env.NEXT_PUBLIC_POLL_INTERVAL_MS, // Poll at configured interval (10 minutes)
   });
 

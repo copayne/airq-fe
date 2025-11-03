@@ -1,11 +1,8 @@
 import { useQuery, type QueryResult } from '@apollo/client';
 import { useMemo } from 'react';
 import { GET_SENSORS, GET_SENSORS_BASIC } from '../graphql/Sensor';
-import { type Sensor } from './useSensorData';
-
-interface GetSensorsData {
-  sensors: Sensor[];
-}
+import type { GetSensorsData } from '~/types/sensors';
+import { DEFAULT_QUERY_OPTIONS } from '~/lib/apolloDefaults';
 
 interface UseSensorDataOptions {
   includeLastReading?: boolean;
@@ -22,7 +19,7 @@ export const useSensorDataOptimized = (options: UseSensorDataOptions = {}) => {
 
   // Choose the appropriate query based on requirements
   const query = includeLastReading ? GET_SENSORS : GET_SENSORS_BASIC;
-  
+
   const queryVariables = useMemo(() => {
     if (includeLastReading) {
       return { includeLastReading: true };
@@ -37,9 +34,8 @@ export const useSensorDataOptimized = (options: UseSensorDataOptions = {}) => {
     refetch,
   }: QueryResult<GetSensorsData> = useQuery(query, {
     variables: queryVariables,
+    ...DEFAULT_QUERY_OPTIONS,
     fetchPolicy,
-    notifyOnNetworkStatusChange: true,
-    errorPolicy: 'all', // Show partial data on errors
     pollInterval,
   });
 

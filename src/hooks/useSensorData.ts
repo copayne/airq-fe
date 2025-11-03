@@ -1,44 +1,8 @@
 import { useQuery, type QueryResult } from '@apollo/client';
 import { useMemo } from 'react';
 import { GET_SENSORS } from '../graphql/Sensor';
-
-export interface Sensor {
-  id: string;
-  model: string;
-  name: string;
-  installationDate: Date;
-  isActive: boolean;
-  currentLocation: {
-    id: string;
-    name: string;
-  }
-  lastReading: {
-    id: string;
-    readingTime: string;
-    sensor: {
-      id: string;
-      name: string;
-    };
-    location: {
-      id: string;
-      name: string;
-    };
-    co2Reading: {
-      co2Ppm: number;
-    };
-    temperatureReading: {
-      temperatureCelsius: number;
-    };
-    humidityReading: {
-      humidityPercentage: number;
-    };
-    isSuccess: boolean;
-  }
-}
-
-interface GetSensorsData {
-  sensors: Sensor[];
-}
+import type { GetSensorsData } from '~/types/sensors';
+import { CACHE_AND_NETWORK_OPTIONS } from '~/lib/apolloDefaults';
 
 export const useSensorData = () => {
   const {
@@ -49,9 +13,7 @@ export const useSensorData = () => {
     variables: {
       includeLastReading: true, // Can be made configurable
     },
-    fetchPolicy: 'cache-and-network', // Show cached data immediately, fetch fresh data in background
-    notifyOnNetworkStatusChange: true,
-    errorPolicy: 'all', // Show partial data on errors
+    ...CACHE_AND_NETWORK_OPTIONS,
   });
 
   return useMemo(() => ({

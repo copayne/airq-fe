@@ -1,5 +1,6 @@
 import { useQuery, useMutation } from '@apollo/client';
 import { GET_LATEST_RING_SNAPSHOT, CAPTURE_RING_SNAPSHOT } from '~/graphql/RingSnapshot';
+import { CACHE_AND_NETWORK_OPTIONS, DEFAULT_QUERY_OPTIONS } from '~/lib/apolloDefaults';
 
 export interface Camera {
   id: string;
@@ -38,9 +39,7 @@ export function useRingSnapshot(cameraId?: number) {
     GET_LATEST_RING_SNAPSHOT,
     {
       variables: cameraId ? { cameraId } : {},
-      errorPolicy: 'all',
-      notifyOnNetworkStatusChange: true,
-      fetchPolicy: 'cache-and-network',
+      ...CACHE_AND_NETWORK_OPTIONS,
       pollInterval: 60000, // Poll every 60 seconds
     }
   );
@@ -49,7 +48,7 @@ export function useRingSnapshot(cameraId?: number) {
     CaptureRingSnapshotData,
     CaptureRingSnapshotVariables
   >(CAPTURE_RING_SNAPSHOT, {
-    errorPolicy: 'all',
+    errorPolicy: DEFAULT_QUERY_OPTIONS.errorPolicy,
     onCompleted: () => {
       void refetch();
     },

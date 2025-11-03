@@ -31,9 +31,9 @@ const DashboardCanvas = memo(() => {
   // Widget components with lazy loading - consolidated for simplicity
   const WIDGETS = useMemo(() => ({
     TABLE: React.lazy(() => import('./widgets/tables/SensorReadingTable')),
-    TEMPERATURE_CHART: React.lazy(() => import('./widgets/charts/TemperatureChart')),
-    CO2_CHART: React.lazy(() => import('./widgets/charts/CO2Chart')),
-    MULTI_METRIC_CHART: React.lazy(() => import('./widgets/charts/MultiMetricChart')),
+    TEMPERATURE_CHART: React.lazy(() => import('./widgets/charts/MetricChart').then(m => ({ default: m.TemperatureChart }))),
+    CO2_CHART: React.lazy(() => import('./widgets/charts/MetricChart').then(m => ({ default: m.CO2Chart }))),
+    MULTI_METRIC_CHART: React.lazy(() => import('./widgets/charts/MetricChart').then(m => ({ default: m.MultiMetricChart }))),
     METRICS_CARD: React.lazy(() => import('./widgets/cards/MetricsCard')),
     SENSOR_CARD: React.lazy(() => import('./widgets/cards/SensorCard')),
     RING_SNAPSHOT: React.lazy(() => import('./widgets/cards/RingSnapshotCard')),

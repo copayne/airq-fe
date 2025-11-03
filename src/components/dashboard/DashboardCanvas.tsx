@@ -26,7 +26,8 @@ interface WidgetWrapperProps {
 // Dashboard component
 const DashboardCanvas = memo(() => {
   // Get sensor data for dynamic sensor card widgets
-  const { sensors } = useSensors();
+  // Use cache-first to avoid refetching on layout changes
+  const { sensors } = useSensors({ fetchPolicy: 'cache-first' });
 
   // Widget components with lazy loading - consolidated for simplicity
   const WIDGETS = useMemo(() => ({

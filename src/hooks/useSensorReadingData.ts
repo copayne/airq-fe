@@ -5,7 +5,7 @@ import { useSensorDataContext, type SensorDataCriteria } from '../context/Sensor
 import { useDebouncedRefetch } from './useDebouncedRefetch';
 import { env } from '~/env.js';
 import type { GetFilteredSensorReadingsData } from '~/types/sensors';
-import { CACHE_AND_NETWORK_OPTIONS } from '~/lib/apolloDefaults';
+import { CACHE_FIRST_OPTIONS } from '~/lib/apolloDefaults';
 
 export const useSensorReadingData = () => {
   const {
@@ -35,7 +35,7 @@ export const useSensorReadingData = () => {
 
   const { loading, error, data, refetch }: QueryResult<GetFilteredSensorReadingsData> = useQuery(GET_FILTERED_SENSOR_READINGS, {
     variables: queryVariables,
-    ...CACHE_AND_NETWORK_OPTIONS,
+    ...CACHE_FIRST_OPTIONS,
     pollInterval: env.NEXT_PUBLIC_POLL_INTERVAL_MS, // Poll at configured interval (10 minutes)
   });
 

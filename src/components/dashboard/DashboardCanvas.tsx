@@ -1,7 +1,7 @@
 // Dashboard.tsx
 import React, { Suspense, memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { Responsive, WidthProvider, type Layout, type Layouts } from 'react-grid-layout';
-import { useSensorData } from '~/hooks/useSensorData';
+import { useSensors } from '~/hooks/useSensors';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 
@@ -26,7 +26,7 @@ interface WidgetWrapperProps {
 // Dashboard component
 const DashboardCanvas = memo(() => {
   // Get sensor data for dynamic sensor card widgets
-  const { sensors } = useSensorData();
+  const { sensors } = useSensors();
 
   // Widget components with lazy loading - consolidated for simplicity
   const WIDGETS = useMemo(() => ({
@@ -303,28 +303,6 @@ const DashboardCanvas = memo(() => {
       return newLayouts;
     });
   }, [generateInitialWidgets, generateDefaultLayouts]);
-
-  // Load saved layouts on component mount (disabled to use dynamic layouts)
-  // useEffect(() => {
-  //   const savedLayouts = localStorage.getItem('dashboard-layouts');
-  //   const savedWidgets = localStorage.getItem('dashboard-widgets');
-  //
-  //   if (savedLayouts) {
-  //     try {
-  //       setLayouts(JSON.parse(savedLayouts) as Layouts);
-  //     } catch (e) {
-  //       console.error('Error loading saved layouts:', e);
-  //     }
-  //   }
-  //
-  //   if (savedWidgets) {
-  //     try {
-  //       setWidgets(JSON.parse(savedWidgets) as Widget[]);
-  //     } catch (e) {
-  //       console.error('Error loading saved widgets:', e);
-  //     }
-  //   }
-  // }, []);
 
   // Save layouts and widgets when they change
   useEffect(() => {

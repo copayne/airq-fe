@@ -31,9 +31,8 @@ export function useLogin() {
   
   const [loginMutation, { loading, error }] = useMutation<LoginMutationData>(LOGIN_USER, {
     onCompleted: (data) => {
-      console.log('in login twice?')
       const { success, message, token, user } = data.loginUser;
-      
+
       if (success && token && user) {
         login(token, user);
       } else {

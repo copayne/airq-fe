@@ -2,22 +2,31 @@ import { useQuery, type QueryResult } from '@apollo/client';
 import { useMemo } from 'react';
 import { GET_SENSORS, GET_SENSORS_BASIC } from '../graphql/Sensor';
 import type { GetSensorsData } from '~/types/sensors';
-import { DEFAULT_QUERY_OPTIONS } from '~/lib/apolloDefaults';
+import { DEFAULT_QUERY_OPTIONS, CACHE_AND_NETWORK_OPTIONS } from '~/lib/apolloDefaults';
 
-interface UseSensorDataOptions {
+export interface UseSensorsOptions {
   includeLastReading?: boolean;
   pollInterval?: number;
   fetchPolicy?: 'cache-first' | 'cache-and-network' | 'network-only' | 'cache-only';
 }
 
-export const useSensorDataOptimized = (options: UseSensorDataOptions = {}) => {
+/**
+ * Unified hook for fetching sensor data with flexible options
+ * Replaces both useSensorData and useSensorDataOptimized
+ *
+ * @param options Configuration options for the query
+ * @param options.includeLastReading Whether to include the last sensor reading (default: true)
+ * @param options.pollInterval Polling interval in milliseconds (default: 0 - no polling)
+ * @param options.fetchPolicy Apollo fetch policy (default: 'cache-and-network')
+ */
+export const useSensors = (options: UseSensorsOptions = {}) => {
   const {
     includeLastReading = true,
-    pollInterval = 0, // No polling by default
-    fetchPolicy = 'cache-first',
+    pollInterval = 0,
+    fetchPolicy = 'cache-and-network',
   } = options;
 
-  // Choose the appropriate query based on requirements
+  // Choose the appropriate query based on whether we need last reading data
   const query = includeLastReading ? GET_SENSORS : GET_SENSORS_BASIC;
 
   const queryVariables = useMemo(() => {
@@ -27,6 +36,11 @@ export const useSensorDataOptimized = (options: UseSensorDataOptions = {}) => {
     return undefined;
   }, [includeLastReading]);
 
+  // Use appropriate default options based on fetch policy
+  const baseOptions = fetchPolicy === 'cache-and-network'
+    ? CACHE_AND_NETWORK_OPTIONS
+    : DEFAULT_QUERY_OPTIONS;
+
   const {
     loading,
     error,
@@ -34,7 +48,7 @@ export const useSensorDataOptimized = (options: UseSensorDataOptions = {}) => {
     refetch,
   }: QueryResult<GetSensorsData> = useQuery(query, {
     variables: queryVariables,
-    ...DEFAULT_QUERY_OPTIONS,
+    ...baseOptions,
     fetchPolicy,
     pollInterval,
   });

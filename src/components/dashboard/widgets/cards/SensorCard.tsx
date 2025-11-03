@@ -12,15 +12,6 @@ interface SensorCardProps {
   sensor: Sensor;
 }
 
-const StatusIndicator = ({ isActive }: { isActive: boolean }) => (
-  <div
-    className={`w-[10px] h-[10px] rounded-full mr-3 relative border-airq-dark border-[1px] ${
-      isActive ? 'bg-airq-primary' : 'bg-airq-tertiary'
-    }`}
-    title={isActive ? 'online' : 'offline'}
-  />
-);
-  
 const getSensorDetails = (sensor: Sensor | undefined) => {
   if (!sensor) {
     return {

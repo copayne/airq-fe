@@ -56,25 +56,12 @@ export interface ValidationResult {
 
 export type AuthFormType = 'login' | 'register';
 
-export interface VerifyEmailInput {
-  token: string;
-}
-
 export interface EmailVerificationInput {
   token: string;
 }
 
-export interface RequestPasswordResetInput {
-  email: string;
-}
-
 export interface PasswordResetRequestInput {
   email: string;
-}
-
-export interface ResetPasswordInput {
-  token: string;
-  newPassword: string;
 }
 
 export interface PasswordResetInput {

@@ -31,7 +31,6 @@ export function useCurrentUser() {
     if (data?.me && isAuthenticated) {
       // The user data is already in context, but we could update it here if needed
       // For now, we just verify consistency
-      console.log('Current user verified:', data.me.username);
     }
   }, [data, isAuthenticated]);
 

@@ -2,7 +2,7 @@ import React, {
   memo,
   Suspense,
 } from 'react';
-import { useSensorData } from '~/hooks/useSensorData';
+import { useSensors } from '~/hooks/useSensors';
 import SensorCard from './SensorCard';
 
 const SensorGrid: React.FC = memo(() => {
@@ -10,7 +10,7 @@ const SensorGrid: React.FC = memo(() => {
     error,
     loading,
     sensors,
-  } = useSensorData();
+  } = useSensors();
 
   if (loading) return (
     <div className="flex flex-wrap bg-white/30 shadow-md mt-4 mb-4 p-6 mx-auto">

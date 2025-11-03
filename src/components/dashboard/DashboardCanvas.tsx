@@ -28,37 +28,23 @@ const DashboardCanvas = memo(() => {
   // Get sensor data for dynamic sensor card widgets
   const { sensors } = useSensorData();
 
-  // Widget types enum - memoized to prevent recreation
-  const WIDGET_TYPES = useMemo(() => ({
-    TABLE: 'TABLE',
-    TEMPERATURE_CHART: 'TEMPERATURE_CHART',
-    CO2_CHART: 'CO2_CHART',
-    HUMIDITY_CHART: 'HUMIDITY_CHART',
-    MULTI_METRIC_CHART: 'MULTI_METRIC_CHART',
-    METRICS_CARD: 'METRICS_CARD',
-    SENSOR_CARD: 'SENSOR_CARD',
-    RING_SNAPSHOT: 'RING_SNAPSHOT',
+  // Widget components with lazy loading - consolidated for simplicity
+  const WIDGETS = useMemo(() => ({
+    TABLE: React.lazy(() => import('./widgets/tables/SensorReadingTable')),
+    TEMPERATURE_CHART: React.lazy(() => import('./widgets/charts/TemperatureChart')),
+    CO2_CHART: React.lazy(() => import('./widgets/charts/CO2Chart')),
+    MULTI_METRIC_CHART: React.lazy(() => import('./widgets/charts/MultiMetricChart')),
+    METRICS_CARD: React.lazy(() => import('./widgets/cards/MetricsCard')),
+    SENSOR_CARD: React.lazy(() => import('./widgets/cards/SensorCard')),
+    RING_SNAPSHOT: React.lazy(() => import('./widgets/cards/RingSnapshotCard')),
   }), []);
 
-  // Dynamic widget component imports for code splitting - memoized
-  // Pointing directly to actual components (wrapper layer removed for simplification)
-  const WIDGET_COMPONENTS = useMemo(() => ({
-    [WIDGET_TYPES.TABLE]: React.lazy(() =>
-      import('./widgets/tables/SensorReadingTable')
-    ),
-    [WIDGET_TYPES.TEMPERATURE_CHART]: React.lazy(() => import('./widgets/charts/TemperatureChart')),
-    [WIDGET_TYPES.CO2_CHART]: React.lazy(() => import('./widgets/charts/CO2Chart')),
-    [WIDGET_TYPES.MULTI_METRIC_CHART]: React.lazy(() => import('./widgets/charts/MultiMetricChart')),
-    [WIDGET_TYPES.METRICS_CARD]: React.lazy(() => import('./widgets/cards/MetricsCard')),
-    [WIDGET_TYPES.SENSOR_CARD]: React.lazy(() => import('./widgets/cards/SensorCard')),
-    [WIDGET_TYPES.RING_SNAPSHOT]: React.lazy(() => import('./widgets/cards/RingSnapshotCard')),
-    // [WIDGET_TYPES.HUMIDITY_CHART]: React.lazy(() => import('./widgets/charts/HumidityChart')),
-  }), [WIDGET_TYPES]);
+  type WidgetType = keyof typeof WIDGETS;
 
   // Widget loading skeleton component
   const WidgetLoadingSkeleton: React.FC<{ type: string }> = ({ type }) => {
-    const skeletonConfig = {
-      [WIDGET_TYPES.TABLE]: { 
+    const skeletonConfig: Record<string, { height: string; content: React.ReactNode }> = {
+      'TABLE': {
         height: '400px',
         content: (
           <>
@@ -73,15 +59,15 @@ const DashboardCanvas = memo(() => {
         )
       },
     };
-    
-    const config = skeletonConfig[type] ?? { 
-      height: '150px', 
-      content: <div className="h-4 bg-gray-300 rounded"></div> 
+
+    const config = skeletonConfig[type] ?? {
+      height: '150px',
+      content: <div className="h-4 bg-gray-300 rounded"></div>
     };
-    
+
     return (
-      <div 
-        className="w-full animate-pulse bg-gray-100" 
+      <div
+        className="w-full animate-pulse bg-gray-100"
         style={{ height: config.height }}
       >
         <div className="p-4">
@@ -93,7 +79,7 @@ const DashboardCanvas = memo(() => {
 
   // Widget renderer with error boundary and suspense - memoized to prevent unnecessary re-renders
   const WidgetRenderer = memo<{ widget: Widget }>(({ widget }) => {
-    const WidgetComponent = WIDGET_COMPONENTS[widget.type as keyof typeof WIDGET_COMPONENTS];
+    const WidgetComponent = WIDGETS[widget.type as WidgetType];
 
     if (!WidgetComponent) {
       return (
@@ -234,7 +220,7 @@ const DashboardCanvas = memo(() => {
     const sensorWidgets: Widget[] = (sensors ?? []).map((sensor, index) => ({
       id: `sensor-${index}`,
       title: sensor.currentLocation.name.toLowerCase(),
-      type: WIDGET_TYPES.SENSOR_CARD,
+      type: 'SENSOR_CARD',
       config: {},
       props: {
         sensor: sensor,
@@ -246,13 +232,13 @@ const DashboardCanvas = memo(() => {
       {
         id: 'widget-1',
         title: 'Metrics',
-        type: WIDGET_TYPES.METRICS_CARD,
+        type: 'METRICS_CARD',
         config: {}
       },
       {
         id: 'widget-2',
         title: 'Latest Readings',
-        type: WIDGET_TYPES.TABLE,
+        type: 'TABLE',
         config: { limit: 10 },
         props: {
           display: false,
@@ -261,24 +247,24 @@ const DashboardCanvas = memo(() => {
       {
         id: 'widget-3',
         title: 'CO2 Trends',
-        type: WIDGET_TYPES.CO2_CHART,
+        type: 'CO2_CHART',
         config: { timeRange: '24h' }
       },
       {
         id: 'widget-4',
         title: 'Temperature Trends',
-        type: WIDGET_TYPES.TEMPERATURE_CHART,
+        type: 'TEMPERATURE_CHART',
         config: { timeRange: '24h' }
       },
       {
         id: 'widget-5',
         title: 'Ring Camera',
-        type: WIDGET_TYPES.RING_SNAPSHOT,
+        type: 'RING_SNAPSHOT',
         config: {},
         props: {},
       },
     ];
-  }, [sensors, WIDGET_TYPES]);
+  }, [sensors]);
 
   // State
   const [layouts, setLayouts] = useState<Layouts>(generateDefaultLayouts);

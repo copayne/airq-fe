@@ -41,16 +41,17 @@ const DashboardCanvas = memo(() => {
   }), []);
 
   // Dynamic widget component imports for code splitting - memoized
+  // Pointing directly to actual components (wrapper layer removed for simplification)
   const WIDGET_COMPONENTS = useMemo(() => ({
     [WIDGET_TYPES.TABLE]: React.lazy(() =>
-      import('./widgets/wrappers/SensorReadingTableWrapper')
+      import('./widgets/tables/SensorReadingTable')
     ),
-    [WIDGET_TYPES.TEMPERATURE_CHART]: React.lazy(() => import('./widgets/wrappers/TemperatureChartWrapper')),
-    [WIDGET_TYPES.CO2_CHART]: React.lazy(() => import('./widgets/wrappers/CO2ChartWrapper')),
-    [WIDGET_TYPES.MULTI_METRIC_CHART]: React.lazy(() => import('./widgets/wrappers/MultiMetricChartWrapper')),
-    [WIDGET_TYPES.METRICS_CARD]: React.lazy(() => import('./widgets/wrappers/MetricsCardWrapper')),
-    [WIDGET_TYPES.SENSOR_CARD]: React.lazy(() => import('./widgets/wrappers/SensorCardWrapper')),
-    [WIDGET_TYPES.RING_SNAPSHOT]: React.lazy(() => import('./widgets/wrappers/RingSnapshotWrapper')),
+    [WIDGET_TYPES.TEMPERATURE_CHART]: React.lazy(() => import('./widgets/charts/TemperatureChart')),
+    [WIDGET_TYPES.CO2_CHART]: React.lazy(() => import('./widgets/charts/CO2Chart')),
+    [WIDGET_TYPES.MULTI_METRIC_CHART]: React.lazy(() => import('./widgets/charts/MultiMetricChart')),
+    [WIDGET_TYPES.METRICS_CARD]: React.lazy(() => import('./widgets/cards/MetricsCard')),
+    [WIDGET_TYPES.SENSOR_CARD]: React.lazy(() => import('./widgets/cards/SensorCard')),
+    [WIDGET_TYPES.RING_SNAPSHOT]: React.lazy(() => import('./widgets/cards/RingSnapshotCard')),
     // [WIDGET_TYPES.HUMIDITY_CHART]: React.lazy(() => import('./widgets/charts/HumidityChart')),
   }), [WIDGET_TYPES]);
 
@@ -102,9 +103,13 @@ const DashboardCanvas = memo(() => {
       );
     }
 
+    // Type assertion: We know the props match the component's expected props at runtime
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const Component = WidgetComponent as React.ComponentType<any>;
+
     return (
       <Suspense fallback={<WidgetLoadingSkeleton type={widget.type} />}>
-        <WidgetComponent
+        <Component
           {...(widget.props ?? {} as Record<string, unknown>)}
         />
       </Suspense>

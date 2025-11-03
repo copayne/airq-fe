@@ -26,7 +26,7 @@ const SensorGrid: React.FC = memo(() => {
         {sensors?.map(sensor => (
           <div key={sensor.id} className="h-36 w-64 md:w-auto flex-shrink-0">
             <SensorCard
-              sensorId={sensor.id}
+              sensor={sensor}
             />
           </div>
         ))}

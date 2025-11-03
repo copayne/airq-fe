@@ -1,5 +1,6 @@
 import { useQuery } from '@apollo/client';
 import { GET_USER } from '~/graphql/auth';
+import { DEFAULT_QUERY_OPTIONS } from '~/lib/apolloDefaults';
 
 // Sensor and Location single entity queries are already handled in existing hooks
 // This hook adds the missing user by ID query
@@ -26,8 +27,7 @@ interface UserData {
 export function useUserById(id: number) {
   const { data, loading, error, refetch } = useQuery<UserData>(GET_USER, {
     variables: { id },
-    errorPolicy: 'all',
-    notifyOnNetworkStatusChange: true,
+    ...DEFAULT_QUERY_OPTIONS,
     skip: !id, // Skip query if no ID provided
   });
 

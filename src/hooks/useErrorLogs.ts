@@ -1,5 +1,5 @@
-import { useQuery } from '@apollo/client';
 import { GET_ERROR_LOGS } from '~/graphql/ErrorLog';
+import { useQueryList } from './useQueryList';
 
 interface ErrorLog {
   id: string;
@@ -9,18 +9,14 @@ interface ErrorLog {
   createdAt: string;
 }
 
-interface ErrorLogsData {
-  errorLogs: ErrorLog[];
-}
-
 export function useErrorLogs() {
-  const { data, loading, error, refetch } = useQuery<ErrorLogsData>(GET_ERROR_LOGS, {
-    errorPolicy: 'all', // Return partial data with errors
-    notifyOnNetworkStatusChange: true,
-  });
+  const { data: errorLogs, loading, error, refetch } = useQueryList<ErrorLog>(
+    GET_ERROR_LOGS,
+    'errorLogs'
+  );
 
   return {
-    errorLogs: data?.errorLogs ?? [],
+    errorLogs,
     loading,
     error,
     refetch,

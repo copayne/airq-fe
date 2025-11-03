@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import type { FormEvent } from 'react';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useAuth } from '~/context/AuthContext';
 import { useLogin } from '~/hooks/useAuthMutations';
 import type { AuthFormData } from '~/types/auth';
@@ -59,7 +59,6 @@ export function LoginForm({ onSuccess, redirectTo }: LoginFormProps) {
     
     // Submit login
     try {
-      console.log('submitting twice?')
       await loginUser({
         usernameOrEmail: formData.usernameOrEmail ?? '',
         password: formData.password ?? '',

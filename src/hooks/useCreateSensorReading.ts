@@ -1,41 +1,9 @@
 import { useMutation } from '@apollo/client';
 import { CREATE_SENSOR_READING, GET_SENSOR_READINGS } from '~/graphql/SensorReading';
-
-interface CreateSensorReadingInput {
-  sensorId: number;
-  humidityPercentage?: number;
-  temperatureCelsius?: number;
-  co2Ppm?: number;
-}
-
-interface SensorReading {
-  id: string;
-  readingTime: string;
-  sensor: {
-    id: string;
-    name: string;
-  };
-  humidityReading?: {
-    humidityPercentage: number;
-  };
-  temperatureReading?: {
-    temperatureCelsius: number;
-  };
-  co2Reading?: {
-    co2Ppm: number;
-  };
-}
-
-interface CreateSensorReadingPayload {
-  success: boolean;
-  message: string;
-  errors: string[];
-  sensorReading?: SensorReading;
-}
-
-interface CreateSensorReadingData {
-  createSensorReading: CreateSensorReadingPayload;
-}
+import type {
+  CreateSensorReadingInput,
+  CreateSensorReadingData
+} from '~/types/sensors';
 
 export function useCreateSensorReading() {
   const [createSensorReadingMutation, { loading, error }] = useMutation<CreateSensorReadingData>(

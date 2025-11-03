@@ -1,5 +1,6 @@
-import { useQuery } from '@apollo/client';
 import { GET_USERS } from '~/graphql/auth';
+import { CACHE_FIRST_OPTIONS } from '~/lib/apolloDefaults';
+import { useQueryList } from './useQueryList';
 
 interface User {
   id: string;
@@ -16,19 +17,15 @@ interface User {
   lastLogin?: string;
 }
 
-interface UsersData {
-  users: User[];
-}
-
 export function useUsers() {
-  const { data, loading, error, refetch } = useQuery<UsersData>(GET_USERS, {
-    errorPolicy: 'all', // Return partial data with errors
-    notifyOnNetworkStatusChange: true,
-    fetchPolicy: 'cache-and-network', // Always fetch fresh data but use cache first
-  });
+  const { data: users, loading, error, refetch } = useQueryList<User>(
+    GET_USERS,
+    'users',
+    CACHE_FIRST_OPTIONS
+  );
 
   return {
-    users: data?.users ?? [],
+    users,
     loading,
     error,
     refetch,

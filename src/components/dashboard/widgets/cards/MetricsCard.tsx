@@ -1,5 +1,11 @@
 import React, { memo } from 'react';
 import { useMetrics } from '~/hooks/useMetrics';
+import {
+  celsiusToFahrenheit,
+  getCO2ColorClasses,
+  getTemperatureFahrenheitColorClasses
+} from '~/utils/thresholds';
+import { DataStateWrapper } from '~/components/common/DataStateWrapper';
 
 interface MetricCellProps {
   label: string;
@@ -31,60 +37,27 @@ const MetricCell: React.FC<MetricCellProps> = ({
 const MetricsCard: React.FC = memo(() => {
   const { metrics, loading, error } = useMetrics();
 
-  // Helper function to convert Celsius to Fahrenheit
-  const celsiusToFahrenheit = (celsius: number | null): number | null => {
-    if (celsius === null) return null;
-    return (celsius * 9/5) + 32;
-  };
+  return (
+    <DataStateWrapper
+      loading={loading}
+      error={error}
+      data={metrics}
+      loadingMessage="Loading metrics..."
+      errorMessage="Error loading metrics"
+      emptyMessage="No metrics available"
+    >
+      {metrics && <MetricsContent metrics={metrics} />}
+    </DataStateWrapper>
+  );
+});
 
-  // Helper function to get color classes based on CO2 value
-  const getCo2ColorClasses = (value: number | null): { inner: string; outer: string; blur: string } => {
-    if (value === null) return { inner: 'bg-airq-light text-airq-dark', outer: 'bg-airq-light/25', blur: 'rgba(243, 244, 255, 0.5)' };
-    if (value <= 800) return { inner: 'bg-airq-primary text-airq-light', outer: 'bg-airq-primary/25', blur: 'rgba(19, 117, 71, 0.5)' };
-    if (value < 1000) return { inner: 'bg-airq-secondary text-airq-dark', outer: 'bg-airq-secondary/25', blur: 'rgba(255, 201, 20, 0.5)' };
-    return { inner: 'bg-airq-tertiary text-airq-light', outer: 'bg-airq-tertiary/25', blur: 'rgba(237, 76, 76, 0.5)' };
-  };
+MetricsCard.displayName = 'MetricsCard';
 
-  // Helper function to get color classes based on temperature value (Fahrenheit)
-  const getTempColorClasses = (value: number | null): { inner: string; outer: string; blur: string } => {
-    if (value === null) return { inner: 'bg-airq-light text-airq-dark', outer: 'bg-airq-light/25', blur: 'rgba(243, 244, 255, 0.5)' };
-    if (value < 68) return { inner: 'bg-airq-primary text-airq-light', outer: 'bg-airq-primary/25', blur: 'rgba(19, 117, 71, 0.5)' }; // < 20°C
-    if (value < 81) return { inner: 'bg-airq-secondary text-airq-dark', outer: 'bg-airq-secondary/25', blur: 'rgba(255, 201, 20, 0.5)' }; // < 27°C
-    return { inner: 'bg-airq-tertiary text-airq-light', outer: 'bg-airq-tertiary/25', blur: 'rgba(237, 76, 76, 0.5)' }; // >= 27°C
-  };
-
-  // Only show loading if we don't have any data yet
-  // This prevents flickering during re-renders or background refetches
-  if (loading && metrics === null) {
-    return (
-      <div className="h-full w-full flex items-center justify-center bg-airq-light">
-        <p className="text-airq-dark">Loading metrics...</p>
-      </div>
-    );
-  }
-
-  // Only show error if we don't have any cached data
-  if (error !== undefined && metrics === null) {
-    return (
-      <div className="h-full w-full flex items-center justify-center bg-airq-light">
-        <p className="text-airq-tertiary">Error loading metrics</p>
-      </div>
-    );
-  }
-
-  // If we still don't have metrics, show placeholder
-  if (metrics === null) {
-    return (
-      <div className="h-full w-full flex items-center justify-center bg-airq-light">
-        <p className="text-airq-dark">No metrics available</p>
-      </div>
-    );
-  }
-
-  const co21dayColors = getCo2ColorClasses(metrics.co21dayAvg);
-  const co230dayColors = getCo2ColorClasses(metrics.co230dayAvg);
-  const co2HighColors = getCo2ColorClasses(metrics.co2HighestAllTime);
-  const co2LowColors = getCo2ColorClasses(metrics.co2LowestAllTime);
+const MetricsContent: React.FC<{ metrics: NonNullable<ReturnType<typeof useMetrics>['metrics']> }> = ({ metrics }) => {
+  const co21dayColors = getCO2ColorClasses(metrics.co21dayAvg);
+  const co230dayColors = getCO2ColorClasses(metrics.co230dayAvg);
+  const co2HighColors = getCO2ColorClasses(metrics.co2HighestAllTime);
+  const co2LowColors = getCO2ColorClasses(metrics.co2LowestAllTime);
 
   // Convert temperatures to Fahrenheit
   const temp1dayF = celsiusToFahrenheit(metrics.temp1dayAvg);
@@ -92,10 +65,10 @@ const MetricsCard: React.FC = memo(() => {
   const tempHighF = celsiusToFahrenheit(metrics.tempHighestAllTime);
   const tempLowF = celsiusToFahrenheit(metrics.tempLowestAllTime);
 
-  const temp1dayColors = getTempColorClasses(temp1dayF);
-  const temp30dayColors = getTempColorClasses(temp30dayF);
-  const tempHighColors = getTempColorClasses(tempHighF);
-  const tempLowColors = getTempColorClasses(tempLowF);
+  const temp1dayColors = getTemperatureFahrenheitColorClasses(temp1dayF);
+  const temp30dayColors = getTemperatureFahrenheitColorClasses(temp30dayF);
+  const tempHighColors = getTemperatureFahrenheitColorClasses(tempHighF);
+  const tempLowColors = getTemperatureFahrenheitColorClasses(tempLowF);
 
   return (
     <div className="h-full w-full flex flex-col">
@@ -165,8 +138,6 @@ const MetricsCard: React.FC = memo(() => {
       </div>
     </div>
   );
-});
-
-MetricsCard.displayName = 'MetricsCard';
+};
 
 export default MetricsCard;

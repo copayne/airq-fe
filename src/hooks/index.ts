@@ -5,8 +5,7 @@ export { useUsers } from './useUsers';
 export { useUserById } from './useSingleEntities';
 
 // Sensor data hooks
-export { useSensorData } from './useSensorData';
-export { useSensorDataOptimized } from './useSensorDataOptimized';
+export { useSensors, type UseSensorsOptions } from './useSensors';
 export { useSensorReadingData } from './useSensorReadingData';
 export { useRecentSensorReadings } from './useRecentSensorReadings';
 export { useCreateSensorReading } from './useCreateSensorReading';
@@ -15,7 +14,16 @@ export { useCreateSensorReading } from './useCreateSensorReading';
 export { useSensorLocations } from './useSensorLocations';
 
 // Measurement data hooks
-export { useCO2Readings, useTemperatureReadings, useHumidityReadings } from './useMeasurements';
+export {
+  useCO2Measurements,
+  useTemperatureMeasurements,
+  useHumidityMeasurements,
+} from './useMeasurements';
+
+// Backward compatibility aliases
+export { useCO2Measurements as useCO2Readings } from './useMeasurements';
+export { useTemperatureMeasurements as useTemperatureReadings } from './useMeasurements';
+export { useHumidityMeasurements as useHumidityReadings } from './useMeasurements';
 
 // Error monitoring hooks
 export { useErrorLogs } from './useErrorLogs';

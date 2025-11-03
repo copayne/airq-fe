@@ -8,6 +8,7 @@ import {
 } from '@tanstack/react-table';
 import { memo, useMemo } from 'react';
 import { useSensorReadingData } from '../../../../hooks/useSensorReadingData';
+import { DataStateWrapper } from '~/components/common/DataStateWrapper';
 
 interface TableData {
   readingTime: string;
@@ -70,10 +71,12 @@ const SensorReadingTable = memo(() => {
   const data = useMemo(() => {
     if (!sensorReadings) return [];
     return sensorReadings.map(reading => ({
-      co2Ppm: reading.co2Reading.co2Ppm.toFixed(0),
-      locationName: reading.location.name,
-      temperatureFahrenheit: ((reading.temperatureReading.temperatureCelsius* 9/5) + 32).toFixed(1),
-      humidityPercentage: reading.humidityReading.humidityPercentage.toFixed(0),
+      co2Ppm: reading.co2Reading?.co2Ppm?.toFixed(0) ?? '--',
+      locationName: reading.location?.name ?? '--',
+      temperatureFahrenheit: reading.temperatureReading?.temperatureCelsius
+        ? ((reading.temperatureReading.temperatureCelsius * 9/5) + 32).toFixed(1)
+        : '--',
+      humidityPercentage: reading.humidityReading?.humidityPercentage?.toFixed(0) ?? '--',
       readingTime: dateFormatter.format(new Date(`${reading.readingTime}Z`)),
     }));
   }, [sensorReadings, dateFormatter]);
@@ -86,12 +89,18 @@ const SensorReadingTable = memo(() => {
     getFilteredRowModel: getFilteredRowModel(),
   });
 
-  if (loading && !isFetched) return <div>Loading...</div>;
-  if (error) return <div>Error: {error.message}</div>;
-
   return (
-    <div className="w-full h-full overflow-auto rounded-sm rounded-ss-none">
-      <table className="w-full">
+    <DataStateWrapper
+      loading={loading && !isFetched}
+      error={error}
+      data={sensorReadings}
+      loadingMessage="Loading sensor readings..."
+      errorMessage={error ? `Error: ${error.message}` : 'Error loading data'}
+      emptyMessage="No sensor readings available"
+      className="w-full h-full flex items-center justify-center"
+    >
+      <div className="w-full h-full overflow-auto rounded-sm rounded-ss-none">
+        <table className="w-full">
         <thead>
           {table.getHeaderGroups().map(headerGroup => (
             <tr key={headerGroup.id}>
@@ -118,7 +127,8 @@ const SensorReadingTable = memo(() => {
           ))}
         </tbody>
       </table>
-    </div>
+      </div>
+    </DataStateWrapper>
   );
 });
 

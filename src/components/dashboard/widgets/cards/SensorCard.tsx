@@ -7,58 +7,22 @@ import {
   getTemperatureCelsiusColorClasses,
   getHumidityColorClasses
 } from '~/utils/thresholds';
+import { formatSensorDetails } from '~/utils/sensorFormatters';
 
 interface SensorCardProps {
   sensor: Sensor;
 }
 
-const getSensorDetails = (sensor: Sensor | undefined) => {
-  if (!sensor) {
-    return {
-      co2: 0,
-      currentLocation: '',
-      humidity: 0,
-      lastReading: '',
-      temp: 0,
-      temperatureFahrenheit: 0,
-    };
-  }
-
-  const lastReading = sensor.lastReading;
-  const co2 = lastReading?.co2Reading?.co2Ppm ?? '--';
-  const humidityRaw = lastReading?.humidityReading?.humidityPercentage;
-  const humidity = humidityRaw
-    ? humidityRaw.toFixed(1)
-    : '--';
-  const temp = lastReading?.temperatureReading?.temperatureCelsius;
-  const temperatureFahrenheit = temp
-    ? ((temp * 9) / 5 + 32).toFixed(0)
-    : '--';
-
-  return {
-    co2,
-    co2Raw: typeof co2 === 'number' ? co2 : 0,
-    currentLocation: sensor.currentLocation.name.toLowerCase(),
-    humidity,
-    humidityRaw: humidityRaw ?? 0,
-    isActive: lastReading?.isSuccess ?? false,
-    lastReading: lastReading ? new Date(lastReading.readingTime).toLocaleString() : '--',
-    temp: temp ? temp.toFixed(1) : '--',
-    tempRaw: temp ?? 0,
-    temperatureFahrenheit
-  }
-}
-
 const SensorCard: React.FC<SensorCardProps> = memo(({ sensor }) => {
   const {
     co2,
-    co2Raw = 0,
+    co2Raw,
     humidity,
     humidityRaw,
     temp,
     tempRaw,
     temperatureFahrenheit,
-  } = getSensorDetails(sensor);
+  } = formatSensorDetails(sensor);
 
   // Get color classes for each metric
   const co2Colors = getCO2ColorClasses(co2Raw);

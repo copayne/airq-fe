@@ -5,6 +5,7 @@ import {
   getCO2ColorClasses,
   getTemperatureFahrenheitColorClasses
 } from '~/utils/thresholds';
+import { DataStateWrapper } from '~/components/common/DataStateWrapper';
 
 interface MetricCellProps {
   label: string;
@@ -36,34 +37,23 @@ const MetricCell: React.FC<MetricCellProps> = ({
 const MetricsCard: React.FC = memo(() => {
   const { metrics, loading, error } = useMetrics();
 
-  // Only show loading if we don't have any data yet
-  // This prevents flickering during re-renders or background refetches
-  if (loading && metrics === null) {
-    return (
-      <div className="h-full w-full flex items-center justify-center bg-airq-light">
-        <p className="text-airq-dark">Loading metrics...</p>
-      </div>
-    );
-  }
+  return (
+    <DataStateWrapper
+      loading={loading}
+      error={error}
+      data={metrics}
+      loadingMessage="Loading metrics..."
+      errorMessage="Error loading metrics"
+      emptyMessage="No metrics available"
+    >
+      {metrics && <MetricsContent metrics={metrics} />}
+    </DataStateWrapper>
+  );
+});
 
-  // Only show error if we don't have any cached data
-  if (error !== undefined && metrics === null) {
-    return (
-      <div className="h-full w-full flex items-center justify-center bg-airq-light">
-        <p className="text-airq-tertiary">Error loading metrics</p>
-      </div>
-    );
-  }
+MetricsCard.displayName = 'MetricsCard';
 
-  // If we still don't have metrics, show placeholder
-  if (metrics === null) {
-    return (
-      <div className="h-full w-full flex items-center justify-center bg-airq-light">
-        <p className="text-airq-dark">No metrics available</p>
-      </div>
-    );
-  }
-
+const MetricsContent: React.FC<{ metrics: NonNullable<ReturnType<typeof useMetrics>['metrics']> }> = ({ metrics }) => {
   const co21dayColors = getCO2ColorClasses(metrics.co21dayAvg);
   const co230dayColors = getCO2ColorClasses(metrics.co230dayAvg);
   const co2HighColors = getCO2ColorClasses(metrics.co2HighestAllTime);
@@ -148,8 +138,6 @@ const MetricsCard: React.FC = memo(() => {
       </div>
     </div>
   );
-});
-
-MetricsCard.displayName = 'MetricsCard';
+};
 
 export default MetricsCard;

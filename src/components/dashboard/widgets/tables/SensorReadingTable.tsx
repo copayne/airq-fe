@@ -8,6 +8,7 @@ import {
 } from '@tanstack/react-table';
 import { memo, useMemo } from 'react';
 import { useSensorReadingData } from '../../../../hooks/useSensorReadingData';
+import { DataStateWrapper } from '~/components/common/DataStateWrapper';
 
 interface TableData {
   readingTime: string;
@@ -88,12 +89,18 @@ const SensorReadingTable = memo(() => {
     getFilteredRowModel: getFilteredRowModel(),
   });
 
-  if (loading && !isFetched) return <div>Loading...</div>;
-  if (error) return <div>Error: {error.message}</div>;
-
   return (
-    <div className="w-full h-full overflow-auto rounded-sm rounded-ss-none">
-      <table className="w-full">
+    <DataStateWrapper
+      loading={loading && !isFetched}
+      error={error}
+      data={sensorReadings}
+      loadingMessage="Loading sensor readings..."
+      errorMessage={error ? `Error: ${error.message}` : 'Error loading data'}
+      emptyMessage="No sensor readings available"
+      className="w-full h-full flex items-center justify-center"
+    >
+      <div className="w-full h-full overflow-auto rounded-sm rounded-ss-none">
+        <table className="w-full">
         <thead>
           {table.getHeaderGroups().map(headerGroup => (
             <tr key={headerGroup.id}>
@@ -120,7 +127,8 @@ const SensorReadingTable = memo(() => {
           ))}
         </tbody>
       </table>
-    </div>
+      </div>
+    </DataStateWrapper>
   );
 });
 

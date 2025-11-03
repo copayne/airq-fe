@@ -13,6 +13,7 @@ import 'chartjs-adapter-date-fns';
 import React, { memo, useMemo } from 'react';
 import { Line } from 'react-chartjs-2';
 import { useSensorReadingData } from '~/hooks/useSensorReadingData';
+import { DataStateWrapper } from '~/components/common/DataStateWrapper';
 
 ChartJS.register(
   CategoryScale,
@@ -181,30 +182,24 @@ const MetricChart: React.FC<MetricChartProps> = memo(({
     };
   }, [metrics, showLegend]);
 
-  if (loading && !sensorReadings?.length) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-airq-contrast"></div>
-      </div>
-    );
-  }
-
-  if (error && !sensorReadings?.length) {
-    return (
-      <div className="h-full flex items-center justify-center text-airq-tertiary">
-        {errorMessage}
-      </div>
-    );
-  }
-
   return (
-    <div className="h-full p-4">
-      <Line
-        data={chartData}
-        options={options}
-        redraw={false}
-      />
-    </div>
+    <DataStateWrapper
+      loading={loading}
+      error={error}
+      data={sensorReadings}
+      errorMessage={errorMessage}
+      emptyMessage="No sensor data available"
+      className="h-full flex items-center justify-center"
+      showSpinner={true}
+    >
+      <div className="h-full p-4">
+        <Line
+          data={chartData}
+          options={options}
+          redraw={false}
+        />
+      </div>
+    </DataStateWrapper>
   );
 });
 

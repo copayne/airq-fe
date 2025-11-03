@@ -1,6 +1,5 @@
-import { useQuery } from '@apollo/client';
 import { GET_SENSOR_LOCATIONS } from '~/graphql/SensorLocation';
-import { DEFAULT_QUERY_OPTIONS } from '~/lib/apolloDefaults';
+import { useQueryList } from './useQueryList';
 
 interface SensorLocation {
   id: string;
@@ -23,17 +22,14 @@ interface SensorLocation {
   };
 }
 
-interface SensorLocationsData {
-  sensorLocations: SensorLocation[];
-}
-
 export function useSensorLocations() {
-  const { data, loading, error, refetch } = useQuery<SensorLocationsData>(GET_SENSOR_LOCATIONS, {
-    ...DEFAULT_QUERY_OPTIONS,
-  });
+  const { data: sensorLocations, loading, error, refetch } = useQueryList<SensorLocation>(
+    GET_SENSOR_LOCATIONS,
+    'sensorLocations'
+  );
 
   return {
-    sensorLocations: data?.sensorLocations ?? [],
+    sensorLocations,
     loading,
     error,
     refetch,

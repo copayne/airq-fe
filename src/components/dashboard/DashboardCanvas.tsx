@@ -1,9 +1,9 @@
 // Dashboard.tsx
 import React, { Suspense, memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { Responsive, WidthProvider, type Layout, type Layouts } from 'react-grid-layout';
-import { useSensors } from '~/hooks/useSensors';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
+import { useSensors } from '~/hooks/useSensors';
 
 // Create a responsive grid layout with width provider
 const ResponsiveGridLayout = WidthProvider(Responsive);
@@ -25,9 +25,12 @@ interface WidgetWrapperProps {
 
 // Dashboard component
 const DashboardCanvas = memo(() => {
-  // Get sensor data for dynamic sensor card widgets
-  // Use cache-first to avoid refetching on layout changes
+  // Get sensor data for the basement sensor card
   const { sensors } = useSensors({ fetchPolicy: 'cache-first' });
+  const basementSensor = useMemo(() =>
+    sensors?.find(s => s.currentLocation.name.toLowerCase() === 'basement'),
+    [sensors]
+  );
 
   // Widget components with lazy loading - consolidated for simplicity
   const WIDGETS = useMemo(() => ({
@@ -35,9 +38,15 @@ const DashboardCanvas = memo(() => {
     TEMPERATURE_CHART: React.lazy(() => import('./widgets/charts/MetricChart').then(m => ({ default: m.TemperatureChart }))),
     CO2_CHART: React.lazy(() => import('./widgets/charts/MetricChart').then(m => ({ default: m.CO2Chart }))),
     MULTI_METRIC_CHART: React.lazy(() => import('./widgets/charts/MetricChart').then(m => ({ default: m.MultiMetricChart }))),
+    AIR_QUALITY_DISTRIBUTION: React.lazy(() => import('./widgets/charts/AirQualityDistributionChart')),
+    AIR_QUALITY_HEATMAP: React.lazy(() => import('./widgets/charts/AirQualityHeatmap')),
     METRICS_CARD: React.lazy(() => import('./widgets/cards/MetricsCard')),
     SENSOR_CARD: React.lazy(() => import('./widgets/cards/SensorCard')),
     RING_SNAPSHOT: React.lazy(() => import('./widgets/cards/RingSnapshotCard')),
+    RING_CONTACT_SENSORS: React.lazy(() => import('./widgets/RingContactSensorCard')),
+    RING_STATUS: React.lazy(() => import('./widgets/RingStatusCard')),
+    QUICK_ACTIONS: React.lazy(() => import('./widgets/cards/QuickActionsCard')),
+    RING_EVENTS: React.lazy(() => import('./widgets/cards/RingEventsCard')),
   }), []);
 
   type WidgetType = keyof typeof WIDGETS;
@@ -79,157 +88,106 @@ const DashboardCanvas = memo(() => {
   };
 
   // Widget renderer with error boundary and suspense - memoized to prevent unnecessary re-renders
-  const WidgetRenderer = memo<{ widget: Widget }>(({ widget }) => {
-    const WidgetComponent = WIDGETS[widget.type as WidgetType];
+  const WidgetRenderer = memo<{ widget: Widget }>(
+    ({ widget }) => {
+      const WidgetComponent = WIDGETS[widget.type as WidgetType];
 
-    if (!WidgetComponent) {
+      if (!WidgetComponent) {
+        return (
+          <div className="w-full h-full flex items-center justify-center bg-red-50 border-2 border-red-200">
+            <p className="text-red-600">Unknown widget type: {widget.type}</p>
+          </div>
+        );
+      }
+
+      // Type assertion: We know the props match the component's expected props at runtime
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const Component = WidgetComponent as React.ComponentType<any>;
+
       return (
-        <div className="w-full h-full flex items-center justify-center bg-red-50 border-2 border-red-200">
-          <p className="text-red-600">Unknown widget type: {widget.type}</p>
-        </div>
+        <Suspense fallback={<WidgetLoadingSkeleton type={widget.type} />}>
+          <Component
+            {...(widget.props ?? {} as Record<string, unknown>)}
+          />
+        </Suspense>
+      );
+    },
+    (prevProps, nextProps) => {
+      // Deep comparison: only re-render if widget data actually changed
+      // This prevents re-renders during layout changes (resize/drag)
+      return (
+        prevProps.widget.id === nextProps.widget.id &&
+        prevProps.widget.type === nextProps.widget.type &&
+        JSON.stringify(prevProps.widget.props) === JSON.stringify(nextProps.widget.props) &&
+        JSON.stringify(prevProps.widget.config) === JSON.stringify(nextProps.widget.config)
       );
     }
-
-    // Type assertion: We know the props match the component's expected props at runtime
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const Component = WidgetComponent as React.ComponentType<any>;
-
-    return (
-      <Suspense fallback={<WidgetLoadingSkeleton type={widget.type} />}>
-        <Component
-          {...(widget.props ?? {} as Record<string, unknown>)}
-        />
-      </Suspense>
-    );
-  });
+  );
   WidgetRenderer.displayName = 'WidgetRenderer';
 
-  // Default layouts for different breakpoints
-  
-  // BACKUP - Original layouts (commented for potential revert)
-  // const originalLayouts = {
-  //   lg: [
-  //     { i: 'widget-1', x: 0, y: 0, w: 2, h: 1, isResizable: false },
-  //     { i: 'widget-2', x: 6, y: 0, w: 3, h: 2, minW: 2, minH: 1 },
-  //     { i: 'widget-3', x: 0, y: 2, w: 6, h: 4, minW: 4, minH: 3 },
-  //   ],
-  //   md: [
-  //     { i: 'widget-1', x: 0, y: 0, w: 2, h: 1, isResizable: false },
-  //     { i: 'widget-2', x: 4, y: 0, w: 3, h: 2, minW: 2, minH: 1 },
-  //     { i: 'widget-3', x: 0, y: 2, w: 8, h: 4, minW: 4, minH: 3 },
-  //   ],
-  //   sm: [
-  //     { i: 'widget-1', x: 0, y: 0, w: 2, h: 1, isResizable: false },
-  //     { i: 'widget-2', x: 0, y: 2, w: 6, h: 4, minW: 2, minH: 1 },
-  //     { i: 'widget-3', x: 0, y: 6, w: 6, h: 4, minW: 4, minH: 3 },
-  //   ],
-  // };
-
-  // Generate layouts dynamically based on sensors
+  // Generate default layouts for widgets
   const generateDefaultLayouts = useMemo(() => {
-    const sensorCount = sensors?.length ?? 0;
-
-    // Generate sensor layouts dynamically
-    const sensorLayoutsLg = [];
-    const sensorLayoutsMd = [];
-    const sensorLayoutsSm = [];
-
-    for (let i = 0; i < sensorCount; i++) {
-      // lg: 24 columns, 6 sensors per row (4 columns each)
-      sensorLayoutsLg.push({
-        i: `sensor-${i}`,
-        x: (i % 6) * 4,
-        y: Math.floor(i / 6) * 2,
-        w: 4,
-        h: 1,
-        minW: 4,
-        minH: 2,
-      });
-
-      // md: 16 columns, 4 sensors per row (4 columns each)
-      sensorLayoutsMd.push({
-        i: `sensor-${i}`,
-        x: (i % 4) * 4,
-        y: Math.floor(i / 4) * 2,
-        w: 4,
-        h: 1,
-        minW: 4,
-        minH: 2,
-      });
-
-      // sm: 12 columns, 2 sensors per row (6 columns each)
-      sensorLayoutsSm.push({
-        i: `sensor-${i}`,
-        x: (i % 2) * 6,
-        y: Math.floor(i / 2) * 2,
-        w: 6,
-        h: 1,
-        minW: 6,
-        minH: 2,
-      });
-    }
-
-    const sensorRowsLg = Math.ceil(sensorCount / 6) * 2;
-    const sensorRowsMd = Math.ceil(sensorCount / 4) * 2;
-    const sensorRowsSm = Math.ceil(sensorCount / 2) * 2;
-
     return {
-        lg: [
-        ...sensorLayoutsLg,
-        // Metrics widget (left side, below sensor cards)
-        { i: 'widget-1', x: 0, y: sensorRowsLg, w: 4, h: 4, isResizable: false },
-        // CO2 chart (top-middle, below sensor cards)
-        { i: 'widget-3', x: 4, y: sensorRowsLg, w: 10, h: 5, minW: 6, minH: 4 },
-        // Temperature chart (top-right, below sensor cards)
-        { i: 'widget-4', x: 14, y: sensorRowsLg, w: 10, h: 5, minW: 6, minH: 4 },
-        // Latest readings table (bottom)
-        { i: 'widget-2', x: 0, y: sensorRowsLg + 6, w: 14, h: 7, minW: 8, minH: 4 },
-        // Ring snapshot (right side, below temperature chart)
-        { i: 'widget-5', x: 14, y: sensorRowsLg + 6, w: 10, h: 7, minW: 6, minH: 4 },
+      lg: [
+        // Basement sensor (top-left)
+        { i: 'widget-7', x: 0, y: 0, w: 5, h: 2, minW: 5, minH: 2 },
+        // Metrics widget (below basement)
+        { i: 'widget-1', x: 0, y: 2, w: 5, h: 5, minW: 5, minH: 5 },
+        // Air Quality Distribution (bottom-left, tall)
+        { i: 'widget-2', x: 0, y: 7, w: 5, h: 8, minW: 4, minH: 8 },
+        // CO2 chart (top-middle)
+        { i: 'widget-3', x: 5, y: 0, w: 12, h: 4, minW: 8, minH: 4 },
+        // Ring snapshot (middle)
+        { i: 'widget-5', x: 5, y: 4, w: 12, h: 8, minW: 8, minH: 6 },
+        // Ring contact sensors (bottom-middle)
+        { i: 'widget-6', x: 5, y: 12, w: 12, h: 3, minW: 10, minH: 2 },
+        // Air Quality Heatmap (right, top)
+        { i: 'widget-8', x: 17, y: 0, w: 7, h: 9, minW: 5, minH: 9 },
+        // Ring Events (right, below heatmap)
+        { i: 'widget-9', x: 17, y: 9, w: 7, h: 6, minW: 5, minH: 4 },
       ],
       md: [
-        ...sensorLayoutsMd,
-        // Metrics widget
-        { i: 'widget-1', x: 0, y: sensorRowsMd, w: 4, h: 4, isResizable: false },
-        // CO2 chart
-        { i: 'widget-3', x: 4, y: sensorRowsMd, w: 6, h: 5, minW: 4, minH: 4 },
-        // Temperature chart
-        { i: 'widget-4', x: 10, y: sensorRowsMd, w: 6, h: 5, minW: 4, minH: 4 },
-        // Table
-        { i: 'widget-2', x: 0, y: sensorRowsMd + 6, w: 12, h: 7, minW: 6, minH: 4 },
-        // Ring snapshot (below temperature chart)
-        { i: 'widget-5', x: 8, y: sensorRowsMd + 6, w: 8, h: 7, minW: 6, minH: 4 },
+        // Basement sensor (top row)
+        { i: 'widget-7', x: 0, y: 0, w: 6, h: 2, minW: 5, minH: 2 },
+        // Metrics widget (below basement sensor)
+        { i: 'widget-1', x: 0, y: 2, w: 4, h: 5, minW: 4, minH: 5 },
+        // CO2 chart (top-right)
+        { i: 'widget-3', x: 4, y: 0, w: 8, h: 4, minW: 6, minH: 4 },
+        // Air Quality Heatmap (right side)
+        { i: 'widget-8', x: 12, y: 0, w: 4, h: 6, minW: 4, minH: 5 },
+        // Air Quality Distribution (bottom-left, tall)
+        { i: 'widget-2', x: 0, y: 7, w: 4, h: 7, minW: 3, minH: 7 },
+        // Ring snapshot (bottom-middle)
+        { i: 'widget-5', x: 4, y: 4, w: 8, h: 6, minW: 6, minH: 5 },
+        // Ring contact sensors (below camera)
+        { i: 'widget-6', x: 4, y: 10, w: 12, h: 3, minW: 8, minH: 2 },
+        // Ring Events (bottom-right)
+        { i: 'widget-9', x: 12, y: 6, w: 4, h: 7, minW: 4, minH: 4 },
       ],
       sm: [
-        ...sensorLayoutsSm,
+        // Basement sensor (top)
+        { i: 'widget-7', x: 0, y: 0, w: 12, h: 2, minW: 8, minH: 2 },
         // Metrics widget
-        { i: 'widget-1', x: 0, y: sensorRowsSm, w: 12, h: 4, isResizable: false },
+        { i: 'widget-1', x: 0, y: 2, w: 12, h: 5, minW: 8, minH: 5 },
         // CO2 chart
-        { i: 'widget-3', x: 0, y: sensorRowsSm + 4, w: 12, h: 5, minW: 8, minH: 4 },
-        // Temperature chart
-        { i: 'widget-4', x: 0, y: sensorRowsSm + 10, w: 12, h: 5, minW: 8, minH: 4 },
-        // Table
-        { i: 'widget-2', x: 0, y: sensorRowsSm + 16, w: 12, h: 7, minW: 8, minH: 4 },
-        // Ring snapshot (below table)
-        { i: 'widget-5', x: 0, y: sensorRowsSm + 22, w: 12, h: 7, minW: 8, minH: 4 },
+        { i: 'widget-3', x: 0, y: 7, w: 12, h: 5, minW: 8, minH: 4 },
+        // Air Quality Heatmap
+        { i: 'widget-8', x: 0, y: 12, w: 12, h: 4, minW: 8, minH: 4 },
+        // Air Quality Distribution (tall)
+        { i: 'widget-2', x: 0, y: 18, w: 12, h: 8, minW: 8, minH: 8 },
+        // Ring snapshot
+        { i: 'widget-5', x: 0, y: 26, w: 12, h: 7, minW: 8, minH: 5 },
+        // Ring contact sensors
+        { i: 'widget-6', x: 0, y: 33, w: 12, h: 3, minW: 8, minH: 2 },
+        // Ring Events
+        { i: 'widget-9', x: 0, y: 36, w: 12, h: 5, minW: 8, minH: 4 },
       ],
     };
-  }, [sensors]);
+  }, []);
 
-  // Generate initial widgets dynamically based on sensors
+  // Generate initial widgets for the dashboard
   const generateInitialWidgets = useMemo(() => {
-    const sensorWidgets: Widget[] = (sensors ?? []).map((sensor, index) => ({
-      id: `sensor-${index}`,
-      title: sensor.currentLocation.name.toLowerCase(),
-      type: 'SENSOR_CARD',
-      config: {},
-      props: {
-        sensor: sensor,
-      },
-    }));
-
-    return [
-      ...sensorWidgets,
+    const widgets: Widget[] = [
       {
         id: 'widget-1',
         title: 'Metrics',
@@ -238,11 +196,12 @@ const DashboardCanvas = memo(() => {
       },
       {
         id: 'widget-2',
-        title: 'Latest Readings',
-        type: 'TABLE',
-        config: { limit: 10 },
+        title: 'Air Quality Distribution',
+        type: 'AIR_QUALITY_DISTRIBUTION',
+        config: {},
         props: {
-          display: false,
+          showLegend: true,
+          showTitle: false,
         },
       },
       {
@@ -252,58 +211,56 @@ const DashboardCanvas = memo(() => {
         config: { timeRange: '24h' }
       },
       {
-        id: 'widget-4',
-        title: 'Temperature Trends',
-        type: 'TEMPERATURE_CHART',
-        config: { timeRange: '24h' }
+        id: 'widget-5',
+        title: 'Front Porch Camera',
+        type: 'RING_SNAPSHOT',
+        config: {},
+        props: {
+          deviceId: '59852574',
+          cameraName: 'Front Porch',
+        },
       },
       {
-        id: 'widget-5',
-        title: 'Ring Camera',
-        type: 'RING_SNAPSHOT',
+        id: 'widget-6',
+        title: 'Door Sensors',
+        type: 'RING_CONTACT_SENSORS',
         config: {},
         props: {},
       },
+      {
+        id: 'widget-7',
+        title: 'Basement',
+        type: 'SENSOR_CARD',
+        config: {},
+        props: {
+          sensor: basementSensor ?? null,
+        },
+      },
+      {
+        id: 'widget-8',
+        title: 'Air Quality Heatmap',
+        type: 'AIR_QUALITY_HEATMAP',
+        config: {},
+      },
+      {
+        id: 'widget-9',
+        title: 'Ring Events',
+        type: 'RING_EVENTS',
+        config: {},
+      },
     ];
-  }, [sensors]);
+
+    return widgets;
+  }, [basementSensor]);
 
   // State
   const [layouts, setLayouts] = useState<Layouts>(generateDefaultLayouts);
   const [widgets, setWidgets] = useState<Widget[]>(generateInitialWidgets);
 
-  // Update widgets when sensors change, and merge new sensor layouts
+  // Update widgets when sensor data loads
   useEffect(() => {
     setWidgets(generateInitialWidgets);
-
-    // Merge new sensor layouts with existing layouts, preserving user customizations
-    setLayouts(prev => {
-      const newLayouts = { ...prev };
-      const newDefaultLayouts = generateDefaultLayouts;
-
-      // For each breakpoint, merge new sensor widget layouts
-      (['lg', 'md', 'sm'] as const).forEach(breakpoint => {
-        const existingLayouts = newLayouts[breakpoint] ?? [];
-        const newSensorLayouts = (newDefaultLayouts[breakpoint] ?? []).filter((layout: Layout) =>
-          layout.i.startsWith('sensor-')
-        );
-
-        // Keep existing layouts for widgets that still exist
-        const existingNonSensorLayouts = existingLayouts.filter((layout: Layout) =>
-          !layout.i.startsWith('sensor-')
-        );
-
-        // For sensor widgets, use existing layout if it exists, otherwise use default
-        const mergedSensorLayouts = newSensorLayouts.map((newLayout: Layout) => {
-          const existing = existingLayouts.find((l: Layout) => l.i === newLayout.i);
-          return existing ?? newLayout;
-        });
-
-        newLayouts[breakpoint] = [...mergedSensorLayouts, ...existingNonSensorLayouts];
-      });
-
-      return newLayouts;
-    });
-  }, [generateInitialWidgets, generateDefaultLayouts]);
+  }, [generateInitialWidgets]);
 
   // Save layouts and widgets when they change
   useEffect(() => {
@@ -379,7 +336,7 @@ const DashboardCanvas = memo(() => {
               </button>
             </div>
           </div>
-          <div className="flex-1 overflow-auto">
+          <div className="flex-1 overflow-hidden">
             {children}
           </div>
         </div>
@@ -395,14 +352,14 @@ const DashboardCanvas = memo(() => {
   WidgetWrapper.displayName = 'WidgetWrapper';
 
   return (
-    <div className="flex-1 p-4 overflow-auto">
+    <div className="h-full w-full p-4 overflow-hidden">
       <ResponsiveGridLayout
         className="layout"
         layouts={layouts}
         breakpoints={{ lg: 1100, md: 900, sm: 768 }}
         cols={{ lg: 24, md: 16, sm: 12 }}
-        rowHeight={75}
-        margin={[16, 16]}
+        rowHeight={55}
+        margin={[8, 8]}
         onLayoutChange={handleLayoutChange}
         onDragStop={handleDragOrResizeStop}
         onResizeStop={handleDragOrResizeStop}

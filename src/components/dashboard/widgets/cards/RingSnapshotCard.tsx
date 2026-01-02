@@ -1,20 +1,17 @@
-import React, { memo } from 'react';
+import React from 'react';
 import Image from 'next/image';
 import { useRingSnapshot } from '~/hooks/useRingSnapshot';
-import { env } from '~/env.js';
 
 interface RingSnapshotCardProps {
-  cameraId?: number;
+  deviceId?: string;
+  cameraName?: string;
 }
 
-const RingSnapshotCard: React.FC<RingSnapshotCardProps> = memo(({ cameraId }) => {
-  const { snapshot, loading, error, capturing, captureSnapshot } = useRingSnapshot(cameraId);
+const RingSnapshotCard: React.FC<RingSnapshotCardProps> = ({ deviceId, cameraName = 'Ring Camera' }) => {
+  const { snapshot, error, capturing, captureSnapshot } = useRingSnapshot(deviceId, { captureOnMount: true });
 
-  // Extract backend base URL from GraphQL endpoint
-  const backendBaseUrl = env.NEXT_PUBLIC_GRAPHQL_ENDPOINT.replace('/graphql', '');
-
-  // Construct absolute image URL
-  const imageUrl = snapshot ? `${backendBaseUrl}${snapshot.imageUrl}` : '';
+  // Image URL is relative to Next.js public directory
+  const imageUrl = snapshot?.imageUrl ?? '';
 
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
@@ -26,15 +23,6 @@ const RingSnapshotCard: React.FC<RingSnapshotCardProps> = memo(({ cameraId }) =>
       minute: '2-digit',
     });
   };
-
-  if (loading && !snapshot) {
-    return (
-      <div className="h-full w-full flex flex-col items-center justify-center bg-airq-light p-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-airq-dark mb-4"></div>
-        <p className="text-airq-dark text-sm">Loading snapshot...</p>
-      </div>
-    );
-  }
 
   if (error && !snapshot) {
     return (
@@ -80,7 +68,7 @@ const RingSnapshotCard: React.FC<RingSnapshotCardProps> = memo(({ cameraId }) =>
         )}
         <Image
           src={imageUrl}
-          alt={`Ring camera snapshot from ${snapshot.camera.name}`}
+          alt={`Ring camera snapshot from ${cameraName}`}
           fill
           unoptimized={true}
           className="object-contain p-2"
@@ -90,10 +78,10 @@ const RingSnapshotCard: React.FC<RingSnapshotCardProps> = memo(({ cameraId }) =>
       <div className="border-t-[1px] border-airq-dark bg-airq-light p-3 flex justify-between items-center">
         <div className="flex flex-col">
           <p className="text-xs text-airq-dark/75 mb-0.5">
-            {snapshot.camera.name}
+            {cameraName}
           </p>
           <p className="text-xs text-airq-dark font-medium">
-            {formatTimestamp(snapshot.captureTimestamp)}
+            {snapshot && formatTimestamp(snapshot.timestamp)}
           </p>
         </div>
         <button
@@ -106,7 +94,7 @@ const RingSnapshotCard: React.FC<RingSnapshotCardProps> = memo(({ cameraId }) =>
       </div>
     </div>
   );
-});
+};
 
 RingSnapshotCard.displayName = 'RingSnapshotCard';
 

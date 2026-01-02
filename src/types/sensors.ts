@@ -142,3 +142,68 @@ export interface CreateSensorReadingPayload {
 export interface CreateSensorReadingData {
   createSensorReading: CreateSensorReadingPayload;
 }
+
+// Air quality distribution data
+export interface AirQualityDistribution {
+  good: number;
+  moderate: number;
+  poor: number;
+  total: number;
+}
+
+export interface GetAirQualityDistributionData {
+  airQualityDistribution: AirQualityDistribution;
+}
+
+export interface AirQualityDistributionsByPeriod {
+  oneDay: AirQualityDistribution;
+  thirtyDays: AirQualityDistribution;
+  allTime: AirQualityDistribution;
+}
+
+export interface GetAirQualityDistributionsByPeriodData {
+  airQualityDistributionsByPeriod: AirQualityDistributionsByPeriod;
+}
+
+// Daily air quality score for heatmap
+export interface DailyAirQualityScore {
+  date: string;
+  score: number | null;
+  readingCount: number;
+}
+
+export interface GetDailyAirQualityScoresData {
+  dailyAirQualityScores: DailyAirQualityScore[];
+}
+
+// Ring Device types
+export interface RingDevice {
+  id: string;
+  deviceId: string;
+  deviceType: string;
+  name: string;
+  location: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RingDeviceInput {
+  deviceId: string;
+  deviceType: string;
+  name: string;
+  location?: string;
+}
+
+export interface GetRingDevicesData {
+  ringDevices: RingDevice[];
+}
+
+export interface BatchUpdateRingDevicesData {
+  batchUpdateRingDevices: {
+    success: boolean;
+    message: string;
+    devicesUpdated: number;
+    devicesCreated: number;
+  };
+}

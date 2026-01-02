@@ -19,6 +19,7 @@ export const env = createEnv({
     NEXT_PUBLIC_GRAPHQL_ENDPOINT: z.string().url(),
     NEXT_PUBLIC_POLL_INTERVAL_MS: z.string().transform((val) => parseInt(val, 10)).pipe(z.number().min(1000)),
     NEXT_PUBLIC_DEBOUNCE_DELAY_MS: z.string().transform((val) => parseInt(val, 10)).pipe(z.number().min(100)),
+    NEXT_PUBLIC_RING_REFRESH_TOKEN: z.string().min(1),
     // Optional sensor range configurations with defaults
     NEXT_PUBLIC_DEFAULT_MIN_CO2: z.string().transform((val) => parseInt(val, 10)).pipe(z.number()).optional(),
     NEXT_PUBLIC_DEFAULT_MAX_CO2: z.string().transform((val) => parseInt(val, 10)).pipe(z.number()).optional(),
@@ -37,6 +38,7 @@ export const env = createEnv({
     NEXT_PUBLIC_GRAPHQL_ENDPOINT: process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT,
     NEXT_PUBLIC_POLL_INTERVAL_MS: process.env.NEXT_PUBLIC_POLL_INTERVAL_MS,
     NEXT_PUBLIC_DEBOUNCE_DELAY_MS: process.env.NEXT_PUBLIC_DEBOUNCE_DELAY_MS,
+    NEXT_PUBLIC_RING_REFRESH_TOKEN: process.env.NEXT_PUBLIC_RING_REFRESH_TOKEN,
     NEXT_PUBLIC_DEFAULT_MIN_CO2: process.env.NEXT_PUBLIC_DEFAULT_MIN_CO2,
     NEXT_PUBLIC_DEFAULT_MAX_CO2: process.env.NEXT_PUBLIC_DEFAULT_MAX_CO2,
     NEXT_PUBLIC_DEFAULT_MIN_TEMP: process.env.NEXT_PUBLIC_DEFAULT_MIN_TEMP,

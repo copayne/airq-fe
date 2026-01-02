@@ -3,6 +3,7 @@ import { type AppType } from "next/app";
 import { JetBrains_Mono, Crimson_Text } from 'next/font/google';
 import { AuthProvider } from '../context/AuthContext';
 import { SensorDataProvider } from '../context/SensorDataContext';
+import { RingProvider } from '../context/RingContext';
 import client from '../lib/apolloClient';
 
 import "~/styles/globals.css";
@@ -32,7 +33,9 @@ const MyApp: AppType = ({ Component, pageProps }) => {
       <ApolloProvider client={client}>
         <AuthProvider>
           <SensorDataProvider>
-            <Component {...pageProps} />
+            <RingProvider>
+              <Component {...pageProps} />
+            </RingProvider>
           </SensorDataProvider>
         </AuthProvider>
       </ApolloProvider>

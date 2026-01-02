@@ -30,3 +30,6 @@ export { useErrorLogs } from './useErrorLogs';
 
 // Utility hooks
 export { useDebouncedRefetch } from './useDebouncedRefetch';
+
+// Air quality hooks
+export { useAirQualityDistribution } from './useAirQualityDistribution';

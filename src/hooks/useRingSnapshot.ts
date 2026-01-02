@@ -1,73 +1,117 @@
-import { useQuery, useMutation } from '@apollo/client';
-import { GET_LATEST_RING_SNAPSHOT, CAPTURE_RING_SNAPSHOT } from '~/graphql/RingSnapshot';
-import { CACHE_FIRST_OPTIONS, DEFAULT_QUERY_OPTIONS } from '~/lib/apolloDefaults';
-
-export interface Camera {
-  id: string;
-  deviceId: string;
-  name: string;
-  location: string | null;
-}
+import { useState, useEffect, useRef } from 'react';
 
 export interface RingSnapshot {
-  id: string;
   imageUrl: string;
-  captureTimestamp: string;
-  fileSize: number | null;
-  createdAt: string;
-  camera: Camera;
+  deviceId: string;
+  timestamp: string;
 }
 
-interface LatestRingSnapshotData {
-  latestRingSnapshot: RingSnapshot | null;
+interface SnapshotResponse {
+  success: boolean;
+  imageUrl?: string;
+  deviceId?: string;
+  timestamp?: string;
+  error?: string;
 }
 
-interface CaptureRingSnapshotData {
-  captureRingSnapshot: {
-    success: boolean;
-    message: string;
-    snapshot: RingSnapshot | null;
-  };
-}
+// Global cache to track auto-captured snapshots across component unmounts/remounts
+const autoCaptureCache = new Map<string, boolean>();
 
-interface CaptureRingSnapshotVariables {
-  cameraId?: number;
-}
+export function useRingSnapshot(deviceId?: string, options?: { captureOnMount?: boolean }) {
+  const [snapshot, setSnapshot] = useState<RingSnapshot | null>(null);
+  const [capturing, setCapturing] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
-export function useRingSnapshot(cameraId?: number) {
-  const { data, loading, error, refetch } = useQuery<LatestRingSnapshotData>(
-    GET_LATEST_RING_SNAPSHOT,
-    {
-      variables: cameraId ? { cameraId } : {},
-      ...CACHE_FIRST_OPTIONS,
-      pollInterval: 60000, // Poll every 60 seconds
-    }
-  );
-
-  const [captureMutation, { loading: capturing }] = useMutation<
-    CaptureRingSnapshotData,
-    CaptureRingSnapshotVariables
-  >(CAPTURE_RING_SNAPSHOT, {
-    errorPolicy: DEFAULT_QUERY_OPTIONS.errorPolicy,
-    onCompleted: () => {
-      void refetch();
-    },
-  });
+  // Track if we've already captured on mount to prevent re-capture on re-render
+  const hasCapturedOnMount = useRef(false);
 
   const captureSnapshot = async () => {
+    if (!deviceId) {
+      setError(new Error('Device ID is required'));
+      return;
+    }
+
+    setCapturing(true);
+    setError(null);
+
     try {
-      await captureMutation({ variables: cameraId ? { cameraId } : {} });
+      const response = await fetch('/api/ring/snapshot', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ deviceId }),
+      });
+
+      const data = await response.json() as SnapshotResponse;
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error ?? 'Failed to capture snapshot');
+      }
+
+      if (data.imageUrl && data.deviceId && data.timestamp) {
+        const newSnapshot: RingSnapshot = {
+          imageUrl: data.imageUrl,
+          deviceId: data.deviceId,
+          timestamp: data.timestamp,
+        };
+        setSnapshot(newSnapshot);
+      }
+
     } catch (err) {
+      const errorMessage = err instanceof Error ? err : new Error('Unknown error');
+      setError(errorMessage);
       console.error('Error capturing snapshot:', err);
+    } finally {
+      setCapturing(false);
     }
   };
 
+  // Load the latest snapshot from disk on mount
+  useEffect(() => {
+    const loadLatestSnapshot = async () => {
+      if (!deviceId) return;
+
+      try {
+        const response = await fetch(`/api/ring/latest-snapshot?deviceId=${deviceId}`);
+        const data = await response.json() as SnapshotResponse;
+
+        if (response.ok && data.success && data.imageUrl && data.deviceId && data.timestamp) {
+          const existingSnapshot: RingSnapshot = {
+            imageUrl: data.imageUrl,
+            deviceId: data.deviceId,
+            timestamp: data.timestamp,
+          };
+          setSnapshot(existingSnapshot);
+        }
+      } catch (err) {
+        // Silently fail - we'll capture a new snapshot anyway
+        console.log('[Ring Snapshot] No existing snapshot found, will capture new one');
+      }
+    };
+
+    void loadLatestSnapshot();
+  }, [deviceId]);
+
+  // Auto-capture on mount if requested and not already captured globally
+  useEffect(() => {
+    if (options?.captureOnMount && deviceId && !hasCapturedOnMount.current) {
+      // Check global cache to see if we've already auto-captured for this device
+      const cacheKey = `auto-capture-${deviceId}`;
+
+      if (!autoCaptureCache.get(cacheKey)) {
+        hasCapturedOnMount.current = true;
+        autoCaptureCache.set(cacheKey, true);
+        void captureSnapshot();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deviceId, options?.captureOnMount]); // Re-run only if deviceId or captureOnMount option changes
+
   return {
-    snapshot: data?.latestRingSnapshot ?? null,
-    loading,
+    snapshot,
     error,
     capturing,
     captureSnapshot,
-    refetch,
   };
 }

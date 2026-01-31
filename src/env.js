@@ -27,6 +27,8 @@ export const env = createEnv({
     NEXT_PUBLIC_DEFAULT_MAX_TEMP: z.string().transform((val) => parseInt(val, 10)).pipe(z.number()).optional(),
     NEXT_PUBLIC_DEFAULT_MIN_HUMIDITY: z.string().transform((val) => parseInt(val, 10)).pipe(z.number()).optional(),
     NEXT_PUBLIC_DEFAULT_MAX_HUMIDITY: z.string().transform((val) => parseInt(val, 10)).pipe(z.number()).optional(),
+    // Query limit for sensor readings (prevents fetching entire database)
+    NEXT_PUBLIC_DEFAULT_QUERY_LIMIT: z.string().transform((val) => parseInt(val, 10)).pipe(z.number().min(100)).optional(),
   },
 
   /**
@@ -45,6 +47,7 @@ export const env = createEnv({
     NEXT_PUBLIC_DEFAULT_MAX_TEMP: process.env.NEXT_PUBLIC_DEFAULT_MAX_TEMP,
     NEXT_PUBLIC_DEFAULT_MIN_HUMIDITY: process.env.NEXT_PUBLIC_DEFAULT_MIN_HUMIDITY,
     NEXT_PUBLIC_DEFAULT_MAX_HUMIDITY: process.env.NEXT_PUBLIC_DEFAULT_MAX_HUMIDITY,
+    NEXT_PUBLIC_DEFAULT_QUERY_LIMIT: process.env.NEXT_PUBLIC_DEFAULT_QUERY_LIMIT,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

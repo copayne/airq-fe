@@ -5,6 +5,7 @@ import { memo } from "react";
 import { useRing } from "~/context/RingContext";
 import { useRingSnapshot } from '~/hooks/useRingSnapshot';
 import type { RingDeviceData } from "~/services/RingController";
+import { getRelativeTime, formatShortDateTime } from "~/utils/dateUtils";
 
 type RingStatusCardProps = {
   deviceId?: string;
@@ -12,31 +13,11 @@ type RingStatusCardProps = {
 };
 
 function formatTimeAgo(timestamp: string | null): string {
-  if (!timestamp) return "Never";
-
-  const now = new Date();
-  const then = new Date(timestamp);
-  const diffMs = now.getTime() - then.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-
-  if (diffMins < 1) return "Just now";
-  if (diffMins < 60) return `${diffMins}m ago`;
-
-  const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `${diffHours}h ago`;
-
-  const diffDays = Math.floor(diffHours / 24);
-  return `${diffDays}d ago`;
+  return getRelativeTime(timestamp, "Never");
 }
 
 function formatTimestamp(timestamp: string) {
-  const date = new Date(timestamp);
-  return date.toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return formatShortDateTime(timestamp);
 }
 
 function SensorStatus({ device }: { device: RingDeviceData }) {

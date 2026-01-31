@@ -24,16 +24,16 @@ const ActionButton: React.FC<ActionButtonProps> = memo(({ label, onClick, loadin
   <button
     onClick={onClick}
     disabled={Boolean(loading) || Boolean(disabled)}
-    className="flex flex-col items-center justify-center p-3 bg-airq-light border border-airq-dark hover:bg-airq-dark hover:text-airq-light transition-colors disabled:opacity-50 disabled:cursor-not-allowed group"
+    className="flex flex-col items-center justify-center p-1.5 bg-airq-light border border-airq-dark hover:bg-airq-dark hover:text-airq-light transition-colors disabled:opacity-50 disabled:cursor-not-allowed group touch-manipulation"
   >
-    <div className="text-2xl mb-1 group-hover:scale-110 transition-transform">
+    <div className="text-lg mb-0.5 group-hover:scale-110 transition-transform">
       {loading ? (
-        <div className="animate-spin h-6 w-6 border-2 border-airq-dark group-hover:border-airq-light border-t-transparent rounded-full" />
+        <div className="animate-spin h-5 w-5 border-2 border-airq-dark group-hover:border-airq-light border-t-transparent rounded-full" />
       ) : (
         icon
       )}
     </div>
-    <span className="text-[10px] font-medium text-center leading-tight">{label}</span>
+    <span className="text-[9px] font-medium text-center leading-tight">{label}</span>
   </button>
 ));
 
@@ -98,35 +98,35 @@ const QuickActionsCard: React.FC = memo(() => {
   }, [handleRefreshSensors, handleRefreshRing]);
 
   return (
-    <div className="h-full w-full flex flex-col bg-airq-light p-2">
-      <div className="grid grid-cols-2 gap-2 flex-1">
+    <div className="h-full w-full flex flex-col bg-airq-light p-1">
+      <div className="grid grid-cols-2 gap-1 flex-1">
         <ActionButton
-          label="Capture Snapshot"
+          label="Capture"
           onClick={handleCaptureSnapshot}
           loading={capturing}
           icon={<span>📷</span>}
         />
         <ActionButton
-          label="Refresh Sensors"
+          label="Sensors"
           onClick={handleRefreshSensors}
           loading={refreshingSensors}
           icon={<span>🌡️</span>}
         />
         <ActionButton
-          label="Refresh Ring"
+          label="Ring"
           onClick={handleRefreshRing}
           loading={refreshingRing}
           icon={<span>🔔</span>}
         />
         <ActionButton
-          label="Refresh All"
+          label="All"
           onClick={handleRefreshAll}
           loading={refreshingSensors || refreshingRing}
           icon={<span>🔄</span>}
         />
       </div>
       {lastAction && (
-        <div className="mt-2 text-center text-xs text-airq-dark/75 bg-airq-dark/5 py-1 rounded">
+        <div className="mt-1 text-center text-[9px] text-airq-dark/75 bg-airq-dark/5 py-0.5 rounded">
           {lastAction}
         </div>
       )}

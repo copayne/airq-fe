@@ -14,6 +14,7 @@ import { DataStateWrapper } from '~/components/common/DataStateWrapper';
 import { GET_DAILY_AIR_QUALITY_SCORES } from '~/graphql/AirQuality';
 import { CACHE_FIRST_OPTIONS } from '~/lib/apolloDefaults';
 import type { DailyAirQualityScore, GetDailyAirQualityScoresData } from '~/types/sensors';
+import type { AirQualityHeatmapConfig } from '~/types/widgetConfig';
 
 interface HeatmapCellProps {
   score: number | null;
@@ -78,7 +79,7 @@ interface MonthData {
   days: (DailyAirQualityScore | null)[];
 }
 
-function organizeByMonth(scores: DailyAirQualityScore[]): MonthData[] {
+function organizeByMonth(scores: DailyAirQualityScore[], daysToShow: number): MonthData[] {
   // Create a map for quick lookup
   const scoreMap = new Map<string, DailyAirQualityScore>();
   scores.forEach(s => scoreMap.set(s.date, s));
@@ -86,7 +87,7 @@ function organizeByMonth(scores: DailyAirQualityScore[]): MonthData[] {
   // Get the date range
   const endDate = new Date();
   const startDate = new Date();
-  startDate.setDate(startDate.getDate() - 547); // 548 days (1.5 years) including today
+  startDate.setDate(startDate.getDate() - (daysToShow - 1)); // daysToShow including today
 
   // Organize by month
   const monthsMap = new Map<string, MonthData>();
@@ -124,19 +125,26 @@ function organizeByMonth(scores: DailyAirQualityScore[]): MonthData[] {
   });
 }
 
-const AirQualityHeatmap: React.FC = memo(() => {
+interface AirQualityHeatmapProps {
+  config?: AirQualityHeatmapConfig;
+}
+
+const AirQualityHeatmap: React.FC<AirQualityHeatmapProps> = memo(({ config }) => {
+  // Use config days value if provided, otherwise default to 548 (1.5 years)
+  const days = config?.days ?? 548;
+
   const { data, loading, error } = useQuery<GetDailyAirQualityScoresData>(
     GET_DAILY_AIR_QUALITY_SCORES,
     {
       ...CACHE_FIRST_OPTIONS,
-      variables: { days: 548 },
+      variables: { days },
     }
   );
 
   const monthsData = useMemo(() => {
     if (!data?.dailyAirQualityScores) return [];
-    return organizeByMonth(data.dailyAirQualityScores);
-  }, [data]);
+    return organizeByMonth(data.dailyAirQualityScores, days);
+  }, [data, days]);
 
   // Find max days in any month for consistent row count
   const maxDays = 31;

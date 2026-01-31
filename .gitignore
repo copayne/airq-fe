@@ -39,6 +39,9 @@ yarn-error.log*
 .env.development
 .env.staging
 
+# Ring API token file (auto-generated, contains refresh token)
+.ring-token
+
 # vercel
 .vercel
 
@@ -52,3 +55,6 @@ yarn-error.log*
 CLAUDE.md
 OPTIMIZE.md
 PLAN.md
+
+# ring snapshots
+/public/ring-snapshots

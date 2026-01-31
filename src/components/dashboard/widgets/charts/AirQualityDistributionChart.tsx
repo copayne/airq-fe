@@ -10,6 +10,7 @@
  * and condition assessments are performed server-side via the GraphQL API.
  */
 
+import { useQuery } from '@apollo/client';
 import {
   ArcElement,
   Chart as ChartJS,
@@ -19,12 +20,11 @@ import {
 } from 'chart.js';
 import React, { memo, useMemo } from 'react';
 import { Doughnut } from 'react-chartjs-2';
-import { useQuery } from '@apollo/client';
-import { GET_AIR_QUALITY_DISTRIBUTIONS_BY_PERIOD } from '~/graphql/AirQuality';
-import type { GetAirQualityDistributionsByPeriodData, AirQualityDistribution } from '~/types/sensors';
 import { DataStateWrapper } from '~/components/common/DataStateWrapper';
-import { CACHE_FIRST_OPTIONS } from '~/lib/apolloDefaults';
 import { env } from '~/env.js';
+import { GET_AIR_QUALITY_DISTRIBUTIONS_BY_PERIOD } from '~/graphql/AirQuality';
+import { CACHE_FIRST_OPTIONS } from '~/lib/apolloDefaults';
+import type { AirQualityDistribution, GetAirQualityDistributionsByPeriodData } from '~/types/sensors';
 
 // Register Chart.js components
 ChartJS.register(ArcElement, Title, Tooltip, Legend);
@@ -107,21 +107,21 @@ const SingleDoughnut: React.FC<SingleDoughnutProps> = memo(({ distribution, labe
       ctx.textBaseline = 'middle';
 
       // Time period label
-      ctx.font = 'bold 11px sans-serif';
+      ctx.font = 'bold 9px sans-serif';
       ctx.fillStyle = '#666';
-      ctx.fillText(label, centerX, centerY - 10);
+      ctx.fillText(label, centerX, centerY - 8);
 
       // Dominant percentage
       const conditionColor = dominantCondition === 'good' ? '#137547' : dominantCondition === 'moderate' ? '#FFC914' : '#ED4C4C';
-      ctx.font = 'bold 18px sans-serif';
+      ctx.font = 'bold 11px sans-serif';
       ctx.fillStyle = conditionColor;
-      ctx.fillText(`${dominantPercentage}%`, centerX, centerY + 10);
+      ctx.fillText(`${dominantPercentage}%`, centerX, centerY + 4);
 
       // Condition text
       const conditionText = dominantCondition.charAt(0).toUpperCase() + dominantCondition.slice(1);
-      ctx.font = '10px sans-serif';
+      ctx.font = '9px sans-serif';
       ctx.fillStyle = '#666';
-      ctx.fillText(conditionText, centerX, centerY + 25);
+      ctx.fillText(conditionText, centerX, centerY + 15);
 
       ctx.restore();
     },
@@ -129,14 +129,14 @@ const SingleDoughnut: React.FC<SingleDoughnutProps> = memo(({ distribution, labe
 
   return (
     <div className="flex flex-col items-center">
-      <div className="w-32 h-32">
+      <div className="w-20 h-20">
         <Doughnut
           data={chartData}
           options={options}
           plugins={[centerTextPlugin]}
         />
       </div>
-      <div className="mt-2 text-xs text-gray-600 text-center">
+      <div className="mt-1 text-[10px] text-gray-600 text-center">
         {distribution.total} readings
       </div>
     </div>
@@ -176,25 +176,25 @@ const AirQualityDistributionChart: React.FC = memo(() => {
       showSpinner={true}
     >
       {distributions && (
-        <div className="h-full p-4 flex flex-col">
+        <div className="h-full p-2 flex flex-col">
           {/* Legend */}
-          <div className="flex justify-center gap-4 mb-4 text-xs">
+          <div className="flex justify-center gap-2 mb-2 text-[9px]">
             <div className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded-full bg-[#137547]"></div>
+              <div className="w-2 h-2 rounded-full bg-[#137547]"></div>
               <span>Good</span>
             </div>
             <div className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded-full bg-[#FFC914]"></div>
+              <div className="w-2 h-2 rounded-full bg-[#FFC914]"></div>
               <span>Moderate</span>
             </div>
             <div className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded-full bg-[#ED4C4C]"></div>
+              <div className="w-2 h-2 rounded-full bg-[#ED4C4C]"></div>
               <span>Poor</span>
             </div>
           </div>
 
           {/* Three doughnut charts - vertically stacked */}
-          <div className="flex-1 flex flex-col items-center justify-around gap-2">
+          <div className="flex-1 flex flex-col items-center justify-around gap-1">
             <SingleDoughnut distribution={distributions.oneDay} label="24 Hours" />
             <SingleDoughnut distribution={distributions.thirtyDays} label="30 Days" />
             <SingleDoughnut distribution={distributions.allTime} label="All Time" />

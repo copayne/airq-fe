@@ -1,10 +1,12 @@
 import {
-  LogIn
+  LogIn,
+  Settings
 } from 'lucide-react';
 import Link from 'next/link';
 import React, { memo } from 'react';
 import { useAuth } from '~/context/AuthContext';
 import { UserMenu } from '../auth/UserMenu';
+import AlertBell from './AlertBell';
 
 const Header: React.FC = memo(() => {
   const { isAuthenticated, user, isLoading } = useAuth();
@@ -31,6 +33,14 @@ const Header: React.FC = memo(() => {
                   verify email
                 </div>
               )}
+              <AlertBell />
+              <Link
+                href="/settings"
+                className="p-2 text-airq-dark hover:text-airq-contrast hover:bg-gray-100 rounded-md transition-colors"
+                title="Settings"
+              >
+                <Settings className="w-5 h-5" />
+              </Link>
               <UserMenu user={user} />
             </div>
           ) : (

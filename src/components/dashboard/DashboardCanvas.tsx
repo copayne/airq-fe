@@ -1,11 +1,14 @@
-// Dashboard.tsx
-import React, { Suspense, memo, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { Suspense, memo, useCallback, useMemo } from 'react';
 import { Responsive, WidthProvider, type Layout, type Layouts } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
-import { useSensors } from '~/hooks/useSensors';
+import { useDashboardLayoutContext } from '~/context/DashboardLayoutContext';
+import type { DashboardLayoutData, GridItemLayout, WidgetState } from '~/types/dashboard';
+import { getDefaultWidgetConfig } from '~/types/widgetConfig';
+import LayoutMenu from './LayoutMenu';
+import WidgetMenu from './WidgetMenu';
+import WidgetConfigPanel from './WidgetConfigPanel';
 
-// Create a responsive grid layout with width provider
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
 // Types
@@ -21,27 +24,171 @@ interface WidgetWrapperProps {
   widget: Widget;
   children: React.ReactNode;
   onRemove: (id: string) => void;
+  onConfigChange: (widgetId: string, config: Record<string, unknown>) => void;
 }
 
-// Dashboard component
-const DashboardCanvas = memo(() => {
-  // Get sensor data for the basement sensor card
-  const { sensors } = useSensors({ fetchPolicy: 'cache-first' });
-  const basementSensor = useMemo(() =>
-    sensors?.find(s => s.currentLocation.name.toLowerCase() === 'basement'),
-    [sensors]
-  );
+interface WidgetRendererProps {
+  widget: Widget;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  widgetComponents: Record<string, React.LazyExoticComponent<React.ComponentType<any>>>;
+}
 
-  // Widget components with lazy loading - consolidated for simplicity
+// Helper to get widget title from type
+const getWidgetTitle = (type: string): string => {
+  const titles: Record<string, string> = {
+    'TABLE': 'Sensor Readings',
+    'TEMPERATURE_CHART': 'Temperature Trends',
+    'CO2_CHART': 'CO2 Trends',
+    'HUMIDITY_CHART': 'Humidity Trends',
+    'MULTI_METRIC_CHART': 'Multi-Metric Chart',
+    'AIR_QUALITY_DISTRIBUTION': 'Air Quality Distribution',
+    'AIR_QUALITY_HEATMAP': 'Air Quality Heatmap',
+    'METRICS_CARD': 'Metrics',
+    'RING_SNAPSHOT': 'Camera',
+    'RING_CONTACT_SENSORS': 'Door Sensors',
+    'RING_STATUS': 'Ring Status',
+    'QUICK_ACTIONS': 'Quick Actions',
+    'RING_EVENTS': 'Ring Events',
+  };
+  return titles[type] ?? type;
+};
+
+// Helper to convert GridItemLayout to Layout
+const toLayout = (item: GridItemLayout): Layout => ({
+  i: item.i,
+  x: item.x,
+  y: item.y,
+  w: item.w,
+  h: item.h,
+  minW: item.minW,
+  minH: item.minH,
+  maxW: item.maxW,
+  maxH: item.maxH,
+});
+
+// Helper to compare widget configs by value (not reference)
+const areConfigsEqual = (prevConfig: Record<string, unknown>, nextConfig: Record<string, unknown>): boolean => {
+  const keys = new Set([...Object.keys(prevConfig), ...Object.keys(nextConfig)]);
+  for (const key of keys) {
+    const prevVal = prevConfig[key];
+    const nextVal = nextConfig[key];
+    // Handle arrays specially - compare by stringified value
+    if (Array.isArray(prevVal) && Array.isArray(nextVal)) {
+      if (JSON.stringify(prevVal) !== JSON.stringify(nextVal)) return false;
+    } else if (prevVal !== nextVal) {
+      return false;
+    }
+  }
+  return true;
+};
+
+// Widget loading skeleton - defined outside to prevent recreation
+const WidgetLoadingSkeleton: React.FC<{ type: string }> = memo(({ type }) => {
+  const isTable = type === 'TABLE';
+  return (
+    <div
+      className="w-full animate-pulse bg-gray-100"
+      style={{ height: isTable ? '400px' : '150px' }}
+    >
+      <div className="p-4">
+        {isTable ? (
+          <>
+            <div className="h-6 bg-gray-300 rounded mb-4 w-1/2"></div>
+            <div className="space-y-2">
+              <div className="h-4 bg-gray-300 rounded"></div>
+              <div className="h-4 bg-gray-300 rounded"></div>
+              <div className="h-4 bg-gray-300 rounded"></div>
+            </div>
+          </>
+        ) : (
+          <div className="h-4 bg-gray-300 rounded"></div>
+        )}
+      </div>
+    </div>
+  );
+});
+WidgetLoadingSkeleton.displayName = 'WidgetLoadingSkeleton';
+
+// Widget renderer - memoized with custom comparison to only re-render when config values change
+const WidgetRenderer: React.FC<WidgetRendererProps> = memo(({ widget, widgetComponents }) => {
+  const WidgetComponent = widgetComponents[widget.type];
+
+  if (!WidgetComponent) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-red-50 border-2 border-red-200">
+        <p className="text-red-600">Unknown widget type: {widget.type}</p>
+      </div>
+    );
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const Component = WidgetComponent as React.ComponentType<any>;
+
+  return (
+    <Suspense fallback={<WidgetLoadingSkeleton type={widget.type} />}>
+      <Component {...(widget.props ?? {})} config={widget.config} />
+    </Suspense>
+  );
+}, (prevProps, nextProps) => {
+  // Custom comparison: only re-render if widget id, type, or config VALUES change
+  if (prevProps.widget.id !== nextProps.widget.id) return false;
+  if (prevProps.widget.type !== nextProps.widget.type) return false;
+  if (!areConfigsEqual(prevProps.widget.config, nextProps.widget.config)) return false;
+  // Props comparison (shallow)
+  if (JSON.stringify(prevProps.widget.props) !== JSON.stringify(nextProps.widget.props)) return false;
+  return true;
+});
+WidgetRenderer.displayName = 'WidgetRenderer';
+
+// Widget wrapper - memoized with custom comparison
+const WidgetWrapper: React.FC<WidgetWrapperProps> = memo(({ widget, children, onRemove, onConfigChange }) => (
+  <div className="h-full w-full border-black border-[1px] shadow-airq-dark shadow-card flex flex-col overflow-hidden">
+    <div className="bg-airq-dark text-airq-light px-2 py-1 flex justify-between items-center border-b-[1px] border-airq-dark">
+      <p className="h-[18px] text-xs font-semibold flex-1 align-baseline widget-drag-handle cursor-grab">
+        {widget.title}
+      </p>
+      <div className="flex items-center gap-0.5">
+        <WidgetConfigPanel
+          widgetId={widget.id}
+          widgetType={widget.type}
+          config={widget.config}
+          onConfigChange={onConfigChange}
+        />
+        <button
+          onClick={() => onRemove(widget.id)}
+          className="text-airq-light hover:text-airq-light/80 focus:outline-none p-0.5"
+          title="Remove"
+        >
+          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div className="flex-1 overflow-hidden">{children}</div>
+  </div>
+), (prevProps, nextProps) => {
+  // Custom comparison: only re-render if widget id, title, type, or config VALUES change
+  if (prevProps.widget.id !== nextProps.widget.id) return false;
+  if (prevProps.widget.title !== nextProps.widget.title) return false;
+  if (prevProps.widget.type !== nextProps.widget.type) return false;
+  if (!areConfigsEqual(prevProps.widget.config, nextProps.widget.config)) return false;
+  // Callback references don't matter for rendering - assume they're stable
+  return true;
+});
+WidgetWrapper.displayName = 'WidgetWrapper';
+
+const DashboardCanvas = memo(() => {
+  // Widget components with lazy loading - stable reference
   const WIDGETS = useMemo(() => ({
     TABLE: React.lazy(() => import('./widgets/tables/SensorReadingTable')),
     TEMPERATURE_CHART: React.lazy(() => import('./widgets/charts/MetricChart').then(m => ({ default: m.TemperatureChart }))),
     CO2_CHART: React.lazy(() => import('./widgets/charts/MetricChart').then(m => ({ default: m.CO2Chart }))),
+    HUMIDITY_CHART: React.lazy(() => import('./widgets/charts/MetricChart').then(m => ({ default: m.HumidityChart }))),
     MULTI_METRIC_CHART: React.lazy(() => import('./widgets/charts/MetricChart').then(m => ({ default: m.MultiMetricChart }))),
     AIR_QUALITY_DISTRIBUTION: React.lazy(() => import('./widgets/charts/AirQualityDistributionChart')),
     AIR_QUALITY_HEATMAP: React.lazy(() => import('./widgets/charts/AirQualityHeatmap')),
     METRICS_CARD: React.lazy(() => import('./widgets/cards/MetricsCard')),
-    SENSOR_CARD: React.lazy(() => import('./widgets/cards/SensorCard')),
     RING_SNAPSHOT: React.lazy(() => import('./widgets/cards/RingSnapshotCard')),
     RING_CONTACT_SENSORS: React.lazy(() => import('./widgets/RingContactSensorCard')),
     RING_STATUS: React.lazy(() => import('./widgets/RingStatusCard')),
@@ -49,307 +196,235 @@ const DashboardCanvas = memo(() => {
     RING_EVENTS: React.lazy(() => import('./widgets/cards/RingEventsCard')),
   }), []);
 
-  type WidgetType = keyof typeof WIDGETS;
+  // Get layout data directly from context
+  const {
+    currentLayoutData,
+    updateLayoutData,
+    updateWidgetConfig,
+    isLoading,
+    droppingWidget,
+    setDroppingWidget,
+  } = useDashboardLayoutContext();
 
-  // Widget loading skeleton component
-  const WidgetLoadingSkeleton: React.FC<{ type: string }> = ({ type }) => {
-    const skeletonConfig: Record<string, { height: string; content: React.ReactNode }> = {
-      'TABLE': {
-        height: '400px',
-        content: (
-          <>
-            <div className="h-6 bg-gray-300 rounded mb-4 w-1/2"></div>
-            <div className="space-y-2">
-              <div className="h-4 bg-gray-300 rounded"></div>
-              <div className="h-4 bg-gray-300 rounded"></div>
-              <div className="h-4 bg-gray-300 rounded"></div>
-              <div className="h-4 bg-gray-300 rounded"></div>
-            </div>
-          </>
-        )
-      },
+  // Derive widgets from context layout data
+  // Merge default config for widgets that don't have config set
+  const widgets = useMemo((): Widget[] => {
+    if (!currentLayoutData?.widgets) return [];
+    return currentLayoutData.widgets.map((ws: WidgetState) => {
+      const defaultConfig = getDefaultWidgetConfig(ws.type);
+      return {
+        id: ws.instanceId,
+        title: getWidgetTitle(ws.type),
+        type: ws.type,
+        config: { ...defaultConfig, ...ws.config },
+        props: ws.props,
+      };
+    });
+  }, [currentLayoutData]);
+
+  // Derive grid layouts from context layout data
+  const layouts = useMemo((): Layouts => {
+    if (!currentLayoutData?.widgets) return { lg: [], md: [], sm: [] };
+
+    const result: Layouts = { lg: [], md: [], sm: [] };
+
+    currentLayoutData.widgets.forEach((ws: WidgetState) => {
+      if (ws.layout.lg) result.lg?.push(toLayout(ws.layout.lg));
+      if (ws.layout.md) result.md?.push(toLayout(ws.layout.md));
+      if (ws.layout.sm) result.sm?.push(toLayout(ws.layout.sm));
+    });
+
+    return result;
+  }, [currentLayoutData]);
+
+  // Dropping item for external drag (from widget menu)
+  // Use MINIMUM dimensions so new widgets don't disrupt existing layout
+  const droppingItem = useMemo((): Layout | undefined => {
+    if (!droppingWidget) return undefined;
+    const lgLayout = droppingWidget.defaultLayouts.lg;
+    return {
+      i: '__dropping-elem__',
+      x: 0,
+      y: 0,
+      w: lgLayout.minW ?? lgLayout.w,
+      h: lgLayout.minH ?? lgLayout.h,
     };
+  }, [droppingWidget]);
 
-    const config = skeletonConfig[type] ?? {
-      height: '150px',
-      content: <div className="h-4 bg-gray-300 rounded"></div>
-    };
+  // Update context when layout changes (drag/resize)
+  // Updates ALL widgets from the layout array to preserve positions after compaction
+  const handleDragOrResizeStop = useCallback(
+    (layout: Layout[], _oldItem: Layout, _newItem: Layout) => {
+      if (!currentLayoutData) return;
 
+      // Update ALL widgets' layouts from the current layout array
+      // This preserves positions of widgets that were pushed by compaction
+      const updatedWidgets = currentLayoutData.widgets.map((ws: WidgetState) => {
+        const currentPos = layout.find(l => l.i === ws.instanceId);
+        if (!currentPos) return ws;
+
+        return {
+          ...ws,
+          layout: {
+            ...ws.layout,
+            lg: {
+              i: currentPos.i,
+              x: currentPos.x,
+              y: currentPos.y,
+              w: currentPos.w,
+              h: currentPos.h,
+              minW: ws.layout.lg?.minW,
+              minH: ws.layout.lg?.minH,
+              maxW: ws.layout.lg?.maxW,
+              maxH: ws.layout.lg?.maxH,
+            },
+          },
+        };
+      });
+
+      const newLayoutData: DashboardLayoutData = {
+        ...currentLayoutData,
+        widgets: updatedWidgets,
+      };
+
+      updateLayoutData(newLayoutData);
+    },
+    [currentLayoutData, updateLayoutData]
+  );
+
+  // Handle external drop (from widget menu)
+  const handleDrop = useCallback(
+    (layout: Layout[], layoutItem: Layout, _event: Event) => {
+      if (!droppingWidget || !currentLayoutData) return;
+
+      const instanceId = `widget-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
+      // Get minimum dimensions for the new widget
+      const lgLayout = droppingWidget.defaultLayouts.lg;
+      const mdLayout = droppingWidget.defaultLayouts.md;
+      const smLayout = droppingWidget.defaultLayouts.sm;
+
+      // Update existing widgets with their current positions from the layout array
+      // This preserves where react-grid-layout placed them after compaction
+      const updatedExistingWidgets = currentLayoutData.widgets.map((ws: WidgetState) => {
+        const currentPos = layout.find(l => l.i === ws.instanceId);
+        if (!currentPos) return ws;
+
+        return {
+          ...ws,
+          layout: {
+            ...ws.layout,
+            lg: {
+              ...ws.layout.lg!,
+              x: currentPos.x,
+              y: currentPos.y,
+              w: currentPos.w,
+              h: currentPos.h,
+            },
+          },
+        };
+      });
+
+      // Get default config for this widget type
+      const defaultConfig = getDefaultWidgetConfig(droppingWidget.id);
+
+      // Create the new widget at the drop position with MINIMUM dimensions
+      const newWidget: WidgetState = {
+        instanceId,
+        type: droppingWidget.id,
+        config: Object.keys(defaultConfig).length > 0 ? defaultConfig : undefined,
+        layout: {
+          lg: {
+            i: instanceId,
+            x: layoutItem.x,
+            y: layoutItem.y,
+            w: lgLayout.minW ?? lgLayout.w,
+            h: lgLayout.minH ?? lgLayout.h,
+            minW: lgLayout.minW,
+            minH: lgLayout.minH,
+            maxW: lgLayout.maxW,
+            maxH: lgLayout.maxH,
+          },
+          md: {
+            i: instanceId,
+            x: Math.min(layoutItem.x, 16 - (mdLayout.minW ?? mdLayout.w)),
+            y: layoutItem.y,
+            w: mdLayout.minW ?? mdLayout.w,
+            h: mdLayout.minH ?? mdLayout.h,
+            minW: mdLayout.minW,
+            minH: mdLayout.minH,
+            maxW: mdLayout.maxW,
+            maxH: mdLayout.maxH,
+          },
+          sm: {
+            i: instanceId,
+            x: 0,
+            y: layoutItem.y,
+            w: smLayout.minW ?? smLayout.w,
+            h: smLayout.minH ?? smLayout.h,
+            minW: smLayout.minW,
+            minH: smLayout.minH,
+            maxW: smLayout.maxW,
+            maxH: smLayout.maxH,
+          },
+        },
+      };
+
+      const newLayoutData: DashboardLayoutData = {
+        ...currentLayoutData,
+        widgets: [...updatedExistingWidgets, newWidget],
+      };
+
+      updateLayoutData(newLayoutData);
+      setDroppingWidget(null);
+    },
+    [droppingWidget, currentLayoutData, updateLayoutData, setDroppingWidget]
+  );
+
+  // Remove a widget
+  const removeWidget = useCallback(
+    (id: string) => {
+      if (!currentLayoutData) return;
+
+      const updatedWidgets = currentLayoutData.widgets.filter(
+        (ws: WidgetState) => ws.instanceId !== id
+      );
+
+      const newLayoutData: DashboardLayoutData = {
+        ...currentLayoutData,
+        widgets: updatedWidgets,
+      };
+
+      updateLayoutData(newLayoutData);
+    },
+    [currentLayoutData, updateLayoutData]
+  );
+
+  // Loading state
+  if (isLoading && widgets.length === 0) {
     return (
-      <div
-        className="w-full animate-pulse bg-gray-100"
-        style={{ height: config.height }}
-      >
-        <div className="p-4">
-          {config.content}
+      <div className="h-full w-full p-4 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-airq-primary mx-auto mb-4"></div>
+          <p className="text-airq-dark">Loading dashboard layout...</p>
         </div>
       </div>
     );
-  };
+  }
 
-  // Widget renderer with error boundary and suspense - memoized to prevent unnecessary re-renders
-  const WidgetRenderer = memo<{ widget: Widget }>(
-    ({ widget }) => {
-      const WidgetComponent = WIDGETS[widget.type as WidgetType];
-
-      if (!WidgetComponent) {
-        return (
-          <div className="w-full h-full flex items-center justify-center bg-red-50 border-2 border-red-200">
-            <p className="text-red-600">Unknown widget type: {widget.type}</p>
-          </div>
-        );
-      }
-
-      // Type assertion: We know the props match the component's expected props at runtime
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const Component = WidgetComponent as React.ComponentType<any>;
-
-      return (
-        <Suspense fallback={<WidgetLoadingSkeleton type={widget.type} />}>
-          <Component
-            {...(widget.props ?? {} as Record<string, unknown>)}
-          />
-        </Suspense>
-      );
-    },
-    (prevProps, nextProps) => {
-      // Deep comparison: only re-render if widget data actually changed
-      // This prevents re-renders during layout changes (resize/drag)
-      return (
-        prevProps.widget.id === nextProps.widget.id &&
-        prevProps.widget.type === nextProps.widget.type &&
-        JSON.stringify(prevProps.widget.props) === JSON.stringify(nextProps.widget.props) &&
-        JSON.stringify(prevProps.widget.config) === JSON.stringify(nextProps.widget.config)
-      );
-    }
-  );
-  WidgetRenderer.displayName = 'WidgetRenderer';
-
-  // Generate default layouts for widgets
-  const generateDefaultLayouts = useMemo(() => {
-    return {
-      lg: [
-        // Basement sensor (top-left)
-        { i: 'widget-7', x: 0, y: 0, w: 5, h: 2, minW: 5, minH: 2 },
-        // Metrics widget (below basement)
-        { i: 'widget-1', x: 0, y: 2, w: 5, h: 5, minW: 5, minH: 5 },
-        // Air Quality Distribution (bottom-left, tall)
-        { i: 'widget-2', x: 0, y: 7, w: 5, h: 8, minW: 4, minH: 8 },
-        // CO2 chart (top-middle)
-        { i: 'widget-3', x: 5, y: 0, w: 12, h: 4, minW: 8, minH: 4 },
-        // Ring snapshot (middle)
-        { i: 'widget-5', x: 5, y: 4, w: 12, h: 8, minW: 8, minH: 6 },
-        // Ring contact sensors (bottom-middle)
-        { i: 'widget-6', x: 5, y: 12, w: 12, h: 3, minW: 10, minH: 2 },
-        // Air Quality Heatmap (right, top)
-        { i: 'widget-8', x: 17, y: 0, w: 7, h: 9, minW: 5, minH: 9 },
-        // Ring Events (right, below heatmap)
-        { i: 'widget-9', x: 17, y: 9, w: 7, h: 6, minW: 5, minH: 4 },
-      ],
-      md: [
-        // Basement sensor (top row)
-        { i: 'widget-7', x: 0, y: 0, w: 6, h: 2, minW: 5, minH: 2 },
-        // Metrics widget (below basement sensor)
-        { i: 'widget-1', x: 0, y: 2, w: 4, h: 5, minW: 4, minH: 5 },
-        // CO2 chart (top-right)
-        { i: 'widget-3', x: 4, y: 0, w: 8, h: 4, minW: 6, minH: 4 },
-        // Air Quality Heatmap (right side)
-        { i: 'widget-8', x: 12, y: 0, w: 4, h: 6, minW: 4, minH: 5 },
-        // Air Quality Distribution (bottom-left, tall)
-        { i: 'widget-2', x: 0, y: 7, w: 4, h: 7, minW: 3, minH: 7 },
-        // Ring snapshot (bottom-middle)
-        { i: 'widget-5', x: 4, y: 4, w: 8, h: 6, minW: 6, minH: 5 },
-        // Ring contact sensors (below camera)
-        { i: 'widget-6', x: 4, y: 10, w: 12, h: 3, minW: 8, minH: 2 },
-        // Ring Events (bottom-right)
-        { i: 'widget-9', x: 12, y: 6, w: 4, h: 7, minW: 4, minH: 4 },
-      ],
-      sm: [
-        // Basement sensor (top)
-        { i: 'widget-7', x: 0, y: 0, w: 12, h: 2, minW: 8, minH: 2 },
-        // Metrics widget
-        { i: 'widget-1', x: 0, y: 2, w: 12, h: 5, minW: 8, minH: 5 },
-        // CO2 chart
-        { i: 'widget-3', x: 0, y: 7, w: 12, h: 5, minW: 8, minH: 4 },
-        // Air Quality Heatmap
-        { i: 'widget-8', x: 0, y: 12, w: 12, h: 4, minW: 8, minH: 4 },
-        // Air Quality Distribution (tall)
-        { i: 'widget-2', x: 0, y: 18, w: 12, h: 8, minW: 8, minH: 8 },
-        // Ring snapshot
-        { i: 'widget-5', x: 0, y: 26, w: 12, h: 7, minW: 8, minH: 5 },
-        // Ring contact sensors
-        { i: 'widget-6', x: 0, y: 33, w: 12, h: 3, minW: 8, minH: 2 },
-        // Ring Events
-        { i: 'widget-9', x: 0, y: 36, w: 12, h: 5, minW: 8, minH: 4 },
-      ],
-    };
-  }, []);
-
-  // Generate initial widgets for the dashboard
-  const generateInitialWidgets = useMemo(() => {
-    const widgets: Widget[] = [
-      {
-        id: 'widget-1',
-        title: 'Metrics',
-        type: 'METRICS_CARD',
-        config: {}
-      },
-      {
-        id: 'widget-2',
-        title: 'Air Quality Distribution',
-        type: 'AIR_QUALITY_DISTRIBUTION',
-        config: {},
-        props: {
-          showLegend: true,
-          showTitle: false,
-        },
-      },
-      {
-        id: 'widget-3',
-        title: 'CO2 Trends',
-        type: 'CO2_CHART',
-        config: { timeRange: '24h' }
-      },
-      {
-        id: 'widget-5',
-        title: 'Front Porch Camera',
-        type: 'RING_SNAPSHOT',
-        config: {},
-        props: {
-          deviceId: '59852574',
-          cameraName: 'Front Porch',
-        },
-      },
-      {
-        id: 'widget-6',
-        title: 'Door Sensors',
-        type: 'RING_CONTACT_SENSORS',
-        config: {},
-        props: {},
-      },
-      {
-        id: 'widget-7',
-        title: 'Basement',
-        type: 'SENSOR_CARD',
-        config: {},
-        props: {
-          sensor: basementSensor ?? null,
-        },
-      },
-      {
-        id: 'widget-8',
-        title: 'Air Quality Heatmap',
-        type: 'AIR_QUALITY_HEATMAP',
-        config: {},
-      },
-      {
-        id: 'widget-9',
-        title: 'Ring Events',
-        type: 'RING_EVENTS',
-        config: {},
-      },
-    ];
-
-    return widgets;
-  }, [basementSensor]);
-
-  // State
-  const [layouts, setLayouts] = useState<Layouts>(generateDefaultLayouts);
-  const [widgets, setWidgets] = useState<Widget[]>(generateInitialWidgets);
-
-  // Update widgets when sensor data loads
-  useEffect(() => {
-    setWidgets(generateInitialWidgets);
-  }, [generateInitialWidgets]);
-
-  // Save layouts and widgets when they change
-  useEffect(() => {
-    localStorage.setItem('dashboard-layouts', JSON.stringify(layouts));
-  }, [layouts]);
-  
-  useEffect(() => {
-    localStorage.setItem('dashboard-widgets', JSON.stringify(widgets));
-  }, [widgets]);
-
-  // Handle layout change - memoized callback
-  // Handle layout changes only when drag/resize stops to prevent excessive updates
-  const handleLayoutChange = useCallback((_currentLayout: Layout[], _allLayouts: Layouts) => {
-    // This is called continuously during drag/resize - we'll use onDragStop/onResizeStop instead
-  }, []);
-
-  const handleDragOrResizeStop = useCallback((_layout: Layout[], oldItem: Layout, newItem: Layout) => {
-    // Only update if position or size actually changed
-    if (oldItem.x !== newItem.x || oldItem.y !== newItem.y ||
-        oldItem.w !== newItem.w || oldItem.h !== newItem.h) {
-      // Get current layouts from state and update
-      setLayouts(prev => {
-        const newLayouts = { ...prev };
-        // Update each breakpoint's layout
-        Object.keys(newLayouts).forEach(breakpoint => {
-          const layoutForBreakpoint = newLayouts[breakpoint];
-          const itemIndex = layoutForBreakpoint?.findIndex((item: Layout) => item.i === newItem.i);
-          if (itemIndex !== undefined && itemIndex >= 0 && layoutForBreakpoint) {
-            layoutForBreakpoint[itemIndex] = { ...layoutForBreakpoint[itemIndex], ...newItem };
-          }
-        });
-        return newLayouts;
-      });
-    }
-  }, []);
-
-  // Remove a widget - memoized callback with functional updates
-  const removeWidget = useCallback((id: string) => {
-    setWidgets(prev => prev.filter(widget => widget.id !== id));
-
-    setLayouts(prev => {
-      const newLayouts = { ...prev };
-      Object.keys(newLayouts).forEach((breakpoint: string) => {
-        if (newLayouts[breakpoint]) {
-          newLayouts[breakpoint] = newLayouts[breakpoint].filter((item: Layout) => item.i !== id);
-        }
-      });
-      return newLayouts;
-    });
-  }, []);
-
-  // Widget wrapper component - memoized with custom comparison to prevent unnecessary re-renders
-  const WidgetWrapper = memo<WidgetWrapperProps>(
-    ({ widget, children, onRemove }) => {
-      return (
-        <div className="h-full w-full border-black border-[1px] shadow-airq-dark shadow-card flex flex-col overflow-hidden">
-          <div className="bg-airq-dark text-airq-light px-2 py-1 flex justify-between items-center border-b-[1px] border-airq-dark">
-            <p className="h-[18px] text-xs font-semibold w-full align-baseline widget-drag-handle cursor-grab">{widget.title}</p>
-            <div className="flex space-x-2">
-              {/* <button
-                onClick={() => openWidgetSettings(widget)}
-                className="text-gray-300 hover:text-white focus:outline-none"
-                title="Settings"
-              >
-                <span>⚙️  </span>
-              </button> */}
-              <button
-                onClick={() => onRemove(widget.id)}
-                className="text-airq-light hover:text-airq-light focus:outline-none"
-                title="Remove"
-              >
-                <span>x</span>
-              </button>
-            </div>
-          </div>
-          <div className="flex-1 overflow-hidden">
-            {children}
-          </div>
+  // Empty state
+  if (!isLoading && widgets.length === 0) {
+    return (
+      <div className="h-full w-full p-4 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-airq-dark mb-4">No dashboard layout found.</p>
+          <p className="text-airq-dark/70 text-sm">Use the layout menu to load or create a layout.</p>
         </div>
-      );
-    },
-    (prevProps, nextProps) => {
-      // Only re-render if widget id or title changed
-      // Children are always different but React will handle their memoization
-      return prevProps.widget.id === nextProps.widget.id &&
-             prevProps.widget.title === nextProps.widget.title;
-    }
-  );
-  WidgetWrapper.displayName = 'WidgetWrapper';
+        <LayoutMenu />
+        <WidgetMenu />
+      </div>
+    );
+  }
 
   return (
     <div className="h-full w-full p-4 overflow-hidden">
@@ -360,24 +435,29 @@ const DashboardCanvas = memo(() => {
         cols={{ lg: 24, md: 16, sm: 12 }}
         rowHeight={55}
         margin={[8, 8]}
-        onLayoutChange={handleLayoutChange}
         onDragStop={handleDragOrResizeStop}
         onResizeStop={handleDragOrResizeStop}
         isDraggable={true}
         isResizable={true}
-        resizeHandles={['se']}
+        resizeHandles={['se', 'sw']}
         draggableHandle=".widget-drag-handle"
         compactType="vertical"
         preventCollision={false}
+        isDroppable={true}
+        droppingItem={droppingItem}
+        onDrop={handleDrop}
       >
         {widgets.map(widget => (
           <div key={widget.id}>
-            <WidgetWrapper widget={widget} onRemove={removeWidget}>
-              <WidgetRenderer widget={widget} />
+            <WidgetWrapper widget={widget} onRemove={removeWidget} onConfigChange={updateWidgetConfig}>
+              <WidgetRenderer widget={widget} widgetComponents={WIDGETS} />
             </WidgetWrapper>
           </div>
         ))}
       </ResponsiveGridLayout>
+
+      <LayoutMenu />
+      <WidgetMenu />
     </div>
   );
 });

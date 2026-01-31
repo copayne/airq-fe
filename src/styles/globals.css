@@ -64,3 +64,131 @@
     -moz-user-select: none !important;
     -ms-user-select: none !important;
 }
+
+/* ============================================
+   Touch-Friendly Resize Handles for Tablets
+   Minimum 44x44px touch target per WCAG guidelines
+   ============================================ */
+
+/* Base resize handle - 44x44px touch target */
+.react-resizable-handle {
+    position: absolute;
+    width: 44px;
+    height: 44px;
+    background-repeat: no-repeat;
+    background-origin: content-box;
+    box-sizing: border-box;
+    touch-action: none;
+    z-index: 10;
+}
+
+/* Southeast handle (primary resize) */
+.react-resizable-handle-se {
+    bottom: -6px;
+    right: -6px;
+    cursor: se-resize;
+    background-image: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path fill="%23333" fill-opacity="0.4" d="M14.5 17.5L17.5 14.5V17.5H14.5ZM10.5 17.5L17.5 10.5V13.5L13.5 17.5H10.5ZM6.5 17.5L17.5 6.5V9.5L9.5 17.5H6.5Z"/></svg>');
+    background-position: bottom 8px right 8px;
+    padding: 0;
+}
+
+/* Southwest handle */
+.react-resizable-handle-sw {
+    bottom: -6px;
+    left: -6px;
+    cursor: sw-resize;
+    background-image: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path fill="%23333" fill-opacity="0.4" d="M5.5 17.5L2.5 14.5V17.5H5.5ZM9.5 17.5L2.5 10.5V13.5L6.5 17.5H9.5ZM13.5 17.5L2.5 6.5V9.5L10.5 17.5H13.5Z"/></svg>');
+    background-position: bottom 8px left 8px;
+    padding: 0;
+}
+
+/* Northeast handle */
+.react-resizable-handle-ne {
+    top: -6px;
+    right: -6px;
+    cursor: ne-resize;
+    background-image: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path fill="%23333" fill-opacity="0.4" d="M14.5 2.5L17.5 5.5V2.5H14.5ZM10.5 2.5L17.5 9.5V6.5L13.5 2.5H10.5ZM6.5 2.5L17.5 13.5V10.5L9.5 2.5H6.5Z"/></svg>');
+    background-position: top 8px right 8px;
+    padding: 0;
+}
+
+/* Northwest handle */
+.react-resizable-handle-nw {
+    top: -6px;
+    left: -6px;
+    cursor: nw-resize;
+    background-image: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path fill="%23333" fill-opacity="0.4" d="M5.5 2.5L2.5 5.5V2.5H5.5ZM9.5 2.5L2.5 9.5V6.5L6.5 2.5H9.5ZM13.5 2.5L2.5 13.5V10.5L10.5 2.5H13.5Z"/></svg>');
+    background-position: top 8px left 8px;
+    padding: 0;
+}
+
+/* Edge handles - make them thin bars but still 44px in touch dimension */
+.react-resizable-handle-n,
+.react-resizable-handle-s {
+    height: 20px;
+    width: 44px;
+    left: 50%;
+    margin-left: -22px;
+    cursor: ns-resize;
+}
+
+.react-resizable-handle-n {
+    top: -6px;
+}
+
+.react-resizable-handle-s {
+    bottom: -6px;
+}
+
+.react-resizable-handle-e,
+.react-resizable-handle-w {
+    width: 20px;
+    height: 44px;
+    top: 50%;
+    margin-top: -22px;
+    cursor: ew-resize;
+}
+
+.react-resizable-handle-e {
+    right: -6px;
+}
+
+.react-resizable-handle-w {
+    left: -6px;
+}
+
+/* Touch device optimizations - make handles more visible */
+@media (hover: none) and (pointer: coarse) {
+    .react-resizable-handle {
+        opacity: 0.7;
+    }
+
+    .react-resizable-handle-se,
+    .react-resizable-handle-sw,
+    .react-resizable-handle-ne,
+    .react-resizable-handle-nw {
+        background-color: rgba(19, 117, 71, 0.15);
+        border-radius: 4px;
+    }
+
+    .react-grid-item:active .react-resizable-handle {
+        opacity: 1;
+        background-color: rgba(19, 117, 71, 0.3);
+    }
+}
+
+/* Fine pointer (mouse) - hide handles until hover */
+@media (pointer: fine) {
+    .react-resizable-handle {
+        opacity: 0;
+        transition: opacity 0.15s ease;
+    }
+
+    .react-grid-item:hover .react-resizable-handle {
+        opacity: 0.7;
+    }
+
+    .react-grid-item:hover .react-resizable-handle:hover {
+        opacity: 1;
+    }
+}

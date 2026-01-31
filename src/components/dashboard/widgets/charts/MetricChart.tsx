@@ -12,8 +12,9 @@ import {
 import 'chartjs-adapter-date-fns';
 import React, { memo, useMemo } from 'react';
 import { Line } from 'react-chartjs-2';
-import { useSensorReadingData } from '~/hooks/useSensorReadingData';
+import { useWidgetSensorData } from '~/hooks/useWidgetSensorData';
 import { DataStateWrapper } from '~/components/common/DataStateWrapper';
+import type { ChartWidgetConfig } from '~/types/widgetConfig';
 
 ChartJS.register(
   CategoryScale,
@@ -31,6 +32,8 @@ interface SensorReading {
   co2Reading?: { co2Ppm: number } | null;
   temperatureReading?: { temperatureCelsius: number } | null;
   humidityReading?: { humidityPercentage: number } | null;
+  sensor?: { id: string } | null;
+  location?: { id: string } | null;
 }
 
 interface MetricConfig {
@@ -53,14 +56,17 @@ interface MetricChartProps {
   metrics: MetricConfig[];
   showLegend?: boolean;
   errorMessage?: string;
+  config?: ChartWidgetConfig;
 }
 
 const MetricChart: React.FC<MetricChartProps> = memo(({
   metrics,
   showLegend = false,
-  errorMessage = 'Error loading chart data'
+  errorMessage = 'Error loading chart data',
+  config,
 }) => {
-  const { sensorReadings, loading, error } = useSensorReadingData();
+  // Fetch data based on widget config - API handles filtering
+  const { sensorReadings, loading, error } = useWidgetSensorData({ config });
 
   const chartData = useMemo(() => {
     if (!sensorReadings?.length) {
@@ -170,8 +176,9 @@ const MetricChart: React.FC<MetricChartProps> = memo(({
             usePointStyle: true,
             pointStyle: 'line' as const,
             font: {
-              size: 11
-            }
+              size: 9
+            },
+            padding: 8
           }
         },
         title: {
@@ -182,20 +189,34 @@ const MetricChart: React.FC<MetricChartProps> = memo(({
     };
   }, [metrics, showLegend]);
 
+  // Determine legend display - use config if provided, otherwise prop
+  const displayLegend = config?.showLegend ?? showLegend;
+
   return (
     <DataStateWrapper
       loading={loading}
       error={error}
       data={sensorReadings}
       errorMessage={errorMessage}
-      emptyMessage="No sensor data available"
+      emptyMessage={(config?.sensorIds?.length ?? 0) > 0 || (config?.locationIds?.length ?? 0) > 0
+        ? "No data for selected filters"
+        : "No sensor data available"}
       className="h-full flex items-center justify-center"
       showSpinner={true}
     >
-      <div className="h-full p-4">
+      <div className="h-full p-2">
         <Line
           data={chartData}
-          options={options}
+          options={{
+            ...options,
+            plugins: {
+              ...options.plugins,
+              legend: {
+                ...options.plugins.legend,
+                display: displayLegend,
+              },
+            },
+          }}
           redraw={false}
         />
       </div>
@@ -207,8 +228,13 @@ MetricChart.displayName = 'MetricChart';
 
 export default MetricChart;
 
-// Pre-configured chart instances for backward compatibility
-export const CO2Chart: React.FC = memo(() => (
+// Props interface for configurable chart instances
+interface ConfigurableChartProps {
+  config?: ChartWidgetConfig;
+}
+
+// Pre-configured chart instances with config support
+export const CO2Chart: React.FC<ConfigurableChartProps> = memo(({ config }) => (
   <MetricChart
     metrics={[{
       key: 'co2',
@@ -219,11 +245,12 @@ export const CO2Chart: React.FC = memo(() => (
       filterReading: (reading) => reading.co2Reading?.co2Ppm != null,
     }]}
     errorMessage="Error loading CO2 data"
+    config={config}
   />
 ));
 CO2Chart.displayName = 'CO2Chart';
 
-export const TemperatureChart: React.FC = memo(() => (
+export const TemperatureChart: React.FC<ConfigurableChartProps> = memo(({ config }) => (
   <MetricChart
     metrics={[{
       key: 'temperature',
@@ -237,11 +264,28 @@ export const TemperatureChart: React.FC = memo(() => (
       filterReading: (reading) => reading.temperatureReading?.temperatureCelsius != null,
     }]}
     errorMessage="Error loading temperature data"
+    config={config}
   />
 ));
 TemperatureChart.displayName = 'TemperatureChart';
 
-export const MultiMetricChart: React.FC = memo(() => (
+export const HumidityChart: React.FC<ConfigurableChartProps> = memo(({ config }) => (
+  <MetricChart
+    metrics={[{
+      key: 'humidity',
+      label: 'Humidity (%)',
+      color: 'rgb(168, 85, 247)',
+      backgroundColor: 'rgba(168, 85, 247, 0.1)',
+      extractValue: (reading) => reading.humidityReading?.humidityPercentage ?? null,
+      filterReading: (reading) => reading.humidityReading?.humidityPercentage != null,
+    }]}
+    errorMessage="Error loading humidity data"
+    config={config}
+  />
+));
+HumidityChart.displayName = 'HumidityChart';
+
+export const MultiMetricChart: React.FC<ConfigurableChartProps> = memo(({ config }) => (
   <MetricChart
     metrics={[
       {
@@ -280,6 +324,7 @@ export const MultiMetricChart: React.FC = memo(() => (
     ]}
     showLegend={true}
     errorMessage="Error loading environmental data"
+    config={config}
   />
 ));
 MultiMetricChart.displayName = 'MultiMetricChart';

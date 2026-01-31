@@ -165,6 +165,169 @@ The Hudson Air Quality Dashboard is a production-ready React/Next.js application
 
 ---
 
+## 🎛️ PHASE 8: Control Panel & Settings 🚧 HIGH PRIORITY
+*Timeline: 1-2 weeks*
+
+### 8.1 Control Panel Navigation & Layout
+**Goal**: Add settings/control panel area accessible from header
+
+**Implementation**:
+- [ ] **PENDING**: Add "Settings" link to Header component
+- [ ] **PENDING**: Create `/settings` page as control panel hub
+- [ ] **PENDING**: Sub-navigation for Locations, Sensors, Assignments
+- [ ] **PENDING**: Protect with authentication (require 'user' role minimum)
+
+**Routes**:
+```
+/settings              - Control panel overview/hub
+/settings/locations    - Location management (list, create, edit)
+/settings/sensors      - Sensor management (list, create, edit)
+/settings/assignments  - Sensor-location assignments
+```
+
+**Technical Approach**:
+- Use existing Layout component
+- Sub-navigation with active state highlighting
+- Breadcrumb navigation for nested routes
+- Responsive design (mobile-friendly tables/forms)
+
+---
+
+### 8.2 Location Management UI
+**Goal**: CRUD interface for managing locations
+
+**Components**:
+```
+src/components/settings/
+├── locations/
+│   ├── LocationList.tsx       - Table with all locations + actions
+│   ├── LocationForm.tsx       - Create/Edit form (modal or inline)
+│   ├── LocationCard.tsx       - Individual location display
+│   └── DeleteLocationModal.tsx - Confirmation dialog
+├── SettingsLayout.tsx         - Layout with sub-navigation
+└── SettingsNav.tsx            - Settings navigation component
+```
+
+**Implementation**:
+- [ ] **PENDING**: Create `LocationList` component with data table
+  - Columns: Name, Description, Current Sensors, Actions
+  - Actions: Edit, Delete
+  - "Add Location" button
+- [ ] **PENDING**: Create `LocationForm` component
+  - Fields: Name (required), Description (optional)
+  - Validation: Name required, max 100 chars
+  - Submit handlers for create/update mutations
+- [ ] **PENDING**: Create `DeleteLocationModal` component
+  - Show warning if sensors currently assigned
+  - Confirm/cancel actions
+- [ ] **PENDING**: Add GraphQL mutations and hooks
+  - `useCreateLocation`, `useUpdateLocation`, `useDeleteLocation`
+
+**GraphQL Operations**:
+```typescript
+// mutations/locations.ts
+const CREATE_LOCATION = gql`
+  mutation CreateLocation($input: CreateLocationInput!) {
+    createLocation(input: $input) {
+      location { id name description }
+      success
+      message
+      errors
+    }
+  }
+`;
+// Similar for update/delete
+```
+
+---
+
+### 8.3 Sensor Management UI
+**Goal**: CRUD interface for managing sensors
+
+**Components**:
+```
+src/components/settings/
+├── sensors/
+│   ├── SensorList.tsx         - Table with all sensors + actions
+│   ├── SensorForm.tsx         - Create/Edit form
+│   ├── SensorCard.tsx         - Individual sensor display
+│   ├── SensorStatusBadge.tsx  - Active/Inactive indicator
+│   └── DeleteSensorModal.tsx  - Confirmation dialog
+```
+
+**Implementation**:
+- [ ] **PENDING**: Create `SensorList` component
+  - Columns: Name, Model, Status, Current Location, Last Reading, Actions
+  - Filter by active/inactive
+  - Actions: Edit, Toggle Active, Delete (if no readings)
+- [ ] **PENDING**: Create `SensorForm` component
+  - Fields: Name (required), Model (required), Installation Date
+  - Active toggle
+- [ ] **PENDING**: Create `SensorStatusBadge` component
+  - Green/Red indicator for active/inactive
+  - Show "Unassigned" if no current location
+- [ ] **PENDING**: Add GraphQL mutations and hooks
+  - `useCreateSensor`, `useUpdateSensor`, `useDeleteSensor`, `useToggleSensorActive`
+
+---
+
+### 8.4 Sensor-Location Assignment UI
+**Goal**: Interface to assign sensors to locations and track history
+
+**Components**:
+```
+src/components/settings/
+├── assignments/
+│   ├── AssignmentList.tsx     - Current assignments overview
+│   ├── AssignSensorModal.tsx  - Assign sensor to location
+│   ├── MoveSensorModal.tsx    - Move sensor to different location
+│   ├── AssignmentHistory.tsx  - Historical location tracking
+│   └── UnassignedSensors.tsx  - List sensors without locations
+```
+
+**Implementation**:
+- [ ] **PENDING**: Create `AssignmentList` component
+  - Show current sensor-location pairs
+  - Actions: Move, Remove assignment
+- [ ] **PENDING**: Create `AssignSensorModal` component
+  - Dropdown to select unassigned sensor
+  - Dropdown to select location
+  - Optional start date
+- [ ] **PENDING**: Create `MoveSensorModal` component
+  - Show current location
+  - Select new location
+  - Automatic end time for old assignment
+- [ ] **PENDING**: Create `AssignmentHistory` component
+  - Time-series view of sensor movements
+  - Filter by sensor or location
+- [ ] **PENDING**: Add GraphQL mutations and hooks
+  - `useAssignSensorToLocation`, `useMoveSensorToLocation`, `useRemoveSensorFromLocation`
+
+---
+
+### 8.5 Control Panel UX Patterns
+**Goal**: Consistent, user-friendly experience
+
+**Patterns**:
+- **Optimistic UI Updates**: Show changes immediately, rollback on error
+- **Loading States**: Skeleton loaders for lists, disabled buttons during mutations
+- **Error Handling**: Toast notifications for success/error, inline form errors
+- **Confirmation Dialogs**: For destructive actions (delete, move)
+- **Empty States**: Helpful messages when no data ("No locations yet. Create one!")
+
+**Shared Components**:
+```
+src/components/common/
+├── DataTable.tsx          - Reusable table with sorting/pagination
+├── Modal.tsx              - Reusable modal dialog
+├── ConfirmDialog.tsx      - Confirmation dialog for destructive actions
+├── FormField.tsx          - Standardized form field with label/error
+├── Toast.tsx              - Toast notifications
+└── EmptyState.tsx         - Empty state display
+```
+
+---
+
 ## ❌ REMOVED FROM INITIAL PLAN
 
 ### Overengineered Features (Not Needed)
@@ -230,23 +393,26 @@ The Hudson Air Quality Dashboard is a production-ready React/Next.js application
 
 ## 📋 NEXT ACTIONS
 
-### Immediate (This Week)
-1. **Fix CSS syntax error** in globals.css
-2. **Verify build process** works correctly
-3. **Plan chart component implementation**
+### Immediate (This Week) - Control Panel Priority
+1. **API**: Add Location CRUD mutations to schema.py
+2. **API**: Add Sensor CRUD mutations to schema.py
+3. **API**: Add SensorLocation assignment mutations
+4. **FE**: Create SettingsLayout and navigation structure
 
 ### Short-term (Next 2 Weeks)
-1. **Implement first chart widget** (Temperature)
-2. **Add basic alert indicators** to sensor cards
-3. **Test real-time data updates** with charts
+1. **FE**: Implement LocationList and LocationForm components
+2. **FE**: Implement SensorList and SensorForm components
+3. **FE**: Add GraphQL hooks for all mutations
+4. **FE**: Implement AssignmentList and modals
 
 ### Medium-term (Next Month)
-1. **Complete all chart widgets**
-2. **Plan authentication system architecture**
-3. **Add basic data export capability**
+1. **Complete Control Panel** with full CRUD functionality
+2. **Add assignment history** view
+3. **Add toast notifications** for feedback
+4. **Implement first chart widget** (Temperature)
 
 ### Long-term (Next Quarter)
-1. **Implement JWT authentication system**
+1. **Complete all chart widgets**
 2. **Add dashboard customization features**
 3. **Begin advanced reporting planning**
 

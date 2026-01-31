@@ -1,0 +1,249 @@
+/**
+ * Widget Configuration Types
+ *
+ * Type definitions for widget-specific configuration options.
+ * These configs are stored as part of the dashboard layout and persist across sessions.
+ */
+
+// Time range presets for chart widgets
+export type TimeRangePreset = '1h' | '6h' | '12h' | '24h' | '7d' | '30d' | '90d' | 'all' | 'custom';
+
+// Base configuration shared by most widgets
+export interface BaseWidgetConfig {
+  sensorIds?: string[];
+  locationIds?: string[];
+}
+
+// Chart widget configuration (TEMPERATURE_CHART, CO2_CHART, HUMIDITY_CHART, MULTI_METRIC_CHART)
+export interface ChartWidgetConfig extends BaseWidgetConfig {
+  timeRange: TimeRangePreset;
+  customStartDate?: string; // ISO date string, used when timeRange is 'custom'
+  customEndDate?: string;   // ISO date string, used when timeRange is 'custom'
+  showLegend?: boolean;
+  showGrid?: boolean;
+}
+
+// Multi-metric chart specific configuration
+export interface MultiMetricChartConfig extends ChartWidgetConfig {
+  metrics: ('co2' | 'temperature' | 'humidity')[];
+}
+
+// Air quality distribution configuration
+export interface AirQualityDistributionConfig extends BaseWidgetConfig {
+  periods: ('24h' | '30d' | 'allTime')[];
+  layout: 'horizontal' | 'vertical';
+}
+
+// Air quality heatmap configuration
+export interface AirQualityHeatmapConfig extends BaseWidgetConfig {
+  days: number; // Number of days to show (default 548)
+}
+
+// Table widget configuration
+export interface TableWidgetConfig extends BaseWidgetConfig {
+  timeRange: TimeRangePreset;
+  customStartDate?: string;
+  customEndDate?: string;
+  pageSize: number;
+  columns: ('time' | 'co2' | 'temperature' | 'humidity' | 'location' | 'sensor')[];
+  defaultSort?: {
+    field: string;
+    direction: 'asc' | 'desc';
+  };
+  temperatureUnit: 'celsius' | 'fahrenheit';
+}
+
+// Metrics card configuration
+export interface MetricsCardConfig extends BaseWidgetConfig {
+  metrics: ('co2_1d' | 'co2_30d' | 'co2_high' | 'co2_low' | 'temp_1d' | 'temp_30d' | 'temp_high' | 'temp_low')[];
+  temperatureUnit: 'celsius' | 'fahrenheit';
+  layout: '2x4' | '4x2' | 'compact';
+}
+
+// Ring snapshot configuration
+export interface RingSnapshotConfig {
+  deviceId?: string;
+  autoRefresh: boolean;
+  refreshInterval: number; // seconds
+  showTimestamp: boolean;
+  showCaptureButton: boolean;
+}
+
+// Ring contact sensors configuration
+export interface RingContactSensorsConfig {
+  deviceIds?: string[];
+  layout: 'grid' | 'list' | 'compact';
+  showBattery: boolean;
+  showLastUpdate: boolean;
+}
+
+// Ring events configuration
+export interface RingEventsConfig {
+  limit: number;
+  refreshInterval: number; // milliseconds
+  eventTypes: ('motion' | 'ding' | 'on_demand' | 'alarm')[];
+  deviceIds?: string[];
+}
+
+// Quick actions configuration
+export interface QuickActionsConfig {
+  actions: ('capture' | 'sensors' | 'ring' | 'all')[];
+  layout: '2x2' | '1x4' | '4x1';
+  showLabels: boolean;
+}
+
+// Union type for all widget configs
+export type WidgetConfig =
+  | ChartWidgetConfig
+  | MultiMetricChartConfig
+  | AirQualityDistributionConfig
+  | AirQualityHeatmapConfig
+  | TableWidgetConfig
+  | MetricsCardConfig
+  | RingSnapshotConfig
+  | RingContactSensorsConfig
+  | RingEventsConfig
+  | QuickActionsConfig;
+
+// Default configurations for each widget type
+export const DEFAULT_CHART_CONFIG: ChartWidgetConfig = {
+  timeRange: '24h',
+  showLegend: false,
+  showGrid: true,
+};
+
+export const DEFAULT_MULTI_METRIC_CONFIG: MultiMetricChartConfig = {
+  timeRange: '24h',
+  metrics: ['co2', 'temperature'],
+  showLegend: true,
+  showGrid: true,
+};
+
+export const DEFAULT_AIR_QUALITY_DISTRIBUTION_CONFIG: AirQualityDistributionConfig = {
+  periods: ['24h', '30d', 'allTime'],
+  layout: 'vertical',
+};
+
+export const DEFAULT_AIR_QUALITY_HEATMAP_CONFIG: AirQualityHeatmapConfig = {
+  days: 548,
+};
+
+export const DEFAULT_TABLE_CONFIG: TableWidgetConfig = {
+  timeRange: '24h',
+  pageSize: 25,
+  columns: ['time', 'co2', 'temperature', 'humidity', 'location'],
+  temperatureUnit: 'fahrenheit',
+};
+
+export const DEFAULT_METRICS_CARD_CONFIG: MetricsCardConfig = {
+  metrics: ['co2_1d', 'temp_1d', 'co2_30d', 'temp_30d', 'co2_high', 'temp_high', 'co2_low', 'temp_low'],
+  temperatureUnit: 'fahrenheit',
+  layout: '2x4',
+};
+
+export const DEFAULT_RING_SNAPSHOT_CONFIG: RingSnapshotConfig = {
+  autoRefresh: false,
+  refreshInterval: 300, // 5 minutes
+  showTimestamp: true,
+  showCaptureButton: true,
+};
+
+export const DEFAULT_RING_CONTACT_SENSORS_CONFIG: RingContactSensorsConfig = {
+  layout: 'grid',
+  showBattery: true,
+  showLastUpdate: true,
+};
+
+export const DEFAULT_RING_EVENTS_CONFIG: RingEventsConfig = {
+  limit: 40,
+  refreshInterval: 60000,
+  eventTypes: ['motion', 'ding', 'on_demand', 'alarm'],
+};
+
+export const DEFAULT_QUICK_ACTIONS_CONFIG: QuickActionsConfig = {
+  actions: ['capture', 'sensors', 'ring', 'all'],
+  layout: '2x2',
+  showLabels: true,
+};
+
+// Helper to get default config for a widget type
+export function getDefaultWidgetConfig(widgetType: string): Record<string, unknown> {
+  switch (widgetType) {
+    case 'TEMPERATURE_CHART':
+    case 'CO2_CHART':
+    case 'HUMIDITY_CHART':
+      return { ...DEFAULT_CHART_CONFIG };
+    case 'MULTI_METRIC_CHART':
+      return { ...DEFAULT_MULTI_METRIC_CONFIG };
+    case 'AIR_QUALITY_DISTRIBUTION':
+      return { ...DEFAULT_AIR_QUALITY_DISTRIBUTION_CONFIG };
+    case 'AIR_QUALITY_HEATMAP':
+      return { ...DEFAULT_AIR_QUALITY_HEATMAP_CONFIG };
+    case 'TABLE':
+      return { ...DEFAULT_TABLE_CONFIG };
+    case 'METRICS_CARD':
+      return { ...DEFAULT_METRICS_CARD_CONFIG };
+    case 'RING_SNAPSHOT':
+      return { ...DEFAULT_RING_SNAPSHOT_CONFIG };
+    case 'RING_CONTACT_SENSORS':
+      return { ...DEFAULT_RING_CONTACT_SENSORS_CONFIG };
+    case 'RING_EVENTS':
+      return { ...DEFAULT_RING_EVENTS_CONFIG };
+    case 'QUICK_ACTIONS':
+      return { ...DEFAULT_QUICK_ACTIONS_CONFIG };
+    default:
+      return {};
+  }
+}
+
+// Time range preset labels for UI
+export const TIME_RANGE_LABELS: Record<TimeRangePreset, string> = {
+  '1h': 'Last Hour',
+  '6h': 'Last 6 Hours',
+  '12h': 'Last 12 Hours',
+  '24h': 'Last 24 Hours',
+  '7d': 'Last 7 Days',
+  '30d': 'Last 30 Days',
+  '90d': 'Last 90 Days',
+  'all': 'All Time',
+  'custom': 'Custom Range',
+};
+
+// Helper to calculate date range from preset
+export function getDateRangeFromPreset(preset: TimeRangePreset): { startDate: Date; endDate: Date } | null {
+  if (preset === 'custom' || preset === 'all') {
+    return null;
+  }
+
+  const now = new Date();
+  const endDate = now;
+  let startDate: Date;
+
+  switch (preset) {
+    case '1h':
+      startDate = new Date(now.getTime() - 60 * 60 * 1000);
+      break;
+    case '6h':
+      startDate = new Date(now.getTime() - 6 * 60 * 60 * 1000);
+      break;
+    case '12h':
+      startDate = new Date(now.getTime() - 12 * 60 * 60 * 1000);
+      break;
+    case '24h':
+      startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      break;
+    case '7d':
+      startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      break;
+    case '30d':
+      startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      break;
+    case '90d':
+      startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+      break;
+    default:
+      startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  }
+
+  return { startDate, endDate };
+}

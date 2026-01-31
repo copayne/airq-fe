@@ -18,6 +18,9 @@ export const useSensorReadingData = () => {
     isFetched,
   } = state;
 
+  // Default limit prevents fetching entire database - 1000 records is sufficient for table views
+  const defaultLimit = env.NEXT_PUBLIC_DEFAULT_QUERY_LIMIT ?? 1000;
+
   const queryVariables = useMemo(() => ({
     input: {
       startDate: criteria.startDate,
@@ -30,8 +33,9 @@ export const useSensorReadingData = () => {
       maxHumidityPercentage: criteria.maxHumidity,
       sensorIds: criteria.sensorIds,
       locationIds: criteria.locationIds,
+      limit: defaultLimit,
     }
-  }), [criteria]);
+  }), [criteria, defaultLimit]);
 
   const { loading, error, data, refetch }: QueryResult<GetFilteredSensorReadingsData> = useQuery(GET_FILTERED_SENSOR_READINGS, {
     variables: queryVariables,

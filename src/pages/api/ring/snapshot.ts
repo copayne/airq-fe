@@ -6,8 +6,7 @@
  */
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { RingApi } from 'ring-client-api';
-import { env } from '~/env';
+import { getRingApi } from '~/lib/ringApiManager';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -37,10 +36,8 @@ export default async function handler(
 
     console.log(`[Ring Snapshot] Capturing snapshot for camera ${deviceId}...`);
 
-    // Initialize Ring API (server-side only)
-    const ringApi = new RingApi({
-      refreshToken: env.NEXT_PUBLIC_RING_REFRESH_TOKEN,
-    });
+    // Get centralized Ring API instance (handles token refresh automatically)
+    const ringApi = await getRingApi();
 
     const locations = await ringApi.getLocations();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

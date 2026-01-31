@@ -1,4 +1,5 @@
 import type { Sensor } from '~/types/sensors';
+import { formatDateTime } from './dateUtils';
 
 /**
  * Formatted sensor details for display
@@ -69,7 +70,7 @@ export function formatSensorDetails(sensor: Sensor | undefined): FormattedSensor
     humidity,
     humidityRaw: humidityRaw ?? 0,
     isActive: lastReading?.isSuccess ?? false,
-    lastReading: lastReading ? new Date(lastReading.readingTime).toLocaleString() : '--',
+    lastReading: formatDateTime(lastReading?.readingTime),
     temp: tempCelsius !== undefined && tempCelsius !== null ? tempCelsius.toFixed(1) : '--',
     tempRaw: tempCelsius ?? 0,
     temperatureFahrenheit,
@@ -83,11 +84,7 @@ export function formatSensorDetails(sensor: Sensor | undefined): FormattedSensor
  * @returns Formatted date/time string in locale format
  */
 export function formatReadingTime(timestamp: string): string {
-  try {
-    return new Date(timestamp).toLocaleString();
-  } catch {
-    return '--';
-  }
+  return formatDateTime(timestamp);
 }
 
 /**

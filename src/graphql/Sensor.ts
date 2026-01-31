@@ -36,3 +36,77 @@ export const GET_SENSORS = gql`
   }
   ${SENSOR_WITH_LAST_READING_FRAGMENT}
 `;
+
+export const GET_SENSOR = gql`
+  query GetSensor($id: Int!) {
+    sensor(id: $id) {
+      id
+      name
+      model
+      isActive
+      installationDate
+      currentLocation {
+        id
+        name
+      }
+    }
+  }
+`;
+
+export const CREATE_SENSOR = gql`
+  mutation CreateSensor($input: CreateSensorInput!) {
+    createSensor(input: $input) {
+      sensor {
+        id
+        name
+        model
+        isActive
+        installationDate
+      }
+      success
+      message
+      errors
+    }
+  }
+`;
+
+export const UPDATE_SENSOR = gql`
+  mutation UpdateSensor($input: UpdateSensorInput!) {
+    updateSensor(input: $input) {
+      sensor {
+        id
+        name
+        model
+        isActive
+      }
+      success
+      message
+      errors
+    }
+  }
+`;
+
+export const DELETE_SENSOR = gql`
+  mutation DeleteSensor($id: Int!) {
+    deleteSensor(id: $id) {
+      success
+      message
+      errors
+    }
+  }
+`;
+
+export const TOGGLE_SENSOR_ACTIVE = gql`
+  mutation ToggleSensorActive($id: Int!, $isActive: Boolean!) {
+    toggleSensorActive(id: $id, isActive: $isActive) {
+      sensor {
+        id
+        name
+        isActive
+      }
+      success
+      message
+      errors
+    }
+  }
+`;

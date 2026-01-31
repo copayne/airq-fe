@@ -73,10 +73,9 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
 // Simple retry logic using Apollo's built-in capabilities
 // We'll handle retries at the query level instead of link level
 
-// HTTP link with timeout and credentials
+// HTTP link with timeout
 const httpLink = new HttpLink({
   uri: env.NEXT_PUBLIC_GRAPHQL_ENDPOINT,
-  credentials: 'include',
   fetchOptions: {
     timeout: 10000, // 10 second timeout to prevent hanging
   },

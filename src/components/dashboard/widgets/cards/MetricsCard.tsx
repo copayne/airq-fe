@@ -24,10 +24,10 @@ const MetricCell: React.FC<MetricCellProps> = ({
 }) => (
   <div className={`flex flex-col flex-grow justify-center items-center w-1/2 border-[1px] border-default-textDark ${outerColorClass}`}>
     <div
-      className={`flex flex-col justify-center items-center px-1.5 py-1 m-2 border-[1px] border-default-textDark ${colorClass}`}
+      className={`flex flex-col justify-center items-center px-1 py-0.5 m-1 border-[1px] border-default-textDark ${colorClass}`}
     >
-      <p className="text-xxs font-light text-center leading-tight">{label}</p>
-      <p className="text-sm leading-tight">
+      <p className="text-[9px] font-light text-center leading-tight">{label}</p>
+      <p className="text-xs leading-tight">
         {value !== null ? `${value.toFixed(value % 1 === 0 ? 0 : 1)}${unit}` : '--'}
       </p>
     </div>

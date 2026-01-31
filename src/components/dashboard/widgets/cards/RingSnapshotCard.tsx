@@ -1,27 +1,52 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import Image from 'next/image';
 import { useRingSnapshot } from '~/hooks/useRingSnapshot';
+import { useRingDevices } from '~/hooks/useRingDevices';
+import { formatShortDateTime } from '~/utils/dateUtils';
 
 interface RingSnapshotCardProps {
   deviceId?: string;
   cameraName?: string;
 }
 
-const RingSnapshotCard: React.FC<RingSnapshotCardProps> = ({ deviceId, cameraName = 'Ring Camera' }) => {
+const RingSnapshotCard: React.FC<RingSnapshotCardProps> = ({ deviceId: propDeviceId, cameraName: propCameraName }) => {
+  // Fetch ring devices to auto-detect camera if no deviceId provided
+  const { devices } = useRingDevices({ pollInterval: 0, fetchPolicy: 'cache-first' });
+
+  // Find first camera if no deviceId prop provided
+  const { deviceId, cameraName } = useMemo(() => {
+    if (propDeviceId) {
+      // If deviceId provided, find matching device for camera name
+      const device = devices.find(d => d.deviceId === propDeviceId);
+      return {
+        deviceId: propDeviceId,
+        cameraName: propCameraName ?? device?.name ?? 'Ring Camera',
+      };
+    }
+
+    // Auto-detect: find first camera device (deviceType contains 'camera')
+    const camera = devices.find(d =>
+      d.deviceType.toLowerCase().includes('camera') ||
+      d.deviceType.toLowerCase().includes('doorbell')
+    );
+
+    if (camera) {
+      return {
+        deviceId: camera.deviceId,
+        cameraName: propCameraName ?? camera.name ?? 'Ring Camera',
+      };
+    }
+
+    return { deviceId: undefined, cameraName: propCameraName ?? 'Ring Camera' };
+  }, [propDeviceId, propCameraName, devices]);
+
   const { snapshot, error, capturing, captureSnapshot } = useRingSnapshot(deviceId, { captureOnMount: true });
 
   // Image URL is relative to Next.js public directory
   const imageUrl = snapshot?.imageUrl ?? '';
 
   const formatTimestamp = (timestamp: string) => {
-    const date = new Date(timestamp);
-    return date.toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    return formatShortDateTime(timestamp);
   };
 
   if (error && !snapshot) {
@@ -60,9 +85,8 @@ const RingSnapshotCard: React.FC<RingSnapshotCardProps> = ({ deviceId, cameraNam
         {capturing && (
           <div className="absolute inset-0 bg-airq-dark/50 flex items-center justify-center z-10">
             <div className="flex flex-col items-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-airq-light mb-3"></div>
-              <p className="text-airq-light text-sm font-medium">Capturing new snapshot...</p>
-              <p className="text-airq-light/75 text-xs mt-1">This may take 30-60 seconds</p>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-airq-light mb-2"></div>
+              <p className="text-airq-light text-xs font-medium">Capturing...</p>
             </div>
           </div>
         )}
@@ -71,25 +95,25 @@ const RingSnapshotCard: React.FC<RingSnapshotCardProps> = ({ deviceId, cameraNam
           alt={`Ring camera snapshot from ${cameraName}`}
           fill
           unoptimized={true}
-          className="object-contain p-2"
+          className="object-contain p-1"
           priority
         />
       </div>
-      <div className="border-t-[1px] border-airq-dark bg-airq-light p-3 flex justify-between items-center">
+      <div className="border-t-[1px] border-airq-dark bg-airq-light px-2 py-1.5 flex justify-between items-center">
         <div className="flex flex-col">
-          <p className="text-xs text-airq-dark/75 mb-0.5">
+          <p className="text-[10px] text-airq-dark/75">
             {cameraName}
           </p>
-          <p className="text-xs text-airq-dark font-medium">
+          <p className="text-[10px] text-airq-dark font-medium">
             {snapshot && formatTimestamp(snapshot.timestamp)}
           </p>
         </div>
         <button
           onClick={() => captureSnapshot()}
           disabled={capturing}
-          className="px-3 py-1.5 bg-airq-dark text-airq-light border-[1px] border-airq-dark hover:bg-airq-dark/90 disabled:opacity-50 disabled:cursor-not-allowed text-xs font-medium"
+          className="px-2 py-1 bg-airq-dark text-airq-light border-[1px] border-airq-dark hover:bg-airq-dark/90 disabled:opacity-50 disabled:cursor-not-allowed text-[10px] font-medium touch-manipulation"
         >
-          {capturing ? 'Capturing...' : 'Capture New'}
+          {capturing ? '...' : 'Capture'}
         </button>
       </div>
     </div>

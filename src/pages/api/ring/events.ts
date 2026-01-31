@@ -6,8 +6,7 @@
  */
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { RingApi } from 'ring-client-api';
-import { env } from '~/env';
+import { getRingApi } from '~/lib/ringApiManager';
 
 export interface RingDeviceEvent {
   deviceId: string;
@@ -18,19 +17,8 @@ export interface RingDeviceEvent {
   timestamp: string;
 }
 
-// Keep track of active Ring API instances to reuse connections
-let ringApiInstance: RingApi | null = null;
+// Keep track of active connections for logging
 let activeConnections = 0;
-
-function getRingApiInstance(): RingApi {
-  if (!ringApiInstance) {
-    console.log('[Ring Events] Creating new Ring API instance');
-    ringApiInstance = new RingApi({
-      refreshToken: env.NEXT_PUBLIC_RING_REFRESH_TOKEN,
-    });
-  }
-  return ringApiInstance;
-}
 
 export default async function handler(
   req: NextApiRequest,
@@ -54,7 +42,8 @@ export default async function handler(
   res.write(`data: ${JSON.stringify({ type: 'connected', timestamp: new Date().toISOString() })}\n\n`);
 
   try {
-    const ringApi = getRingApiInstance();
+    // Get centralized Ring API instance (handles token refresh automatically)
+    const ringApi = await getRingApi();
     const locations = await ringApi.getLocations();
 
     // Subscribe to data updates from all locations

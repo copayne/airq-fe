@@ -6,10 +6,13 @@
 
 import React, { memo, useCallback, useEffect, useState } from 'react';
 import type { RingEvent } from '~/pages/api/ring/history';
+import type { RingEventsConfig } from '~/types/widgetConfig';
+import { getRelativeTime as getRelativeTimeUtil } from '~/utils/dateUtils';
 
 interface RingEventsCardProps {
   limit?: number;
   refreshInterval?: number;
+  config?: RingEventsConfig;
 }
 
 function getEventIcon(eventType: string): string {
@@ -36,39 +39,27 @@ function getEventIcon(eventType: string): string {
 }
 
 function getRelativeTime(timestamp: string): string {
-  const now = new Date();
-  const eventTime = new Date(timestamp);
-  const diffMs = now.getTime() - eventTime.getTime();
-  const diffSec = Math.floor(diffMs / 1000);
-  const diffMin = Math.floor(diffSec / 60);
-  const diffHour = Math.floor(diffMin / 60);
-  const diffDay = Math.floor(diffHour / 24);
-
-  if (diffSec < 60) return 'Just now';
-  if (diffMin < 60) return `${diffMin}m ago`;
-  if (diffHour < 24) return `${diffHour}h ago`;
-  if (diffDay < 7) return `${diffDay}d ago`;
-
-  return eventTime.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-  });
+  return getRelativeTimeUtil(timestamp, 'Unknown');
 }
 
 const RingEventsCard: React.FC<RingEventsCardProps> = memo(({
   limit = 40,
   refreshInterval = 60000,
+  config,
 }) => {
+  // Use config values if provided, otherwise fall back to props
+  const effectiveLimit = config?.limit ?? limit;
+  const effectiveRefreshInterval = config?.refreshInterval ?? refreshInterval;
+
   const [events, setEvents] = useState<RingEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
-  console.log(events)
 
   const fetchEvents = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/ring/history?limit=${limit}&t=${Date.now()}`, {
+      const response = await fetch(`/api/ring/history?limit=${effectiveLimit}&t=${Date.now()}`, {
         cache: 'no-store',
       });
       const data = await response.json() as { success: boolean; events?: RingEvent[]; error?: string };
@@ -85,18 +76,18 @@ const RingEventsCard: React.FC<RingEventsCardProps> = memo(({
       setLoading(false);
       setLastRefresh(new Date());
     }
-  }, [limit]);
+  }, [effectiveLimit]);
 
   useEffect(() => {
     void fetchEvents();
 
-    if (refreshInterval > 0) {
+    if (effectiveRefreshInterval > 0) {
       const interval = setInterval(() => {
         void fetchEvents();
-      }, refreshInterval);
+      }, effectiveRefreshInterval);
       return () => clearInterval(interval);
     }
-  }, [fetchEvents, refreshInterval]);
+  }, [fetchEvents, effectiveRefreshInterval]);
 
   if (loading && events.length === 0) {
     return (

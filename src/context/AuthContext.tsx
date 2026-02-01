@@ -16,6 +16,7 @@ interface AuthState {
 interface AuthContextValue extends AuthState {
   login: (token: string, user: User) => void;
   logout: () => void;
+  updateUser: (user: User) => void;
   clearError: () => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string) => void;
@@ -37,7 +38,8 @@ type AuthAction =
   | { type: 'CLEAR_ERROR' }
   | { type: 'LOGIN_SUCCESS'; payload: { token: string; user: User } }
   | { type: 'LOGOUT' }
-  | { type: 'TOKEN_EXPIRED' };
+  | { type: 'TOKEN_EXPIRED' }
+  | { type: 'UPDATE_USER'; payload: User };
 
 const initialState: AuthState = {
   user: null,
@@ -73,6 +75,11 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
         isAuthenticated: true,
         isLoading: false,
         error: null,
+      };
+    case 'UPDATE_USER':
+      return {
+        ...state,
+        user: action.payload,
       };
     case 'LOGOUT':
     case 'TOKEN_EXPIRED':
@@ -191,6 +198,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const updateUser = (user: User) => {
+    try {
+      localStorage.setItem('auth_user', JSON.stringify(user));
+      dispatch({ type: 'UPDATE_USER', payload: user });
+    } catch (error) {
+      console.error('Error updating user data:', error);
+    }
+  };
+
   const clearError = () => {
     dispatch({ type: 'CLEAR_ERROR' });
   };
@@ -207,6 +223,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     ...state,
     login,
     logout,
+    updateUser,
     clearError,
     setLoading,
     setError,

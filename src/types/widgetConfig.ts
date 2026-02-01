@@ -85,6 +85,25 @@ export interface RingEventsConfig {
   deviceIds?: string[];
 }
 
+// Historical trends configuration
+export interface HistoricalTrendsConfig extends BaseWidgetConfig {
+  timeRange: TimeRangePreset;
+  customStartDate?: string;
+  customEndDate?: string;
+  metric: 'co2' | 'temperature' | 'humidity';
+  aggregation: 'daily' | 'weekly';
+  showTrendLine: boolean;
+}
+
+// Sensor comparison configuration
+export interface SensorComparisonConfig extends BaseWidgetConfig {
+  timeRange: TimeRangePreset;
+  customStartDate?: string;
+  customEndDate?: string;
+  metric: 'co2' | 'temperature' | 'humidity';
+  showLegend: boolean;
+}
+
 // Quick actions configuration
 export interface QuickActionsConfig {
   actions: ('capture' | 'sensors' | 'ring' | 'all')[];
@@ -103,6 +122,8 @@ export type WidgetConfig =
   | RingSnapshotConfig
   | RingContactSensorsConfig
   | RingEventsConfig
+  | HistoricalTrendsConfig
+  | SensorComparisonConfig
   | QuickActionsConfig;
 
 // Default configurations for each widget type
@@ -160,6 +181,19 @@ export const DEFAULT_RING_EVENTS_CONFIG: RingEventsConfig = {
   eventTypes: ['motion', 'ding', 'on_demand', 'alarm'],
 };
 
+export const DEFAULT_HISTORICAL_TRENDS_CONFIG: HistoricalTrendsConfig = {
+  timeRange: '90d',
+  metric: 'co2',
+  aggregation: 'daily',
+  showTrendLine: true,
+};
+
+export const DEFAULT_SENSOR_COMPARISON_CONFIG: SensorComparisonConfig = {
+  timeRange: '24h',
+  metric: 'co2',
+  showLegend: true,
+};
+
 export const DEFAULT_QUICK_ACTIONS_CONFIG: QuickActionsConfig = {
   actions: ['capture', 'sensors', 'ring', 'all'],
   layout: '2x2',
@@ -189,6 +223,10 @@ export function getDefaultWidgetConfig(widgetType: string): Record<string, unkno
       return { ...DEFAULT_RING_CONTACT_SENSORS_CONFIG };
     case 'RING_EVENTS':
       return { ...DEFAULT_RING_EVENTS_CONFIG };
+    case 'HISTORICAL_TRENDS':
+      return { ...DEFAULT_HISTORICAL_TRENDS_CONFIG };
+    case 'SENSOR_COMPARISON':
+      return { ...DEFAULT_SENSOR_COMPARISON_CONFIG };
     case 'QUICK_ACTIONS':
       return { ...DEFAULT_QUICK_ACTIONS_CONFIG };
     default:

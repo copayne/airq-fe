@@ -72,8 +72,22 @@ export class RingController {
       // Load initial device list from database
       await this.loadDevicesFromDb();
 
+      // If no devices in DB, auto-sync from Ring API to populate the database
+      if (this.devices.size === 0) {
+        console.log('[RingController] No devices in database, auto-syncing from Ring API...');
+        try {
+          await this.syncToDatabase();
+        } catch (syncError) {
+          console.warn('[RingController] Auto-sync failed, continuing without DB devices:', syncError);
+        }
+      }
+
       // Connect to real-time event stream for status updates
       this.connectToEventStream();
+
+      // Fetch live status from Ring API in the background (non-blocking).
+      // This populates status/battery/lastUpdate without delaying initialization.
+      void this.fetchLiveDeviceState();
 
       this.isInitialized = true;
       console.log('[RingController] Initialized successfully with real-time websocket updates');
@@ -178,6 +192,56 @@ export class RingController {
 
 
   /**
+   * Fetch live device state from Ring API to populate status, battery, and lastUpdate.
+   * The database only stores static info (name, type, location), so we need a live
+   * fetch to get current open/closed status and battery levels.
+   */
+  private async fetchLiveDeviceState(): Promise<void> {
+    try {
+      console.log('[RingController] Fetching live device state from Ring API...');
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
+      const response = await fetch('/api/ring/sync', { signal: controller.signal });
+      clearTimeout(timeout);
+
+      if (!response.ok) {
+        console.warn('[RingController] Failed to fetch live state, devices will update via SSE');
+        return;
+      }
+
+      const data = await response.json() as { success: boolean; devices?: RingDeviceData[]; error?: string };
+
+      if (!data.success || !data.devices) {
+        console.warn('[RingController] Live state fetch returned no devices');
+        return;
+      }
+
+      // Merge live state into cached devices
+      for (const liveDevice of data.devices) {
+        const cached = this.devices.get(liveDevice.deviceId);
+        if (cached) {
+          this.devices.set(liveDevice.deviceId, {
+            ...cached,
+            status: liveDevice.status,
+            batteryLevel: liveDevice.batteryLevel,
+            lastUpdate: liveDevice.lastUpdate,
+          });
+        } else {
+          // Device exists in Ring but not in DB — add it to the local cache
+          this.devices.set(liveDevice.deviceId, liveDevice);
+        }
+      }
+
+      console.log(`[RingController] Updated ${data.devices.length} devices with live state`);
+      this.notifyListeners();
+
+    } catch (error) {
+      console.warn('[RingController] Failed to fetch live device state:', error);
+      // Non-fatal: devices will still update via SSE when state changes
+    }
+  }
+
+  /**
    * Load devices from database and populate local cache
    */
   private async loadDevicesFromDb(): Promise<void> {
@@ -192,18 +256,21 @@ export class RingController {
       const dbDevices = data.ringDevices;
       console.log(`[RingController] Loaded ${dbDevices.length} devices from database`);
 
-      // Convert to RingDeviceData and update local cache
-      // Note: batteryLevel, status, and lastUpdate come from websocket, not DB
+      // Convert to RingDeviceData and update local cache.
+      // Preserve existing live state (status/battery/lastUpdate) if we already
+      // have it from a previous sync or SSE update.
+      const previousDevices = new Map(this.devices);
       this.devices.clear();
       for (const device of dbDevices) {
+        const existing = previousDevices.get(device.deviceId);
         const deviceData: RingDeviceData = {
           deviceId: device.deviceId,
           deviceType: device.deviceType,
           name: device.name,
           location: device.location,
-          batteryLevel: null, // Will be updated via websocket
-          status: null, // Will be updated via websocket
-          lastUpdate: null, // Will be updated via websocket
+          batteryLevel: existing?.batteryLevel ?? null,
+          status: existing?.status ?? null,
+          lastUpdate: existing?.lastUpdate ?? null,
         };
         this.devices.set(device.deviceId, deviceData);
       }
@@ -259,6 +326,7 @@ export class RingController {
   async refresh(): Promise<void> {
     console.log('[RingController] Manual refresh requested');
     await this.loadDevicesFromDb();
+    await this.fetchLiveDeviceState();
   }
 
   /**
@@ -309,6 +377,21 @@ export class RingController {
 
         // Reload devices from database to update local cache
         await this.loadDevicesFromDb();
+
+        // Merge live status/battery/lastUpdate from the Ring API response
+        // back into the cache (loadDevicesFromDb sets these to null)
+        for (const liveDevice of ringDevices) {
+          const cached = this.devices.get(liveDevice.deviceId);
+          if (cached) {
+            this.devices.set(liveDevice.deviceId, {
+              ...cached,
+              status: liveDevice.status,
+              batteryLevel: liveDevice.batteryLevel,
+              lastUpdate: liveDevice.lastUpdate,
+            });
+          }
+        }
+        this.notifyListeners();
       } else {
         throw new Error(result.data?.batchUpdateRingDevices.message ?? 'Batch update failed');
       }

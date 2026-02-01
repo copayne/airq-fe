@@ -96,40 +96,45 @@ const SensorReadingTable = memo<SensorReadingTableProps>(({ config }) => {
     return readings;
   }, [sensorReadings, config]);
   const columns = useMemo(
-    () => [
-      columnHelper.accessor('readingTime', {
-        header: 'Time',
-        cell: info => {
-          const timeValue = info.getValue();
-          const [datePart, timePart] = timeValue.split(', ');
-
-          return (
-            <div>
-              <p className="text-sm">{timePart}</p>
-              <span className="text-xs p-0 m-0">{datePart}</span>
-            </div>
-          )
-        },
-      }),
-      columnHelper.accessor('co2Ppm', {
-        header: 'CO2 PPM',
-        cell: info => info.getValue(),
-      }),
-      columnHelper.accessor('temperature', {
-        header: tempLabel,
-        cell: info => info.getValue(),
-      }),
-      columnHelper.accessor('humidityPercentage', {
-        header: 'Humidity %',
-        cell: info => info.getValue(),
-      }),
-      columnHelper.accessor('locationName', {
-        header: 'Location',
-        cell: info => info.getValue(),
-        enableResizing: true,
-      }),
-    ],
-    [tempLabel]
+    () => {
+      const visibleColumns: string[] = config?.columns ?? ['time', 'co2', 'temperature', 'humidity', 'location'];
+      const allColumns = [
+        { key: 'time', col: columnHelper.accessor('readingTime', {
+          header: 'Time',
+          cell: info => {
+            const timeValue = info.getValue();
+            const [datePart, timePart] = timeValue.split(', ');
+            return (
+              <div>
+                <p className="text-sm">{timePart}</p>
+                <span className="text-xs p-0 m-0">{datePart}</span>
+              </div>
+            );
+          },
+        })},
+        { key: 'co2', col: columnHelper.accessor('co2Ppm', {
+          header: 'CO2 PPM',
+          cell: info => info.getValue(),
+        })},
+        { key: 'temperature', col: columnHelper.accessor('temperature', {
+          header: tempLabel,
+          cell: info => info.getValue(),
+        })},
+        { key: 'humidity', col: columnHelper.accessor('humidityPercentage', {
+          header: 'Humidity %',
+          cell: info => info.getValue(),
+        })},
+        { key: 'location', col: columnHelper.accessor('locationName', {
+          header: 'Location',
+          cell: info => info.getValue(),
+          enableResizing: true,
+        })},
+      ];
+      return allColumns
+        .filter(c => visibleColumns.includes(c.key))
+        .map(c => c.col);
+    },
+    [tempLabel, config?.columns]
   );
   const dateFormatter = useMemo(() => new Intl.DateTimeFormat('en-US', {
     dateStyle: 'short',
@@ -171,6 +176,12 @@ const SensorReadingTable = memo<SensorReadingTableProps>(({ config }) => {
       pagination: {
         pageSize,
       },
+      ...(config?.defaultSort ? {
+        sorting: [{
+          id: config.defaultSort.field,
+          desc: config.defaultSort.direction === 'desc',
+        }],
+      } : {}),
     },
   });
 

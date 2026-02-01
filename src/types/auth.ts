@@ -78,6 +78,17 @@ export interface BaseResponse {
   message: string;
 }
 
+export interface UpdateProfileInput {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+}
+
+export interface ChangePasswordInput {
+  currentPassword: string;
+  newPassword: string;
+}
+
 export interface PasswordResetFormData {
   email?: string;
   newPassword?: string;

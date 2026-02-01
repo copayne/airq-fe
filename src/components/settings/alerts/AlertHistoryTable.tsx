@@ -9,6 +9,7 @@ interface AlertHistoryEntry {
   co2Ppm: number;
   severity: string;
   channelsSent: string;
+  emailStatus: string;
   acknowledged: boolean;
   acknowledgedAt: string | null;
   createdAt: string;
@@ -71,7 +72,7 @@ export const AlertHistoryTable: React.FC = () => {
               <th className="px-4 py-2">sensor</th>
               <th className="px-4 py-2">CO2</th>
               <th className="px-4 py-2">severity</th>
-              <th className="px-4 py-2">channels</th>
+              <th className="px-4 py-2">email</th>
               <th className="px-4 py-2">status</th>
             </tr>
           </thead>
@@ -94,7 +95,19 @@ export const AlertHistoryTable: React.FC = () => {
                     {alert.severity}
                   </span>
                 </td>
-                <td className="px-4 py-2 text-xs text-airq-dark/70">{alert.channelsSent}</td>
+                <td className="px-4 py-2">
+                  <span
+                    className={`inline-block px-2 py-0.5 text-xs font-medium ${
+                      alert.emailStatus === 'sent'
+                        ? 'bg-airq-primary/10 text-airq-primary border border-airq-primary/30'
+                        : alert.emailStatus === 'failed'
+                        ? 'bg-airq-tertiary/10 text-airq-tertiary border border-airq-tertiary/30'
+                        : 'bg-airq-dark/10 text-airq-dark/60 border border-airq-dark/20'
+                    }`}
+                  >
+                    {alert.emailStatus}
+                  </span>
+                </td>
                 <td className="px-4 py-2">
                   {alert.acknowledged ? (
                     <span className="text-xs text-airq-primary">acknowledged</span>

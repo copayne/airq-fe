@@ -8,11 +8,6 @@ interface AlertThreshold {
   warningPpm: number;
   criticalPpm: number;
   cooldownMinutes: number;
-  emailEnabled: boolean;
-  browserEnabled: boolean;
-  ntfyEnabled: boolean;
-  ntfyTopic: string | null;
-  ntfyServer: string | null;
   isEnabled: boolean;
 }
 
@@ -38,11 +33,6 @@ export const AlertThresholdForm: React.FC<AlertThresholdFormProps> = ({
   const [warningPpm, setWarningPpm] = useState(threshold?.warningPpm ?? 1000);
   const [criticalPpm, setCriticalPpm] = useState(threshold?.criticalPpm ?? 1500);
   const [cooldownMinutes, setCooldownMinutes] = useState(threshold?.cooldownMinutes ?? 30);
-  const [emailEnabled, setEmailEnabled] = useState(threshold?.emailEnabled ?? true);
-  const [browserEnabled, setBrowserEnabled] = useState(threshold?.browserEnabled ?? true);
-  const [ntfyEnabled, setNtfyEnabled] = useState(threshold?.ntfyEnabled ?? false);
-  const [ntfyTopic, setNtfyTopic] = useState(threshold?.ntfyTopic ?? '');
-  const [ntfyServer, setNtfyServer] = useState(threshold?.ntfyServer ?? 'https://ntfy.sh');
   const [isEnabled, setIsEnabled] = useState(threshold?.isEnabled ?? true);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -52,11 +42,6 @@ export const AlertThresholdForm: React.FC<AlertThresholdFormProps> = ({
       setWarningPpm(threshold.warningPpm);
       setCriticalPpm(threshold.criticalPpm);
       setCooldownMinutes(threshold.cooldownMinutes);
-      setEmailEnabled(threshold.emailEnabled);
-      setBrowserEnabled(threshold.browserEnabled);
-      setNtfyEnabled(threshold.ntfyEnabled);
-      setNtfyTopic(threshold.ntfyTopic ?? '');
-      setNtfyServer(threshold.ntfyServer ?? 'https://ntfy.sh');
       setIsEnabled(threshold.isEnabled);
     }
   }, [threshold]);
@@ -90,11 +75,6 @@ export const AlertThresholdForm: React.FC<AlertThresholdFormProps> = ({
           warningPpm,
           criticalPpm,
           cooldownMinutes,
-          emailEnabled,
-          browserEnabled,
-          ntfyEnabled,
-          ntfyTopic: ntfyEnabled ? ntfyTopic : null,
-          ntfyServer: ntfyEnabled ? ntfyServer : null,
           isEnabled,
         },
       },
@@ -159,47 +139,6 @@ export const AlertThresholdForm: React.FC<AlertThresholdFormProps> = ({
           className={inputClass}
         />
       </div>
-
-      <div className="space-y-2">
-        <p className={labelClass}>notification channels</p>
-        <label className="flex items-center space-x-2 text-sm">
-          <input type="checkbox" checked={emailEnabled} onChange={(e) => setEmailEnabled(e.target.checked)} className="accent-airq-contrast" />
-          <span>Email</span>
-        </label>
-        <label className="flex items-center space-x-2 text-sm">
-          <input type="checkbox" checked={browserEnabled} onChange={(e) => setBrowserEnabled(e.target.checked)} className="accent-airq-contrast" />
-          <span>Browser</span>
-        </label>
-        <label className="flex items-center space-x-2 text-sm">
-          <input type="checkbox" checked={ntfyEnabled} onChange={(e) => setNtfyEnabled(e.target.checked)} className="accent-airq-contrast" />
-          <span>ntfy.sh push</span>
-        </label>
-      </div>
-
-      {ntfyEnabled && (
-        <div className="space-y-3 pl-6 border-l-2 border-airq-contrast/30">
-          <div>
-            <label className={labelClass}>ntfy topic</label>
-            <input
-              type="text"
-              value={ntfyTopic}
-              onChange={(e) => setNtfyTopic(e.target.value)}
-              placeholder="my-airq-alerts"
-              className={inputClass}
-            />
-          </div>
-          <div>
-            <label className={labelClass}>ntfy server</label>
-            <input
-              type="text"
-              value={ntfyServer}
-              onChange={(e) => setNtfyServer(e.target.value)}
-              placeholder="https://ntfy.sh"
-              className={inputClass}
-            />
-          </div>
-        </div>
-      )}
 
       <label className="flex items-center space-x-2 text-sm">
         <input type="checkbox" checked={isEnabled} onChange={(e) => setIsEnabled(e.target.checked)} className="accent-airq-contrast" />

@@ -1,15 +1,21 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { useRingSnapshot } from '~/hooks/useRingSnapshot';
 import { useRingDevices } from '~/hooks/useRingDevices';
 import { formatShortDateTime } from '~/utils/dateUtils';
+import type { RingSnapshotConfig } from '~/types/widgetConfig';
 
 interface RingSnapshotCardProps {
   deviceId?: string;
   cameraName?: string;
+  config?: RingSnapshotConfig;
 }
 
-const RingSnapshotCard: React.FC<RingSnapshotCardProps> = ({ deviceId: propDeviceId, cameraName: propCameraName }) => {
+const RingSnapshotCard: React.FC<RingSnapshotCardProps> = ({ deviceId: propDeviceId, cameraName: propCameraName, config }) => {
+  const showTimestamp = config?.showTimestamp ?? true;
+  const showCaptureButton = config?.showCaptureButton ?? true;
+  const autoRefresh = config?.autoRefresh ?? false;
+  const refreshInterval = config?.refreshInterval ?? 300;
   // Fetch ring devices to auto-detect camera if no deviceId provided
   const { devices } = useRingDevices({ pollInterval: 0, fetchPolicy: 'cache-first' });
 
@@ -41,6 +47,17 @@ const RingSnapshotCard: React.FC<RingSnapshotCardProps> = ({ deviceId: propDevic
   }, [propDeviceId, propCameraName, devices]);
 
   const { snapshot, error, capturing, captureSnapshot } = useRingSnapshot(deviceId, { captureOnMount: true });
+
+  // Auto-refresh support
+  const captureRef = useRef(captureSnapshot);
+  captureRef.current = captureSnapshot;
+  useEffect(() => {
+    if (!autoRefresh || refreshInterval <= 0) return;
+    const interval = setInterval(() => {
+      void captureRef.current();
+    }, refreshInterval * 1000);
+    return () => clearInterval(interval);
+  }, [autoRefresh, refreshInterval]);
 
   // Image URL is relative to Next.js public directory
   const imageUrl = snapshot?.imageUrl ?? '';
@@ -99,23 +116,29 @@ const RingSnapshotCard: React.FC<RingSnapshotCardProps> = ({ deviceId: propDevic
           priority
         />
       </div>
-      <div className="border-t-[1px] border-airq-dark bg-airq-light px-2 py-1.5 flex justify-between items-center">
-        <div className="flex flex-col">
-          <p className="text-[10px] text-airq-dark/75">
-            {cameraName}
-          </p>
-          <p className="text-[10px] text-airq-dark font-medium">
-            {snapshot && formatTimestamp(snapshot.timestamp)}
-          </p>
+      {(showTimestamp || showCaptureButton) && (
+        <div className="border-t-[1px] border-airq-dark bg-airq-light px-2 py-1.5 flex justify-between items-center">
+          {showTimestamp ? (
+            <div className="flex flex-col">
+              <p className="text-[10px] text-airq-dark/75">
+                {cameraName}
+              </p>
+              <p className="text-[10px] text-airq-dark font-medium">
+                {snapshot && formatTimestamp(snapshot.timestamp)}
+              </p>
+            </div>
+          ) : <div />}
+          {showCaptureButton && (
+            <button
+              onClick={() => captureSnapshot()}
+              disabled={capturing}
+              className="px-2 py-1 bg-airq-dark text-airq-light border-[1px] border-airq-dark hover:bg-airq-dark/90 disabled:opacity-50 disabled:cursor-not-allowed text-[10px] font-medium touch-manipulation"
+            >
+              {capturing ? '...' : 'Capture'}
+            </button>
+          )}
         </div>
-        <button
-          onClick={() => captureSnapshot()}
-          disabled={capturing}
-          className="px-2 py-1 bg-airq-dark text-airq-light border-[1px] border-airq-dark hover:bg-airq-dark/90 disabled:opacity-50 disabled:cursor-not-allowed text-[10px] font-medium touch-manipulation"
-        >
-          {capturing ? '...' : 'Capture'}
-        </button>
-      </div>
+      )}
     </div>
   );
 };

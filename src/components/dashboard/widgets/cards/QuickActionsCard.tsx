@@ -11,6 +11,7 @@ import React, { memo, useState, useCallback } from 'react';
 import { useApolloClient } from '@apollo/client';
 import { useRing } from '~/context/RingContext';
 import { useRingSnapshot } from '~/hooks/useRingSnapshot';
+import type { QuickActionsConfig } from '~/types/widgetConfig';
 
 interface ActionButtonProps {
   label: string;
@@ -20,11 +21,12 @@ interface ActionButtonProps {
   disabled?: boolean;
 }
 
-const ActionButton: React.FC<ActionButtonProps> = memo(({ label, onClick, loading, icon, disabled }) => (
+const ActionButton: React.FC<ActionButtonProps & { showLabel?: boolean }> = memo(({ label, onClick, loading, icon, disabled, showLabel = true }) => (
   <button
     onClick={onClick}
     disabled={Boolean(loading) || Boolean(disabled)}
     className="flex flex-col items-center justify-center p-1.5 bg-airq-light border border-airq-dark hover:bg-airq-dark hover:text-airq-light transition-colors disabled:opacity-50 disabled:cursor-not-allowed group touch-manipulation"
+    title={label}
   >
     <div className="text-lg mb-0.5 group-hover:scale-110 transition-transform">
       {loading ? (
@@ -33,13 +35,19 @@ const ActionButton: React.FC<ActionButtonProps> = memo(({ label, onClick, loadin
         icon
       )}
     </div>
-    <span className="text-[9px] font-medium text-center leading-tight">{label}</span>
+    {showLabel && <span className="text-[9px] font-medium text-center leading-tight">{label}</span>}
   </button>
 ));
 
 ActionButton.displayName = 'ActionButton';
 
-const QuickActionsCard: React.FC = memo(() => {
+interface QuickActionsCardProps {
+  config?: QuickActionsConfig;
+}
+
+const QuickActionsCard: React.FC<QuickActionsCardProps> = memo(({ config }) => {
+  const layout = config?.layout ?? '2x2';
+  const showLabels = config?.showLabels ?? true;
   const apolloClient = useApolloClient();
   const { refresh: refreshRing } = useRing();
   const { capturing, captureSnapshot } = useRingSnapshot('59852574', { captureOnMount: false });
@@ -99,30 +107,38 @@ const QuickActionsCard: React.FC = memo(() => {
 
   return (
     <div className="h-full w-full flex flex-col bg-airq-light p-1">
-      <div className="grid grid-cols-2 gap-1 flex-1">
+      <div className={`gap-1 flex-1 ${
+        layout === '1x4' ? 'grid grid-cols-4' :
+        layout === '4x1' ? 'grid grid-cols-1' :
+        'grid grid-cols-2'
+      }`}>
         <ActionButton
           label="Capture"
           onClick={handleCaptureSnapshot}
           loading={capturing}
           icon={<span>📷</span>}
+          showLabel={showLabels}
         />
         <ActionButton
           label="Sensors"
           onClick={handleRefreshSensors}
           loading={refreshingSensors}
           icon={<span>🌡️</span>}
+          showLabel={showLabels}
         />
         <ActionButton
           label="Ring"
           onClick={handleRefreshRing}
           loading={refreshingRing}
           icon={<span>🔔</span>}
+          showLabel={showLabels}
         />
         <ActionButton
           label="All"
           onClick={handleRefreshAll}
           loading={refreshingSensors || refreshingRing}
           icon={<span>🔄</span>}
+          showLabel={showLabels}
         />
       </div>
       {lastAction && (

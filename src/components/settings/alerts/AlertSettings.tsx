@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
-import { Plus, Edit2, Trash2, Bell } from 'lucide-react';
-import { GET_ALERT_THRESHOLDS, DELETE_ALERT_THRESHOLD } from '~/graphql/Alerts';
+import { Plus, Edit2, Trash2, Bell, Send } from 'lucide-react';
+import { GET_ALERT_THRESHOLDS, DELETE_ALERT_THRESHOLD, SEND_TEST_ALERT } from '~/graphql/Alerts';
 import { GET_SENSORS_BASIC } from '~/graphql/Sensor';
 import { AlertThresholdForm } from './AlertThresholdForm';
 import { AlertHistoryTable } from './AlertHistoryTable';
@@ -14,11 +14,6 @@ interface AlertThreshold {
   warningPpm: number;
   criticalPpm: number;
   cooldownMinutes: number;
-  emailEnabled: boolean;
-  browserEnabled: boolean;
-  ntfyEnabled: boolean;
-  ntfyTopic: string | null;
-  ntfyServer: string | null;
   isEnabled: boolean;
   sensor: { id: number; name: string } | null;
 }
@@ -32,9 +27,23 @@ export const AlertSettings: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingThreshold, setEditingThreshold] = useState<AlertThreshold | null>(null);
   const [deletingThreshold, setDeletingThreshold] = useState<AlertThreshold | null>(null);
+  const [testAlertMessage, setTestAlertMessage] = useState<string | null>(null);
 
   const { data, loading, refetch } = useQuery<{ alertThresholds: AlertThreshold[] }>(GET_ALERT_THRESHOLDS);
   const { data: sensorsData } = useQuery<{ sensors: Sensor[] }>(GET_SENSORS_BASIC);
+
+  const [sendTestAlert, { loading: sendingTest }] = useMutation<{
+    sendTestAlert: { success: boolean; message: string };
+  }>(SEND_TEST_ALERT, {
+    onCompleted: (result) => {
+      setTestAlertMessage(result.sendTestAlert.message);
+      setTimeout(() => setTestAlertMessage(null), 5000);
+    },
+    onError: () => {
+      setTestAlertMessage('Failed to send test alert');
+      setTimeout(() => setTestAlertMessage(null), 5000);
+    },
+  });
 
   const [deleteThreshold, { loading: deleting }] = useMutation<{
     deleteAlertThreshold: { success: boolean; message: string };
@@ -75,14 +84,30 @@ export const AlertSettings: React.FC = () => {
             <Bell className="w-4 h-4" />
             <p className="text-sm font-semibold">alert thresholds</p>
           </div>
-          <button
-            onClick={() => { setEditingThreshold(null); setIsFormOpen(true); }}
-            className="flex items-center space-x-1 text-xs bg-airq-contrast px-2 py-1 hover:bg-airq-contrast/90 transition-colors"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>add threshold</span>
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => void sendTestAlert()}
+              disabled={sendingTest}
+              className="flex items-center space-x-1 text-xs bg-airq-light/20 px-2 py-1 hover:bg-airq-light/30 transition-colors disabled:opacity-50"
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>{sendingTest ? 'sending...' : 'test alert'}</span>
+            </button>
+            <button
+              onClick={() => { setEditingThreshold(null); setIsFormOpen(true); }}
+              className="flex items-center space-x-1 text-xs bg-airq-contrast px-2 py-1 hover:bg-airq-contrast/90 transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>add threshold</span>
+            </button>
+          </div>
         </div>
+
+        {testAlertMessage && (
+          <div className="px-4 py-2 text-xs bg-airq-primary/10 text-airq-dark border-b border-airq-dark/20">
+            {testAlertMessage}
+          </div>
+        )}
 
         {loading ? (
           <div className="p-4 text-sm text-airq-dark/60">Loading thresholds...</div>
@@ -107,13 +132,6 @@ export const AlertSettings: React.FC = () => {
                     <span className="text-airq-secondary font-medium">W: {t.warningPpm} ppm</span>
                     <span className="text-airq-tertiary font-medium">C: {t.criticalPpm} ppm</span>
                     <span>cooldown: {t.cooldownMinutes}m</span>
-                    <span>
-                      {[
-                        t.emailEnabled && 'email',
-                        t.browserEnabled && 'browser',
-                        t.ntfyEnabled && 'ntfy',
-                      ].filter(Boolean).join(', ')}
-                    </span>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">

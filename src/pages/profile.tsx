@@ -1,10 +1,19 @@
 import Head from 'next/head';
+import { useState } from 'react';
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute';
+import { Modal } from '~/components/common/Modal';
+import { useToast } from '~/components/common/Toast';
 import Layout from '~/components/layout/Layout';
+import { ProfileEditForm } from '~/components/profile/ProfileEditForm';
+import { ChangePasswordForm } from '~/components/profile/ChangePasswordForm';
 import { useAuth } from '~/context/AuthContext';
+import type { User } from '~/types/auth';
 
 function ProfileContent() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
+  const { showToast } = useToast();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   if (!user) return null;
 
@@ -19,6 +28,17 @@ function ProfileContent() {
       default:
         return 'bg-airq-light text-airq-dark border-airq-dark';
     }
+  };
+
+  const handleProfileEditSuccess = (updatedUser: User) => {
+    updateUser(updatedUser);
+    setIsEditModalOpen(false);
+    showToast('success', 'Profile updated successfully');
+  };
+
+  const handlePasswordChangeSuccess = () => {
+    setIsPasswordModalOpen(false);
+    showToast('success', 'Password changed successfully');
   };
 
   return (
@@ -107,11 +127,13 @@ function ProfileContent() {
           <div className="px-8 py-6 border-t border-airq-dark bg-airq-light">
             <div className="flex space-x-4 justify-between">
               <button
+                onClick={() => setIsEditModalOpen(true)}
                 className="w-16 shadow-card py-2 px-3 border border-airq-dark rounded-sm text-sm font-medium text-airq-light bg-airq-contrast"
               >
                 edit
               </button>
               <button
+                onClick={() => setIsPasswordModalOpen(true)}
                 className="w-40 shadow-card py-2 px-3 border border-airq-dark rounded-sm text-sm font-medium text-airq-light bg-airq-primary"
               >
                 change password
@@ -120,6 +142,21 @@ function ProfileContent() {
           </div>
         </div>
       </div>
+
+      <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title="edit profile" size="sm">
+        <ProfileEditForm
+          user={user}
+          onSuccess={handleProfileEditSuccess}
+          onCancel={() => setIsEditModalOpen(false)}
+        />
+      </Modal>
+
+      <Modal isOpen={isPasswordModalOpen} onClose={() => setIsPasswordModalOpen(false)} title="change password" size="sm">
+        <ChangePasswordForm
+          onSuccess={handlePasswordChangeSuccess}
+          onCancel={() => setIsPasswordModalOpen(false)}
+        />
+      </Modal>
     </Layout>
   );
 }

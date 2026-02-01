@@ -32,8 +32,14 @@ const CONFIGURABLE_WIDGETS = [
   'MULTI_METRIC_CHART',
   'TABLE',
   'RING_EVENTS',
+  'RING_SNAPSHOT',
+  'RING_CONTACT_SENSORS',
   'AIR_QUALITY_DISTRIBUTION',
   'AIR_QUALITY_HEATMAP',
+  'HISTORICAL_TRENDS',
+  'SENSOR_COMPARISON',
+  'METRICS_CARD',
+  'QUICK_ACTIONS',
 ];
 
 export const WidgetConfigPanel: React.FC<WidgetConfigPanelProps> = ({
@@ -240,13 +246,338 @@ export const WidgetConfigPanel: React.FC<WidgetConfigPanelProps> = ({
               />
             )}
 
+            {/* Historical Trends: Metric */}
+            {widgetType === 'HISTORICAL_TRENDS' && (
+              <SelectField
+                label="Metric"
+                value={(localConfig.metric as string) ?? 'co2'}
+                options={[
+                  { value: 'co2', label: 'CO2 (PPM)' },
+                  { value: 'temperature', label: 'Temperature' },
+                  { value: 'humidity', label: 'Humidity' },
+                ]}
+                onChange={(value) => updateConfig('metric', value)}
+              />
+            )}
+
+            {/* Historical Trends: Aggregation */}
+            {widgetType === 'HISTORICAL_TRENDS' && (
+              <SelectField
+                label="Aggregation"
+                value={(localConfig.aggregation as string) ?? 'daily'}
+                options={[
+                  { value: 'daily', label: 'Daily Average' },
+                  { value: 'weekly', label: 'Weekly Average' },
+                ]}
+                onChange={(value) => updateConfig('aggregation', value)}
+              />
+            )}
+
+            {/* Historical Trends: Show Trend Line */}
+            {widgetType === 'HISTORICAL_TRENDS' && (
+              <CheckboxField
+                label="Show trend line"
+                checked={(localConfig.showTrendLine as boolean) ?? true}
+                onChange={(checked) => updateConfig('showTrendLine', checked)}
+              />
+            )}
+
+            {/* Sensor Comparison: Metric */}
+            {widgetType === 'SENSOR_COMPARISON' && (
+              <SelectField
+                label="Metric"
+                value={(localConfig.metric as string) ?? 'co2'}
+                options={[
+                  { value: 'co2', label: 'CO2 (PPM)' },
+                  { value: 'temperature', label: 'Temperature' },
+                  { value: 'humidity', label: 'Humidity' },
+                ]}
+                onChange={(value) => updateConfig('metric', value)}
+              />
+            )}
+
             {/* Show Legend - for charts */}
-            {widgetType.includes('CHART') && (
+            {(widgetType.includes('CHART') || widgetType === 'SENSOR_COMPARISON') && (
               <CheckboxField
                 label="Show legend"
                 checked={(localConfig.showLegend as boolean) ?? false}
                 onChange={(checked) => updateConfig('showLegend', checked)}
               />
+            )}
+
+            {/* Show Grid - for charts */}
+            {(widgetType.includes('CHART')) && (
+              <CheckboxField
+                label="Show grid lines"
+                checked={(localConfig.showGrid as boolean) ?? true}
+                onChange={(checked) => updateConfig('showGrid', checked)}
+              />
+            )}
+
+            {/* Air Quality Distribution: Period Toggles */}
+            {widgetType === 'AIR_QUALITY_DISTRIBUTION' && (
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Periods to Display</label>
+                <div className="flex flex-wrap gap-1">
+                  {[
+                    { value: '24h', label: '24 Hours' },
+                    { value: '30d', label: '30 Days' },
+                    { value: 'allTime', label: 'All Time' },
+                  ].map(period => {
+                    const selected = (localConfig.periods as string[]) ?? ['24h', '30d', 'allTime'];
+                    const isSelected = selected.includes(period.value);
+                    return (
+                      <button
+                        key={period.value}
+                        onClick={() => {
+                          if (isSelected && selected.length > 1) {
+                            updateConfig('periods', selected.filter(p => p !== period.value));
+                          } else if (!isSelected) {
+                            updateConfig('periods', [...selected, period.value]);
+                          }
+                        }}
+                        className={`px-2 py-1 text-xs rounded border ${
+                          isSelected
+                            ? 'bg-airq-primary text-white border-airq-primary'
+                            : 'bg-white text-gray-700 border-gray-300 hover:border-airq-primary'
+                        }`}
+                      >
+                        {period.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Air Quality Distribution: Layout */}
+            {widgetType === 'AIR_QUALITY_DISTRIBUTION' && (
+              <SelectField
+                label="Layout"
+                value={(localConfig.layout as string) ?? 'vertical'}
+                options={[
+                  { value: 'vertical', label: 'Vertical' },
+                  { value: 'horizontal', label: 'Horizontal' },
+                ]}
+                onChange={(value) => updateConfig('layout', value)}
+              />
+            )}
+
+            {/* Table: Visible Columns */}
+            {widgetType === 'TABLE' && (
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Visible Columns</label>
+                <div className="flex flex-wrap gap-1">
+                  {[
+                    { value: 'time', label: 'Time' },
+                    { value: 'co2', label: 'CO2' },
+                    { value: 'temperature', label: 'Temp' },
+                    { value: 'humidity', label: 'Humidity' },
+                    { value: 'location', label: 'Location' },
+                    { value: 'sensor', label: 'Sensor' },
+                  ].map(col => {
+                    const selected = (localConfig.columns as string[]) ?? ['time', 'co2', 'temperature', 'humidity', 'location'];
+                    const isSelected = selected.includes(col.value);
+                    return (
+                      <button
+                        key={col.value}
+                        onClick={() => {
+                          if (isSelected && selected.length > 1) {
+                            updateConfig('columns', selected.filter(c => c !== col.value));
+                          } else if (!isSelected) {
+                            updateConfig('columns', [...selected, col.value]);
+                          }
+                        }}
+                        className={`px-2 py-1 text-xs rounded border ${
+                          isSelected
+                            ? 'bg-airq-primary text-white border-airq-primary'
+                            : 'bg-white text-gray-700 border-gray-300 hover:border-airq-primary'
+                        }`}
+                      >
+                        {col.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Table: Default Sort */}
+            {widgetType === 'TABLE' && (
+              <>
+                <SelectField
+                  label="Default Sort Field"
+                  value={((localConfig.defaultSort as Record<string, string>)?.field) ?? 'readingTime'}
+                  options={[
+                    { value: 'readingTime', label: 'Time' },
+                    { value: 'co2Ppm', label: 'CO2' },
+                    { value: 'temperature', label: 'Temperature' },
+                    { value: 'humidityPercentage', label: 'Humidity' },
+                    { value: 'locationName', label: 'Location' },
+                  ]}
+                  onChange={(value) => updateConfig('defaultSort', {
+                    field: value,
+                    direction: ((localConfig.defaultSort as Record<string, string>)?.direction) ?? 'desc',
+                  })}
+                />
+                <SelectField
+                  label="Sort Direction"
+                  value={((localConfig.defaultSort as Record<string, string>)?.direction) ?? 'desc'}
+                  options={[
+                    { value: 'desc', label: 'Descending' },
+                    { value: 'asc', label: 'Ascending' },
+                  ]}
+                  onChange={(value) => updateConfig('defaultSort', {
+                    field: ((localConfig.defaultSort as Record<string, string>)?.field) ?? 'readingTime',
+                    direction: value,
+                  })}
+                />
+              </>
+            )}
+
+            {/* Metrics Card: Temperature Unit */}
+            {widgetType === 'METRICS_CARD' && (
+              <SelectField
+                label="Temperature Unit"
+                value={(localConfig.temperatureUnit as string) ?? 'fahrenheit'}
+                options={[
+                  { value: 'fahrenheit', label: 'Fahrenheit (°F)' },
+                  { value: 'celsius', label: 'Celsius (°C)' },
+                ]}
+                onChange={(value) => updateConfig('temperatureUnit', value)}
+              />
+            )}
+
+            {/* Metrics Card: Layout */}
+            {widgetType === 'METRICS_CARD' && (
+              <SelectField
+                label="Layout"
+                value={(localConfig.layout as string) ?? '2x4'}
+                options={[
+                  { value: '2x4', label: '2 columns x 4 rows' },
+                  { value: '4x2', label: '4 columns x 2 rows' },
+                  { value: 'compact', label: 'Compact' },
+                ]}
+                onChange={(value) => updateConfig('layout', value)}
+              />
+            )}
+
+            {/* Ring Snapshot: Auto Refresh */}
+            {widgetType === 'RING_SNAPSHOT' && (
+              <>
+                <CheckboxField
+                  label="Auto-refresh snapshot"
+                  checked={(localConfig.autoRefresh as boolean) ?? false}
+                  onChange={(checked) => updateConfig('autoRefresh', checked)}
+                />
+                {(localConfig.autoRefresh as boolean) && (
+                  <SelectField
+                    label="Refresh interval"
+                    value={String((localConfig.refreshInterval as number) ?? 300)}
+                    options={[
+                      { value: '60', label: '1 minute' },
+                      { value: '300', label: '5 minutes' },
+                      { value: '600', label: '10 minutes' },
+                      { value: '900', label: '15 minutes' },
+                    ]}
+                    onChange={(value) => updateConfig('refreshInterval', parseInt(value))}
+                  />
+                )}
+                <CheckboxField
+                  label="Show timestamp"
+                  checked={(localConfig.showTimestamp as boolean) ?? true}
+                  onChange={(checked) => updateConfig('showTimestamp', checked)}
+                />
+                <CheckboxField
+                  label="Show capture button"
+                  checked={(localConfig.showCaptureButton as boolean) ?? true}
+                  onChange={(checked) => updateConfig('showCaptureButton', checked)}
+                />
+              </>
+            )}
+
+            {/* Ring Events: Event Type Filters */}
+            {widgetType === 'RING_EVENTS' && (
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Event Types</label>
+                <div className="flex flex-wrap gap-1">
+                  {[
+                    { value: 'motion', label: 'Motion' },
+                    { value: 'ding', label: 'Doorbell' },
+                    { value: 'on_demand', label: 'Live View' },
+                    { value: 'alarm', label: 'Alarm' },
+                  ].map(eventType => {
+                    const selected = (localConfig.eventTypes as string[]) ?? ['motion', 'ding', 'on_demand', 'alarm'];
+                    const isSelected = selected.includes(eventType.value);
+                    return (
+                      <button
+                        key={eventType.value}
+                        onClick={() => {
+                          if (isSelected && selected.length > 1) {
+                            updateConfig('eventTypes', selected.filter(e => e !== eventType.value));
+                          } else if (!isSelected) {
+                            updateConfig('eventTypes', [...selected, eventType.value]);
+                          }
+                        }}
+                        className={`px-2 py-1 text-xs rounded border ${
+                          isSelected
+                            ? 'bg-airq-primary text-white border-airq-primary'
+                            : 'bg-white text-gray-700 border-gray-300 hover:border-airq-primary'
+                        }`}
+                      >
+                        {eventType.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Ring Contact Sensors: Layout */}
+            {widgetType === 'RING_CONTACT_SENSORS' && (
+              <>
+                <SelectField
+                  label="Layout"
+                  value={(localConfig.layout as string) ?? 'grid'}
+                  options={[
+                    { value: 'grid', label: 'Grid' },
+                    { value: 'list', label: 'List' },
+                    { value: 'compact', label: 'Compact' },
+                  ]}
+                  onChange={(value) => updateConfig('layout', value)}
+                />
+                <CheckboxField
+                  label="Show battery level"
+                  checked={(localConfig.showBattery as boolean) ?? true}
+                  onChange={(checked) => updateConfig('showBattery', checked)}
+                />
+                <CheckboxField
+                  label="Show last update time"
+                  checked={(localConfig.showLastUpdate as boolean) ?? true}
+                  onChange={(checked) => updateConfig('showLastUpdate', checked)}
+                />
+              </>
+            )}
+
+            {/* Quick Actions: Layout */}
+            {widgetType === 'QUICK_ACTIONS' && (
+              <>
+                <SelectField
+                  label="Layout"
+                  value={(localConfig.layout as string) ?? '2x2'}
+                  options={[
+                    { value: '2x2', label: '2x2 Grid' },
+                    { value: '1x4', label: '1 Row' },
+                    { value: '4x1', label: '1 Column' },
+                  ]}
+                  onChange={(value) => updateConfig('layout', value)}
+                />
+                <CheckboxField
+                  label="Show labels"
+                  checked={(localConfig.showLabels as boolean) ?? true}
+                  onChange={(checked) => updateConfig('showLabels', checked)}
+                />
+              </>
             )}
           </div>
 

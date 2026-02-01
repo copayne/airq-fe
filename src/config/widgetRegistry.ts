@@ -19,6 +19,8 @@ import {
   Table,
   Thermometer,
   Calendar,
+  GitCompareArrows,
+  TrendingUp,
   Zap,
 } from 'lucide-react';
 
@@ -132,6 +134,31 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
       lg: { w: 12, h: 5, minW: 8, minH: 4 },
       md: { w: 16, h: 5, minW: 8, minH: 4 },
       sm: { w: 12, h: 5, minW: 10, minH: 4 },
+    },
+  },
+
+  {
+    id: 'HISTORICAL_TRENDS',
+    name: 'Historical Trends',
+    category: 'air-quality',
+    icon: TrendingUp,
+    description: 'Daily/weekly averaged trends over long periods',
+    defaultLayouts: {
+      lg: { w: 10, h: 5, minW: 6, minH: 3 },
+      md: { w: 12, h: 5, minW: 6, minH: 3 },
+      sm: { w: 12, h: 4, minW: 8, minH: 3 },
+    },
+  },
+  {
+    id: 'SENSOR_COMPARISON',
+    name: 'Sensor Comparison',
+    category: 'air-quality',
+    icon: GitCompareArrows,
+    description: 'Compare metrics across multiple sensors',
+    defaultLayouts: {
+      lg: { w: 10, h: 5, minW: 6, minH: 3 },
+      md: { w: 12, h: 5, minW: 6, minH: 3 },
+      sm: { w: 12, h: 4, minW: 8, minH: 3 },
     },
   },
 

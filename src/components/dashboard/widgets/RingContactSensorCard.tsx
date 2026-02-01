@@ -4,14 +4,17 @@ import { DoorClosed, DoorOpen, Battery, WifiOff, Clock, AlertCircle } from "luci
 import { useRing } from "~/context/RingContext";
 import type { RingDeviceData } from "~/services/RingController";
 import { getRelativeTime } from "~/utils/dateUtils";
+import type { RingContactSensorsConfig } from "~/types/widgetConfig";
 
-type RingContactSensorCardProps = Record<string, unknown>;
+interface RingContactSensorCardProps {
+  config?: RingContactSensorsConfig;
+}
 
 function formatTimeAgo(timestamp: string | null): string {
   return getRelativeTime(timestamp, "Never");
 }
 
-function SensorStatus({ device }: { device: RingDeviceData }) {
+function SensorStatus({ device, showBattery = true, showLastUpdate = true }: { device: RingDeviceData; showBattery?: boolean; showLastUpdate?: boolean }) {
   const isOpen = device.status === "open";
   const isOffline = !device.lastUpdate;
 
@@ -48,7 +51,7 @@ function SensorStatus({ device }: { device: RingDeviceData }) {
         <span className="text-[10px] font-medium text-airq-dark truncate">
           {device.name}
         </span>
-        {device.batteryLevel !== null && (
+        {showBattery && device.batteryLevel !== null && (
           <div className="flex items-center gap-0.5">
             <Battery className={`h-2.5 w-2.5 ${batteryColor}`} />
             <span className={`text-[9px] ${batteryColor}`}>
@@ -72,16 +75,21 @@ function SensorStatus({ device }: { device: RingDeviceData }) {
         </span>
       </div>
 
-      <div className="flex items-center gap-0.5 text-[9px] text-gray-500 border-t-[1px] border-airq-dark w-full justify-center py-0.5">
-        <Clock className="h-2.5 w-2.5" />
-        <span>{formatTimeAgo(device.lastUpdate)}</span>
-      </div>
+      {showLastUpdate && (
+        <div className="flex items-center gap-0.5 text-[9px] text-gray-500 border-t-[1px] border-airq-dark w-full justify-center py-0.5">
+          <Clock className="h-2.5 w-2.5" />
+          <span>{formatTimeAgo(device.lastUpdate)}</span>
+        </div>
+      )}
     </div>
   );
 }
 
-function RingContactSensorCard(_props: RingContactSensorCardProps) {
+function RingContactSensorCard({ config }: RingContactSensorCardProps) {
   const { devices, isInitialized, error } = useRing();
+  const layoutStyle = config?.layout ?? 'grid';
+  const showBattery = config?.showBattery ?? true;
+  const showLastUpdate = config?.showLastUpdate ?? true;
 
   const contactSensors = devices.filter(
     (device: RingDeviceData) => device.deviceType === "contact_sensor" ||
@@ -126,9 +134,13 @@ function RingContactSensorCard(_props: RingContactSensorCardProps) {
   return (
     <div className="h-full w-full border-black border-[1px] shadow-airq-dark shadow-card flex flex-col bg-airq-light">
       <div className="flex-1 overflow-auto p-1">
-        <div className="grid grid-cols-1 gap-1 sm:grid-cols-3 h-full">
+        <div className={`gap-1 h-full ${
+          layoutStyle === 'list' ? 'flex flex-col' :
+          layoutStyle === 'compact' ? 'grid grid-cols-2 sm:grid-cols-4' :
+          'grid grid-cols-1 sm:grid-cols-3'
+        }`}>
           {contactSensors.map((device) => (
-            <SensorStatus key={device.deviceId} device={device} />
+            <SensorStatus key={device.deviceId} device={device} showBattery={showBattery} showLastUpdate={showLastUpdate} />
           ))}
         </div>
       </div>

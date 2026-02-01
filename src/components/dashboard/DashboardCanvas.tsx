@@ -49,6 +49,8 @@ const getWidgetTitle = (type: string): string => {
     'RING_STATUS': 'Ring Status',
     'QUICK_ACTIONS': 'Quick Actions',
     'RING_EVENTS': 'Ring Events',
+    'HISTORICAL_TRENDS': 'Historical Trends',
+    'SENSOR_COMPARISON': 'Sensor Comparison',
   };
   return titles[type] ?? type;
 };
@@ -194,6 +196,8 @@ const DashboardCanvas = memo(() => {
     RING_STATUS: React.lazy(() => import('./widgets/RingStatusCard')),
     QUICK_ACTIONS: React.lazy(() => import('./widgets/cards/QuickActionsCard')),
     RING_EVENTS: React.lazy(() => import('./widgets/cards/RingEventsCard')),
+    HISTORICAL_TRENDS: React.lazy(() => import('./widgets/charts/HistoricalTrendsChart')),
+    SENSOR_COMPARISON: React.lazy(() => import('./widgets/charts/SensorComparisonChart')),
   }), []);
 
   // Get layout data directly from context

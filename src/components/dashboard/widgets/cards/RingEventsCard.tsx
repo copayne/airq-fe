@@ -65,7 +65,18 @@ const RingEventsCard: React.FC<RingEventsCardProps> = memo(({
       const data = await response.json() as { success: boolean; events?: RingEvent[]; error?: string };
 
       if (data.success && data.events) {
-        setEvents(data.events);
+        // Filter by event types if configured
+        const eventTypeFilter = config?.eventTypes;
+        const eventTypeMap: Record<string, string> = {
+          motion: 'Motion Detected',
+          ding: 'Doorbell Ring',
+          on_demand: 'Live View',
+          alarm: 'Alarm',
+        };
+        const filteredEvents = eventTypeFilter?.length
+          ? data.events.filter(e => eventTypeFilter.some(t => eventTypeMap[t] === e.eventType))
+          : data.events;
+        setEvents(filteredEvents);
         setError(null);
       } else {
         setError(data.error ?? 'Failed to fetch events');
@@ -76,7 +87,7 @@ const RingEventsCard: React.FC<RingEventsCardProps> = memo(({
       setLoading(false);
       setLastRefresh(new Date());
     }
-  }, [effectiveLimit]);
+  }, [effectiveLimit, config?.eventTypes]);
 
   useEffect(() => {
     void fetchEvents();

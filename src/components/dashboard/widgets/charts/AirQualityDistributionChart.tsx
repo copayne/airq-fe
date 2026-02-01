@@ -25,6 +25,7 @@ import { env } from '~/env.js';
 import { GET_AIR_QUALITY_DISTRIBUTIONS_BY_PERIOD } from '~/graphql/AirQuality';
 import { CACHE_FIRST_OPTIONS } from '~/lib/apolloDefaults';
 import type { AirQualityDistribution, GetAirQualityDistributionsByPeriodData } from '~/types/sensors';
+import type { AirQualityDistributionConfig } from '~/types/widgetConfig';
 
 // Register Chart.js components
 ChartJS.register(ArcElement, Title, Tooltip, Legend);
@@ -154,7 +155,11 @@ const SingleDoughnut: React.FC<SingleDoughnutProps> = memo(({ distribution, labe
 
 SingleDoughnut.displayName = 'SingleDoughnut';
 
-const AirQualityDistributionChart: React.FC = memo(() => {
+interface AirQualityDistributionChartProps {
+  config?: AirQualityDistributionConfig;
+}
+
+const AirQualityDistributionChart: React.FC<AirQualityDistributionChartProps> = memo(({ config }) => {
   const { data, loading, error } = useQuery<GetAirQualityDistributionsByPeriodData>(
     GET_AIR_QUALITY_DISTRIBUTIONS_BY_PERIOD,
     {
@@ -175,32 +180,41 @@ const AirQualityDistributionChart: React.FC = memo(() => {
       className="h-full flex items-center justify-center"
       showSpinner={true}
     >
-      {distributions && (
-        <div className="h-full p-2 flex flex-col">
-          {/* Legend */}
-          <div className="flex justify-center gap-2 mb-2 text-[9px]">
-            <div className="flex items-center gap-1">
-              <div className="w-2 h-2 rounded-full bg-[#137547]"></div>
-              <span>Good</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-2 h-2 rounded-full bg-[#FFC914]"></div>
-              <span>Moderate</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-2 h-2 rounded-full bg-[#ED4C4C]"></div>
-              <span>Poor</span>
-            </div>
-          </div>
+      {distributions && (() => {
+        const periods = config?.periods ?? ['24h', '30d', 'allTime'];
+        const layout = config?.layout ?? 'vertical';
+        const isHorizontal = layout === 'horizontal';
+        const periodCharts: { key: string; distribution: AirQualityDistribution; label: string }[] = [];
+        if (periods.includes('24h')) periodCharts.push({ key: '24h', distribution: distributions.oneDay, label: '24 Hours' });
+        if (periods.includes('30d')) periodCharts.push({ key: '30d', distribution: distributions.thirtyDays, label: '30 Days' });
+        if (periods.includes('allTime')) periodCharts.push({ key: 'allTime', distribution: distributions.allTime, label: 'All Time' });
 
-          {/* Three doughnut charts - vertically stacked */}
-          <div className="flex-1 flex flex-col items-center justify-around gap-1">
-            <SingleDoughnut distribution={distributions.oneDay} label="24 Hours" />
-            <SingleDoughnut distribution={distributions.thirtyDays} label="30 Days" />
-            <SingleDoughnut distribution={distributions.allTime} label="All Time" />
+        return (
+          <div className="h-full p-2 flex flex-col">
+            {/* Legend */}
+            <div className="flex justify-center gap-2 mb-2 text-[9px]">
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded-full bg-[#137547]"></div>
+                <span>Good</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded-full bg-[#FFC914]"></div>
+                <span>Moderate</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded-full bg-[#ED4C4C]"></div>
+                <span>Poor</span>
+              </div>
+            </div>
+
+            <div className={`flex-1 flex ${isHorizontal ? 'flex-row' : 'flex-col'} items-center justify-around gap-1`}>
+              {periodCharts.map(({ key, distribution, label }) => (
+                <SingleDoughnut key={key} distribution={distribution} label={label} />
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </DataStateWrapper>
   );
 });

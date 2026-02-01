@@ -7,11 +7,6 @@ export const ALERT_THRESHOLD_FRAGMENT = gql`
     warningPpm
     criticalPpm
     cooldownMinutes
-    emailEnabled
-    browserEnabled
-    ntfyEnabled
-    ntfyTopic
-    ntfyServer
     isEnabled
     createdAt
     updatedAt
@@ -29,6 +24,7 @@ export const ALERT_HISTORY_FRAGMENT = gql`
     co2Ppm
     severity
     channelsSent
+    emailStatus
     acknowledged
     acknowledgedAt
     createdAt
@@ -101,6 +97,15 @@ export const ACKNOWLEDGE_ALL_ALERTS = gql`
       success
       message
       count
+    }
+  }
+`;
+
+export const SEND_TEST_ALERT = gql`
+  mutation SendTestAlert {
+    sendTestAlert {
+      success
+      message
     }
   }
 `;

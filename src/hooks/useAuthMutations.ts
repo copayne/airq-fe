@@ -1,21 +1,25 @@
 import { useMutation } from '@apollo/client';
 import { useAuth } from '~/context/AuthContext';
 import {
+  CHANGE_PASSWORD,
   LOGIN_USER,
   LOGOUT_USER,
   REGISTER_USER,
   REQUEST_PASSWORD_RESET,
   RESET_PASSWORD,
+  UPDATE_PROFILE,
   VERIFY_EMAIL
 } from '~/graphql/auth';
 import type {
   AuthPayload,
   BaseResponse,
+  ChangePasswordInput,
   EmailVerificationInput,
   LoginInput,
   PasswordResetInput,
   PasswordResetRequestInput,
-  RegisterInput
+  RegisterInput,
+  UpdateProfileInput
 } from '~/types/auth';
 
 interface LoginMutationData {
@@ -222,6 +226,72 @@ export function useResetPassword() {
     loading,
     error,
   };
+}
+
+export function useUpdateProfile() {
+  const { updateUser, setError, setLoading } = useAuth();
+
+  const [updateProfileMutation, { loading, error }] = useMutation<{ updateProfile: AuthPayload }>(UPDATE_PROFILE, {
+    onCompleted: (data) => {
+      const { success, message, user } = data.updateProfile;
+      if (success && user) {
+        updateUser(user);
+      } else if (!success) {
+        setError(message || 'Profile update failed');
+      }
+    },
+    onError: (error) => {
+      console.error('Profile update error:', error);
+      setError(error.message || 'Profile update failed. Please try again.');
+    },
+  });
+
+  const updateProfile = async (input: UpdateProfileInput) => {
+    setLoading(true);
+    try {
+      const result = await updateProfileMutation({ variables: { input } });
+      return result.data?.updateProfile;
+    } catch (error) {
+      console.error('Profile update mutation error:', error);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { updateProfile, loading, error };
+}
+
+export function useChangePassword() {
+  const { setError, setLoading } = useAuth();
+
+  const [changePasswordMutation, { loading, error }] = useMutation<{ changePassword: BaseResponse }>(CHANGE_PASSWORD, {
+    onCompleted: (data) => {
+      const { success, message } = data.changePassword;
+      if (!success) {
+        setError(message || 'Password change failed');
+      }
+    },
+    onError: (error) => {
+      console.error('Password change error:', error);
+      setError(error.message || 'Password change failed. Please try again.');
+    },
+  });
+
+  const changePassword = async (input: ChangePasswordInput) => {
+    setLoading(true);
+    try {
+      const result = await changePasswordMutation({ variables: { input } });
+      return result.data?.changePassword;
+    } catch (error) {
+      console.error('Password change mutation error:', error);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { changePassword, loading, error };
 }
 
 export function useLogout() {

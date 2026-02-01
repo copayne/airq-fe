@@ -14,7 +14,7 @@ import React, { memo, useMemo } from 'react';
 import { Line } from 'react-chartjs-2';
 import { useWidgetSensorData } from '~/hooks/useWidgetSensorData';
 import { DataStateWrapper } from '~/components/common/DataStateWrapper';
-import type { ChartWidgetConfig } from '~/types/widgetConfig';
+import type { ChartWidgetConfig, MultiMetricChartConfig } from '~/types/widgetConfig';
 
 ChartJS.register(
   CategoryScale,
@@ -189,8 +189,9 @@ const MetricChart: React.FC<MetricChartProps> = memo(({
     };
   }, [metrics, showLegend]);
 
-  // Determine legend display - use config if provided, otherwise prop
+  // Determine legend/grid display - use config if provided, otherwise prop
   const displayLegend = config?.showLegend ?? showLegend;
+  const displayGrid = config?.showGrid ?? true;
 
   return (
     <DataStateWrapper
@@ -216,6 +217,13 @@ const MetricChart: React.FC<MetricChartProps> = memo(({
                 display: displayLegend,
               },
             },
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+            scales: Object.fromEntries(
+              Object.entries(options.scales).map(([key, scale]) => [
+                key,
+                { ...(scale as Record<string, unknown>), grid: { ...((scale as Record<string, unknown>).grid as Record<string, unknown> ?? {}), display: displayGrid } },
+              ])
+            ),
           }}
           redraw={false}
         />
@@ -285,46 +293,86 @@ export const HumidityChart: React.FC<ConfigurableChartProps> = memo(({ config })
 ));
 HumidityChart.displayName = 'HumidityChart';
 
-export const MultiMetricChart: React.FC<ConfigurableChartProps> = memo(({ config }) => (
-  <MetricChart
-    metrics={[
-      {
-        key: 'co2',
-        label: 'CO2 (PPM)',
-        color: '#137547',
-        backgroundColor: 'rgba(19, 117, 71, 0.1)',
-        yAxisId: 'yCO2',
+const ALL_MULTI_METRICS: Record<string, MetricConfig & { yAxisId: string; yAxisConfig: MetricConfig['yAxisConfig'] }> = {
+  co2: {
+    key: 'co2',
+    label: 'CO2 (PPM)',
+    color: '#137547',
+    backgroundColor: 'rgba(19, 117, 71, 0.1)',
+    yAxisId: 'yCO2',
+    yAxisConfig: {
+      title: 'CO2 (PPM)',
+      position: 'left',
+      color: '#137547',
+      drawOnChartArea: true,
+    },
+    extractValue: (reading) => reading.co2Reading?.co2Ppm ?? null,
+    filterReading: (reading) => reading.co2Reading?.co2Ppm != null,
+  },
+  temperature: {
+    key: 'temperature',
+    label: 'Temperature (°F)',
+    color: '#2E2EAB',
+    backgroundColor: 'rgba(46, 46, 171, 0.1)',
+    yAxisId: 'yTemp',
+    yAxisConfig: {
+      title: 'Temperature (°F)',
+      position: 'right',
+      color: '#2E2EAB',
+      drawOnChartArea: false,
+    },
+    extractValue: (reading) =>
+      reading.temperatureReading?.temperatureCelsius != null
+        ? (reading.temperatureReading.temperatureCelsius * 9/5) + 32
+        : null,
+    filterReading: (reading) => reading.temperatureReading?.temperatureCelsius != null,
+  },
+  humidity: {
+    key: 'humidity',
+    label: 'Humidity (%)',
+    color: 'rgb(168, 85, 247)',
+    backgroundColor: 'rgba(168, 85, 247, 0.1)',
+    yAxisId: 'yHumidity',
+    yAxisConfig: {
+      title: 'Humidity (%)',
+      position: 'right',
+      color: 'rgb(168, 85, 247)',
+      drawOnChartArea: false,
+    },
+    extractValue: (reading) => reading.humidityReading?.humidityPercentage ?? null,
+    filterReading: (reading) => reading.humidityReading?.humidityPercentage != null,
+  },
+};
+
+interface MultiMetricChartProps {
+  config?: MultiMetricChartConfig;
+}
+
+export const MultiMetricChart: React.FC<MultiMetricChartProps> = memo(({ config }) => {
+  const selectedMetrics = config?.metrics ?? ['co2', 'temperature'];
+  // Ensure first metric draws on chart area, others don't
+  const metrics = selectedMetrics
+    .map((key, index) => {
+      const metric = ALL_MULTI_METRICS[key];
+      if (!metric) return null;
+      return {
+        ...metric,
         yAxisConfig: {
-          title: 'CO2 (PPM)',
-          position: 'left',
-          color: '#137547',
-          drawOnChartArea: true
+          ...metric.yAxisConfig,
+          position: index === 0 ? 'left' as const : 'right' as const,
+          drawOnChartArea: index === 0,
         },
-        extractValue: (reading) => reading.co2Reading?.co2Ppm ?? null,
-        filterReading: (reading) => reading.co2Reading?.co2Ppm != null,
-      },
-      {
-        key: 'temperature',
-        label: 'Temperature (°F)',
-        color: '#2E2EAB',
-        backgroundColor: 'rgba(46, 46, 171, 0.1)',
-        yAxisId: 'yTemp',
-        yAxisConfig: {
-          title: 'Temperature (°F)',
-          position: 'right',
-          color: '#2E2EAB',
-          drawOnChartArea: false
-        },
-        extractValue: (reading) =>
-          reading.temperatureReading?.temperatureCelsius != null
-            ? (reading.temperatureReading.temperatureCelsius * 9/5) + 32
-            : null,
-        filterReading: (reading) => reading.temperatureReading?.temperatureCelsius != null,
-      }
-    ]}
-    showLegend={true}
-    errorMessage="Error loading environmental data"
-    config={config}
-  />
-));
+      };
+    })
+    .filter((m): m is NonNullable<typeof m> => m !== null) as MetricConfig[];
+
+  return (
+    <MetricChart
+      metrics={metrics}
+      showLegend={true}
+      errorMessage="Error loading environmental data"
+      config={config}
+    />
+  );
+});
 MultiMetricChart.displayName = 'MultiMetricChart';

@@ -108,6 +108,31 @@ export const RESET_PASSWORD = gql`
   }
 `;
 
+// Update profile mutation
+export const UPDATE_PROFILE = gql`
+  mutation UpdateProfile($input: UpdateProfileInput!) {
+    updateProfile(input: $input) {
+      success
+      message
+      token
+      user {
+        ...UserData
+      }
+    }
+  }
+  ${USER_FRAGMENT}
+`;
+
+// Change password mutation
+export const CHANGE_PASSWORD = gql`
+  mutation ChangePassword($input: ChangePasswordInput!) {
+    changePassword(input: $input) {
+      success
+      message
+    }
+  }
+`;
+
 // Logout user mutation
 export const LOGOUT_USER = gql`
   mutation LogoutUser($input: LogoutInput!) {

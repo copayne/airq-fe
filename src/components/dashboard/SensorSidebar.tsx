@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useState, useCallback } from 'react';
 import { DoorClosed, DoorOpen, Battery, WifiOff, Clock } from 'lucide-react';
 import { useSensors } from '~/hooks/useSensors';
 import { useRing } from '~/context/RingContext';
@@ -11,12 +11,24 @@ import {
   getHumidityColorClasses,
   getTemperatureCelsiusColorClasses
 } from '~/utils/thresholds';
+import Sparkline from '~/components/common/Sparkline';
+import SparklineModal, { type SparklineMetric } from '~/components/common/SparklineModal';
+import { useSparklineData } from '~/hooks/useSparklineData';
+
+// Sparkline colors matching the chart colors
+const SPARKLINE_COLORS = {
+  co2: 'rgb(34, 197, 94)',
+  temperature: 'rgb(59, 130, 246)',
+  humidity: 'rgb(168, 85, 247)',
+} as const;
 
 interface CompactSensorCardProps {
   sensor: Sensor;
 }
 
 const CompactSensorCard: React.FC<CompactSensorCardProps> = memo(({ sensor }) => {
+  const [modalMetric, setModalMetric] = useState<SparklineMetric | null>(null);
+
   const {
     co2,
     co2Raw,
@@ -26,6 +38,21 @@ const CompactSensorCard: React.FC<CompactSensorCardProps> = memo(({ sensor }) =>
     temperatureFahrenheit,
     lastReading,
   } = formatSensorDetails(sensor);
+
+  const {
+    co2Data,
+    temperatureData,
+    humidityData,
+    loading: sparklineLoading,
+  } = useSparklineData(sensor.id);
+
+  const openModal = useCallback((metric: SparklineMetric) => {
+    setModalMetric(metric);
+  }, []);
+
+  const closeModal = useCallback(() => {
+    setModalMetric(null);
+  }, []);
 
   const co2Colors = getCO2ColorClasses(co2Raw);
   const tempColors = getTemperatureCelsiusColorClasses(tempRaw ?? null);
@@ -40,29 +67,60 @@ const CompactSensorCard: React.FC<CompactSensorCardProps> = memo(({ sensor }) =>
   };
 
   return (
-    <div className="border border-airq-dark shadow-card bg-airq-light">
-      {/* Header with location name */}
-      <div className="bg-airq-dark text-airq-light px-2 py-1 flex items-center justify-between">
-        <span className="text-xs font-semibold truncate">{locationName}</span>
-        <span className="text-[10px] text-airq-light/60">{getRelativeTime(lastReading)}</span>
+    <>
+      <div className="border border-airq-dark shadow-card bg-airq-light">
+        {/* Header with location name */}
+        <div className="bg-airq-dark text-airq-light px-2 py-1 flex items-center justify-between">
+          <span className="text-xs font-semibold truncate">{locationName}</span>
+          <span className="text-[10px] text-airq-light/60">{getRelativeTime(lastReading)}</span>
+        </div>
+
+        {/* Metrics row with sparklines */}
+        <div className="flex divide-x divide-airq-dark/30">
+          <div className={`flex-1 px-2 py-1.5 text-center ${co2Colors.inner}`}>
+            <p className="text-[10px] uppercase">co2</p>
+            <p className="text-sm font-medium">{co2}<span className="text-[10px]">ppm</span></p>
+            <Sparkline
+              data={co2Data}
+              color={SPARKLINE_COLORS.co2}
+              loading={sparklineLoading}
+              onClick={() => openModal('co2')}
+            />
+          </div>
+          <div className={`flex-1 px-2 py-1.5 text-center ${tempColors.inner}`}>
+            <p className="text-[10px] uppercase">temp</p>
+            <p className="text-sm font-medium">{temperatureFahrenheit}<span className="text-[10px]">f</span></p>
+            <Sparkline
+              data={temperatureData}
+              color={SPARKLINE_COLORS.temperature}
+              loading={sparklineLoading}
+              onClick={() => openModal('temperature')}
+            />
+          </div>
+          <div className={`flex-1 px-2 py-1.5 text-center ${humidityColors.inner}`}>
+            <p className="text-[10px] uppercase">hum</p>
+            <p className="text-sm font-medium">{humidity}<span className="text-[10px]">%</span></p>
+            <Sparkline
+              data={humidityData}
+              color={SPARKLINE_COLORS.humidity}
+              loading={sparklineLoading}
+              onClick={() => openModal('humidity')}
+            />
+          </div>
+        </div>
       </div>
 
-      {/* Metrics row */}
-      <div className="flex divide-x divide-airq-dark/30">
-        <div className={`flex-1 px-2 py-1.5 text-center ${co2Colors.inner}`}>
-          <p className="text-[10px] uppercase">co2</p>
-          <p className="text-sm font-medium">{co2}<span className="text-[10px]">ppm</span></p>
-        </div>
-        <div className={`flex-1 px-2 py-1.5 text-center ${tempColors.inner}`}>
-          <p className="text-[10px] uppercase">temp</p>
-          <p className="text-sm font-medium">{temperatureFahrenheit}<span className="text-[10px]">f</span></p>
-        </div>
-        <div className={`flex-1 px-2 py-1.5 text-center ${humidityColors.inner}`}>
-          <p className="text-[10px] uppercase">hum</p>
-          <p className="text-sm font-medium">{humidity}<span className="text-[10px]">%</span></p>
-        </div>
-      </div>
-    </div>
+      {/* Expanded Chart Modal */}
+      {modalMetric && (
+        <SparklineModal
+          isOpen={!!modalMetric}
+          onClose={closeModal}
+          metric={modalMetric}
+          sensorId={sensor.id}
+          sensorName={sensor.name}
+        />
+      )}
+    </>
   );
 });
 

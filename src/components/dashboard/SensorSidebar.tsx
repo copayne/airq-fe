@@ -77,7 +77,7 @@ const CompactSensorCard: React.FC<CompactSensorCardProps> = memo(({ sensor }) =>
 
         {/* Metrics row with sparklines */}
         <div className="flex divide-x divide-airq-dark/30">
-          <div className={`flex-1 px-2 py-1.5 text-center ${co2Colors.inner}`}>
+          <div className={`flex-1 min-w-0 px-2 py-1.5 text-center overflow-hidden ${co2Colors.inner}`}>
             <p className="text-[10px] uppercase">co2</p>
             <p className="text-sm font-medium">{co2}<span className="text-[10px]">ppm</span></p>
             <Sparkline
@@ -87,7 +87,7 @@ const CompactSensorCard: React.FC<CompactSensorCardProps> = memo(({ sensor }) =>
               onClick={() => openModal('co2')}
             />
           </div>
-          <div className={`flex-1 px-2 py-1.5 text-center ${tempColors.inner}`}>
+          <div className={`flex-1 min-w-0 px-2 py-1.5 text-center overflow-hidden ${tempColors.inner}`}>
             <p className="text-[10px] uppercase">temp</p>
             <p className="text-sm font-medium">{temperatureFahrenheit}<span className="text-[10px]">f</span></p>
             <Sparkline
@@ -97,7 +97,7 @@ const CompactSensorCard: React.FC<CompactSensorCardProps> = memo(({ sensor }) =>
               onClick={() => openModal('temperature')}
             />
           </div>
-          <div className={`flex-1 px-2 py-1.5 text-center ${humidityColors.inner}`}>
+          <div className={`flex-1 min-w-0 px-2 py-1.5 text-center overflow-hidden ${humidityColors.inner}`}>
             <p className="text-[10px] uppercase">hum</p>
             <p className="text-sm font-medium">{humidity}<span className="text-[10px]">%</span></p>
             <Sparkline

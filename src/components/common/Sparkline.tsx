@@ -8,7 +8,6 @@ import {
 } from 'chart.js';
 import React, { memo, useMemo } from 'react';
 import { Line } from 'react-chartjs-2';
-import type { TrendDirection } from '~/utils/sparklineAggregator';
 
 ChartJS.register(
   CategoryScale,
@@ -23,8 +22,6 @@ interface SparklineProps {
   color: string;
   onClick?: () => void;
   loading?: boolean;
-  trend?: TrendDirection;
-  showTrend?: boolean;
 }
 
 const Sparkline: React.FC<SparklineProps> = memo(({
@@ -32,8 +29,6 @@ const Sparkline: React.FC<SparklineProps> = memo(({
   color,
   onClick,
   loading = false,
-  trend,
-  showTrend = false,
 }) => {
   const chartData = useMemo(() => ({
     labels: data.map((_, i) => i.toString()),
@@ -76,8 +71,8 @@ const Sparkline: React.FC<SparklineProps> = memo(({
   // Loading skeleton
   if (loading) {
     return (
-      <div className="h-[20px] w-full flex items-center justify-center">
-        <div className="h-[12px] w-full bg-current opacity-20 rounded animate-pulse" />
+      <div className="h-[16px] w-full min-w-0 flex items-center justify-center">
+        <div className="h-[8px] w-full bg-current opacity-20 rounded animate-pulse" />
       </div>
     );
   }
@@ -85,31 +80,23 @@ const Sparkline: React.FC<SparklineProps> = memo(({
   // No data state
   if (!data.length) {
     return (
-      <div className="h-[20px] w-full flex items-center justify-center">
+      <div className="h-[16px] w-full min-w-0 flex items-center justify-center">
         <div className="h-[1px] w-full bg-current opacity-30" />
       </div>
     );
   }
 
-  const trendArrow = showTrend && trend ? (
-    <span className="ml-1 text-[10px]">
-      {trend === 'up' && '\u2191'}
-      {trend === 'down' && '\u2193'}
-    </span>
-  ) : null;
-
   return (
     <div
-      className={`h-[20px] w-full flex items-center ${onClick ? 'cursor-pointer hover:opacity-80' : ''}`}
+      className={`h-[16px] w-full min-w-0 overflow-hidden ${onClick ? 'cursor-pointer hover:opacity-80' : ''}`}
       onClick={onClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
       onKeyDown={onClick ? (e) => e.key === 'Enter' && onClick() : undefined}
     >
-      <div className="h-full flex-1">
+      <div className="h-full w-full">
         <Line data={chartData} options={options} redraw={false} />
       </div>
-      {trendArrow}
     </div>
   );
 });

@@ -38,8 +38,10 @@ export function getSocket(token: string): Socket {
     auth: { token },
     transports: ['websocket', 'polling'],
     reconnection: true,
-    reconnectionAttempts: 10,
-    reconnectionDelay: 2000,
+    reconnectionAttempts: Infinity,  // Keep trying indefinitely for 24/7 operation
+    reconnectionDelay: 1000,         // Start with 1 second
+    reconnectionDelayMax: 30000,     // Cap at 30 seconds (exponential backoff)
+    randomizationFactor: 0.5,        // Add jitter to prevent thundering herd
   });
 
   return socket;

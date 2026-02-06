@@ -6,11 +6,12 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
+  type SortingState,
 } from '@tanstack/react-table';
-import { memo, useMemo } from 'react';
-import { useSensorReadingData } from '../../../../hooks/useSensorReadingData';
+import { memo, useMemo, useState, useEffect } from 'react';
+import { useWidgetSensorData } from '~/hooks/useWidgetSensorData';
 import { DataStateWrapper } from '~/components/common/DataStateWrapper';
-import { getDateRangeFromPreset, type TableWidgetConfig } from '~/types/widgetConfig';
+import type { TableWidgetConfig } from '~/types/widgetConfig';
 
 interface SensorReading {
   readingTime: string;
@@ -23,6 +24,7 @@ interface SensorReading {
 
 interface TableData {
   readingTime: string;
+  timestamp: number; // Epoch ms for proper sorting
   co2Ppm: string;
   temperature: string;
   humidityPercentage: string;
@@ -36,65 +38,42 @@ interface SensorReadingTableProps {
 const columnHelper = createColumnHelper<TableData>();
 
 const SensorReadingTable = memo<SensorReadingTableProps>(({ config }) => {
-  const {
-    error,
-    isFetched,
-    loading,
-    sensorReadings,
-  } = useSensorReadingData();
+  // Use widget-specific data fetching (same as charts) to get fresh data based on config
+  const { sensorReadings, loading, error } = useWidgetSensorData({ config });
 
   // Get temperature unit from config
   const tempUnit = config?.temperatureUnit ?? 'fahrenheit';
   const tempLabel = tempUnit === 'celsius' ? 'Temp (°C)' : 'Temp (°F)';
 
-  // Filter readings based on widget config
+  // Reactive pagination state - updates when config changes
+  const pageSize = config?.pageSize ?? 25;
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize });
+
+  // Reset pagination when pageSize config changes
+  useEffect(() => {
+    setPagination(prev => ({ ...prev, pageSize, pageIndex: 0 }));
+  }, [pageSize]);
+
+  // Reactive sorting state - updates when config changes
+  const [sorting, setSorting] = useState<SortingState>(
+    config?.defaultSort
+      ? [{ id: config.defaultSort.field, desc: config.defaultSort.direction === 'desc' }]
+      : []
+  );
+
+  // Update sorting when config changes
+  useEffect(() => {
+    if (config?.defaultSort) {
+      setSorting([{ id: config.defaultSort.field, desc: config.defaultSort.direction === 'desc' }]);
+    }
+  }, [config?.defaultSort]);
+
+  // Data is already filtered by API (time range, sensors, locations)
+  // Just cast to the expected type
   const filteredReadings = useMemo(() => {
     if (!sensorReadings?.length) return [];
-
-    let readings = [...sensorReadings] as SensorReading[];
-
-    // Filter by time range
-    if (config?.timeRange && config.timeRange !== 'all') {
-      let startDate: Date | null = null;
-      let endDate: Date | null = null;
-
-      if (config.timeRange === 'custom') {
-        if (config.customStartDate) startDate = new Date(config.customStartDate);
-        if (config.customEndDate) endDate = new Date(config.customEndDate);
-      } else {
-        const range = getDateRangeFromPreset(config.timeRange);
-        if (range) {
-          startDate = range.startDate;
-          endDate = range.endDate;
-        }
-      }
-
-      if (startDate !== null || endDate !== null) {
-        readings = readings.filter(r => {
-          const readingDate = new Date(`${r.readingTime}Z`);
-          if (startDate && readingDate < startDate) return false;
-          if (endDate && readingDate > endDate) return false;
-          return true;
-        });
-      }
-    }
-
-    // Filter by sensors
-    if (config?.sensorIds?.length) {
-      readings = readings.filter(r =>
-        r.sensor?.id && config.sensorIds!.includes(r.sensor.id)
-      );
-    }
-
-    // Filter by locations
-    if (config?.locationIds?.length) {
-      readings = readings.filter(r =>
-        r.location?.id && config.locationIds!.includes(r.location.id)
-      );
-    }
-
-    return readings;
-  }, [sensorReadings, config]);
+    return sensorReadings as SensorReading[];
+  }, [sensorReadings]);
   const columns = useMemo(
     () => {
       const visibleColumns: string[] = config?.columns ?? ['time', 'co2', 'temperature', 'humidity', 'location'];
@@ -111,6 +90,8 @@ const SensorReadingTable = memo<SensorReadingTableProps>(({ config }) => {
               </div>
             );
           },
+          // Sort by timestamp (epoch) not formatted string to handle AM/PM correctly
+          sortingFn: (rowA, rowB) => rowA.original.timestamp - rowB.original.timestamp,
         })},
         { key: 'co2', col: columnHelper.accessor('co2Ppm', {
           header: 'CO2 PPM',
@@ -153,17 +134,17 @@ const SensorReadingTable = memo<SensorReadingTableProps>(({ config }) => {
           : ((celsius * 9/5) + 32).toFixed(1);
       }
 
+      const date = new Date(`${reading.readingTime}Z`);
       return {
         co2Ppm: reading.co2Reading?.co2Ppm?.toFixed(0) ?? '--',
         locationName: reading.location?.name ?? '--',
         temperature: tempValue,
         humidityPercentage: reading.humidityReading?.humidityPercentage?.toFixed(0) ?? '--',
-        readingTime: dateFormatter.format(new Date(`${reading.readingTime}Z`)),
+        readingTime: dateFormatter.format(date),
+        timestamp: date.getTime(), // Store epoch for sorting
       };
     });
   }, [filteredReadings, dateFormatter, tempUnit]);
-
-  const pageSize = config?.pageSize ?? 25;
 
   const table = useReactTable({
     data,
@@ -172,26 +153,22 @@ const SensorReadingTable = memo<SensorReadingTableProps>(({ config }) => {
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    initialState: {
-      pagination: {
-        pageSize,
-      },
-      ...(config?.defaultSort ? {
-        sorting: [{
-          id: config.defaultSort.field,
-          desc: config.defaultSort.direction === 'desc',
-        }],
-      } : {}),
+    // Use controlled state so config changes apply immediately
+    state: {
+      pagination,
+      sorting,
     },
+    onPaginationChange: setPagination,
+    onSortingChange: setSorting,
   });
 
   const hasFilters = (config?.sensorIds?.length ?? 0) > 0 || (config?.locationIds?.length ?? 0) > 0;
 
   return (
     <DataStateWrapper
-      loading={loading && !isFetched}
+      loading={loading}
       error={error}
-      data={filteredReadings.length > 0 ? filteredReadings : sensorReadings}
+      data={filteredReadings}
       loadingMessage="Loading sensor readings..."
       errorMessage={error ? `Error: ${error.message}` : 'Error loading data'}
       emptyMessage={hasFilters ? "No data for selected filters" : "No sensor readings available"}

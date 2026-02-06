@@ -4,7 +4,7 @@
  */
 
 import { useQuery } from '@apollo/client';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { GET_FILTERED_SENSOR_READINGS } from '../graphql/SensorReading';
 import { getDateRangeFromPreset, type TimeRangePreset } from '~/types/widgetConfig';
 import type { GetFilteredSensorReadingsData } from '~/types/sensors';
@@ -31,7 +31,24 @@ export const useWidgetSensorData = ({ config, skip = false }: UseWidgetSensorDat
   const sensorIdsKey = config?.sensorIds?.join(',') ?? '';
   const locationIdsKey = config?.locationIds?.join(',') ?? '';
 
-  // Build query variables - recalculated when config changes
+  // Time-based state that updates on each poll interval to ensure relative time ranges
+  // (e.g., "last 6 hours") are recalculated with fresh timestamps
+  const [timeRefreshKey, setTimeRefreshKey] = useState(0);
+
+  useEffect(() => {
+    // Only set up interval for relative time ranges (not 'all' or 'custom')
+    if (!config?.timeRange || config.timeRange === 'all' || config.timeRange === 'custom') {
+      return;
+    }
+
+    const intervalId = setInterval(() => {
+      setTimeRefreshKey(prev => prev + 1);
+    }, env.NEXT_PUBLIC_POLL_INTERVAL_MS);
+
+    return () => clearInterval(intervalId);
+  }, [config?.timeRange]);
+
+  // Build query variables - recalculated when config changes OR time passes
   const variables = useMemo(() => {
     let startDate: string | undefined;
     let endDate: string | undefined;
@@ -63,12 +80,14 @@ export const useWidgetSensorData = ({ config, skip = false }: UseWidgetSensorDat
         limit: DEFAULT_WIDGET_LIMIT,
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- timeRefreshKey intentionally triggers recalculation
   }, [
     config?.timeRange,
     config?.customStartDate,
     config?.customEndDate,
     sensorIdsKey,
     locationIdsKey,
+    timeRefreshKey, // Triggers recalculation of relative time ranges on each poll interval
   ]);
 
   // Use regular useQuery with network-only to always fetch fresh data

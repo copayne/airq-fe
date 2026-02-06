@@ -16,6 +16,13 @@ const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
 });
 
+// Parse API hostname/port from GraphQL endpoint for image configuration
+const graphqlEndpoint = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || 'http://localhost:5000/graphql';
+const apiUrl = new URL(graphqlEndpoint);
+const apiHostname = apiUrl.hostname;
+const apiPort = apiUrl.port || (apiUrl.protocol === 'https:' ? '443' : '80');
+const apiProtocol = apiUrl.protocol.replace(':', '');
+
 /** @type {import("next").NextConfig} */
 const config = {
   reactStrictMode: false,
@@ -42,9 +49,9 @@ const config = {
   images: {
     remotePatterns: [
       {
-        protocol: 'http',
-        hostname: 'mini',
-        port: '5000',
+        protocol: apiProtocol,
+        hostname: apiHostname,
+        port: apiPort,
         pathname: '/api/ring-snapshots/**',
       },
     ],

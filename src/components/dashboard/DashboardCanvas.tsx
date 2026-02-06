@@ -5,6 +5,7 @@ import 'react-resizable/css/styles.css';
 import { useDashboardLayoutContext } from '~/context/DashboardLayoutContext';
 import type { DashboardLayoutData, GridItemLayout, WidgetState } from '~/types/dashboard';
 import { getDefaultWidgetConfig } from '~/types/widgetConfig';
+import { getWidgetDefinition } from '~/config/widgetRegistry';
 import LayoutMenu from './LayoutMenu';
 import WidgetMenu from './WidgetMenu';
 import WidgetConfigPanel from './WidgetConfigPanel';
@@ -227,15 +228,38 @@ const DashboardCanvas = memo(() => {
   }, [currentLayoutData]);
 
   // Derive grid layouts from context layout data
+  // Always use registry min values so constraint updates apply to existing widgets
   const layouts = useMemo((): Layouts => {
     if (!currentLayoutData?.widgets) return { lg: [], md: [], sm: [] };
 
     const result: Layouts = { lg: [], md: [], sm: [] };
 
     currentLayoutData.widgets.forEach((ws: WidgetState) => {
-      if (ws.layout.lg) result.lg?.push(toLayout(ws.layout.lg));
-      if (ws.layout.md) result.md?.push(toLayout(ws.layout.md));
-      if (ws.layout.sm) result.sm?.push(toLayout(ws.layout.sm));
+      // Look up the widget's registry definition for authoritative min constraints
+      const registryDef = getWidgetDefinition(ws.type);
+      const registryLayouts = registryDef?.defaultLayouts;
+
+      if (ws.layout.lg) {
+        result.lg?.push({
+          ...toLayout(ws.layout.lg),
+          minH: registryLayouts?.lg.minH ?? ws.layout.lg.minH,
+          minW: registryLayouts?.lg.minW ?? ws.layout.lg.minW,
+        });
+      }
+      if (ws.layout.md) {
+        result.md?.push({
+          ...toLayout(ws.layout.md),
+          minH: registryLayouts?.md.minH ?? ws.layout.md.minH,
+          minW: registryLayouts?.md.minW ?? ws.layout.md.minW,
+        });
+      }
+      if (ws.layout.sm) {
+        result.sm?.push({
+          ...toLayout(ws.layout.sm),
+          minH: registryLayouts?.sm.minH ?? ws.layout.sm.minH,
+          minW: registryLayouts?.sm.minW ?? ws.layout.sm.minW,
+        });
+      }
     });
 
     return result;

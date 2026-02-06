@@ -119,9 +119,9 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
     icon: Grid3X3,
     description: 'Distribution charts for 24h, 30d, all-time',
     defaultLayouts: {
-      lg: { w: 10, h: 5, minW: 6, minH: 3 },
-      md: { w: 10, h: 4, minW: 6, minH: 3 },
-      sm: { w: 12, h: 4, minW: 8, minH: 3 },
+      lg: { w: 10, h: 5, minW: 5, minH: 1 },
+      md: { w: 10, h: 4, minW: 5, minH: 1 },
+      sm: { w: 12, h: 4, minW: 8, minH: 1  },
     },
   },
   {

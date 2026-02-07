@@ -50,9 +50,8 @@ export function useGlanceableStatus(): void {
       return;
     }
 
-    // Use the worst (highest) CO2 reading to determine overall status
+    // Use the worst (highest) CO2 reading for both favicon and title
     const worstCo2 = Math.max(...co2Readings);
-    const avgCo2 = Math.round(co2Readings.reduce((a, b) => a + b, 0) / co2Readings.length);
 
     // Determine air quality level based on worst reading
     const level = getAirQualityLevel(worstCo2);
@@ -63,8 +62,8 @@ export function useGlanceableStatus(): void {
       lastLevelRef.current = level;
     }
 
-    // Update title with average CO2
-    const newTitle = `${avgCo2} ppm — AirQ`;
+    // Update title with highest CO2
+    const newTitle = `${worstCo2} ppm — AirQ`;
     if (newTitle !== lastTitleRef.current) {
       document.title = newTitle;
       lastTitleRef.current = newTitle;

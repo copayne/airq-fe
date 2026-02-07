@@ -5,14 +5,20 @@ import { env } from '~/env.js';
 
 const DEFAULT_TITLE = 'AirQ Dashboard';
 
+interface GlanceableStatusResult {
+  worstCo2: number | null;
+  level: AirQualityLevel;
+}
+
 /**
  * Hook that provides glanceable status by updating:
  * - Browser favicon color based on air quality (green/yellow/red)
  * - Browser tab title with current CO2 reading
  *
  * Uses the worst air quality reading across all active sensors.
+ * Returns the current worst CO2 reading for use with haptic/streak features.
  */
-export function useGlanceableStatus(): void {
+export function useGlanceableStatus(): GlanceableStatusResult {
   const { sensors } = useSensors({
     includeLastReading: true,
     pollInterval: env.NEXT_PUBLIC_POLL_INTERVAL_MS,
@@ -21,6 +27,8 @@ export function useGlanceableStatus(): void {
 
   const lastLevelRef = useRef<AirQualityLevel>('unknown');
   const lastTitleRef = useRef<string>(DEFAULT_TITLE);
+  const currentWorstCo2Ref = useRef<number | null>(null);
+  const currentLevelRef = useRef<AirQualityLevel>('unknown');
 
   useEffect(() => {
     // Skip if no sensors or running on server
@@ -38,6 +46,8 @@ export function useGlanceableStatus(): void {
         document.title = DEFAULT_TITLE;
         lastTitleRef.current = DEFAULT_TITLE;
       }
+      currentWorstCo2Ref.current = null;
+      currentLevelRef.current = 'unknown';
       return;
     }
 
@@ -52,9 +62,11 @@ export function useGlanceableStatus(): void {
 
     // Use the worst (highest) CO2 reading for both favicon and title
     const worstCo2 = Math.max(...co2Readings);
+    currentWorstCo2Ref.current = worstCo2;
 
     // Determine air quality level based on worst reading
     const level = getAirQualityLevel(worstCo2);
+    currentLevelRef.current = level;
 
     // Update favicon only if level changed
     if (level !== lastLevelRef.current) {
@@ -78,4 +90,9 @@ export function useGlanceableStatus(): void {
       }
     };
   }, []);
+
+  return {
+    worstCo2: currentWorstCo2Ref.current,
+    level: currentLevelRef.current,
+  };
 }

@@ -14,6 +14,8 @@ import {
 import Sparkline from '~/components/common/Sparkline';
 import SparklineModal, { type SparklineMetric } from '~/components/common/SparklineModal';
 import { useSparklineData } from '~/hooks/useSparklineData';
+import AnimatedNumber from '~/components/common/AnimatedNumber';
+import { CompactSensorCardSkeleton } from '~/components/common/Skeleton';
 
 // Sparkline colors matching the chart colors
 const SPARKLINE_COLORS = {
@@ -79,7 +81,14 @@ const CompactSensorCard: React.FC<CompactSensorCardProps> = memo(({ sensor }) =>
         <div className="flex divide-x divide-airq-dark/30">
           <div className={`flex-1 min-w-0 px-2 py-1.5 text-center overflow-hidden ${co2Colors.inner}`}>
             <p className="text-[10px] uppercase">co2</p>
-            <p className="text-sm font-medium">{co2}<span className="text-[10px]">ppm</span></p>
+            <p className="text-sm font-medium">
+              {co2Raw !== null ? (
+                <AnimatedNumber value={co2Raw} />
+              ) : (
+                co2
+              )}
+              <span className="text-[10px]">ppm</span>
+            </p>
             <Sparkline
               data={co2Data}
               color={SPARKLINE_COLORS.co2}
@@ -89,7 +98,14 @@ const CompactSensorCard: React.FC<CompactSensorCardProps> = memo(({ sensor }) =>
           </div>
           <div className={`flex-1 min-w-0 px-2 py-1.5 text-center overflow-hidden ${tempColors.inner}`}>
             <p className="text-[10px] uppercase">temp</p>
-            <p className="text-sm font-medium">{temperatureFahrenheit}<span className="text-[10px]">f</span></p>
+            <p className="text-sm font-medium">
+              {tempRaw !== null && tempRaw !== undefined ? (
+                <AnimatedNumber value={tempRaw * 9/5 + 32} />
+              ) : (
+                temperatureFahrenheit
+              )}
+              <span className="text-[10px]">f</span>
+            </p>
             <Sparkline
               data={temperatureData}
               color={SPARKLINE_COLORS.temperature}
@@ -99,7 +115,14 @@ const CompactSensorCard: React.FC<CompactSensorCardProps> = memo(({ sensor }) =>
           </div>
           <div className={`flex-1 min-w-0 px-2 py-1.5 text-center overflow-hidden ${humidityColors.inner}`}>
             <p className="text-[10px] uppercase">hum</p>
-            <p className="text-sm font-medium">{humidity}<span className="text-[10px]">%</span></p>
+            <p className="text-sm font-medium">
+              {humidityRaw !== null && humidityRaw !== undefined ? (
+                <AnimatedNumber value={humidityRaw} />
+              ) : (
+                humidity
+              )}
+              <span className="text-[10px]">%</span>
+            </p>
             <Sparkline
               data={humidityData}
               color={SPARKLINE_COLORS.humidity}
@@ -248,11 +271,11 @@ const SensorSidebar: React.FC = memo(() => {
     return (
       <div className="w-56 flex-shrink-0 border-r border-airq-dark bg-airq-light/50">
         <div className="p-3 space-y-3">
+          <div className="text-xs font-semibold text-airq-dark/30 uppercase tracking-wide">
+            Air Quality
+          </div>
           {[1, 2].map((i) => (
-            <div key={i} className="animate-pulse">
-              <div className="h-4 bg-airq-dark/10 mb-2"></div>
-              <div className="h-12 bg-airq-dark/5"></div>
-            </div>
+            <CompactSensorCardSkeleton key={i} />
           ))}
         </div>
       </div>

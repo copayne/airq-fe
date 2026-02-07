@@ -167,7 +167,7 @@ const CompactRingDoorCard: React.FC<CompactRingDoorCardProps> = memo(({ device }
           : 'text-red-600';
 
   return (
-    <div className={`flex flex-col items-center border border-airq-dark ${statusClasses}`}>
+    <div className={`flex flex-col items-center border border-airq-dark shadow-card ${statusClasses}`}>
       <div className="flex w-full items-center justify-between border-b border-airq-dark px-2 py-1">
         <span className="text-xs font-medium text-airq-dark truncate">
           {device.name}

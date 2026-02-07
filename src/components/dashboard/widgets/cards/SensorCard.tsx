@@ -28,9 +28,6 @@ const SensorCard: React.FC<SensorCardProps> = memo(({ sensor }) => {
     co2Data,
     temperatureData,
     humidityData,
-    co2Trend,
-    temperatureTrend,
-    humidityTrend,
     loading: sparklineLoading,
   } = useSparklineData(sensor?.id);
 
@@ -77,7 +74,6 @@ const SensorCard: React.FC<SensorCardProps> = memo(({ sensor }) => {
               data={co2Data}
               color={SPARKLINE_COLORS.co2}
               loading={sparklineLoading}
-              trend={co2Trend}
               onClick={() => openModal('co2')}
             />
           </div>
@@ -91,7 +87,6 @@ const SensorCard: React.FC<SensorCardProps> = memo(({ sensor }) => {
               data={temperatureData}
               color={SPARKLINE_COLORS.temperature}
               loading={sparklineLoading}
-              trend={temperatureTrend}
               onClick={() => openModal('temperature')}
             />
           </div>
@@ -105,7 +100,6 @@ const SensorCard: React.FC<SensorCardProps> = memo(({ sensor }) => {
               data={humidityData}
               color={SPARKLINE_COLORS.humidity}
               loading={sparklineLoading}
-              trend={humidityTrend}
               onClick={() => openModal('humidity')}
             />
           </div>

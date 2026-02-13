@@ -262,6 +262,8 @@ export function DashboardLayoutProvider({ children }: DashboardLayoutProviderPro
   // whether the user has made any local edits since the layout was loaded.
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const loadedSnapshotRef = useRef<string | null>(null);
+  // Track pending unsaved data for beforeunload flush
+  const pendingSaveRef = useRef<{ layoutId: string; layoutData: DashboardLayoutData } | null>(null);
 
   // Capture the server snapshot whenever a layout is loaded so we can
   // distinguish "loaded from server" from "user edited".
@@ -293,8 +295,10 @@ export function DashboardLayoutProvider({ children }: DashboardLayoutProviderPro
 
     const layoutId = state.currentLayoutId;
     const layoutData = state.currentLayoutData;
+    pendingSaveRef.current = { layoutId, layoutData };
 
     autoSaveTimer.current = setTimeout(() => {
+      pendingSaveRef.current = null;
       void (async () => {
         try {
           await updateLayoutMutation(layoutId, { layoutData });
@@ -314,6 +318,37 @@ export function DashboardLayoutProvider({ children }: DashboardLayoutProviderPro
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.currentLayoutData, state.currentLayoutId]);
+
+  // Flush pending auto-save on page unload using sendBeacon so
+  // the mutation fires even if the page is closing.
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      const pending = pendingSaveRef.current;
+      if (!pending) return;
+
+      const graphqlEndpoint = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? '/graphql';
+      const mutation = JSON.stringify({
+        query: `mutation UpdateDashboardLayout($input: UpdateDashboardLayoutInput!) {
+          updateDashboardLayout(input: $input) { success }
+        }`,
+        variables: {
+          input: {
+            id: pending.layoutId,
+            layoutData: JSON.stringify(pending.layoutData),
+          },
+        },
+      });
+
+      navigator.sendBeacon(
+        graphqlEndpoint,
+        new Blob([mutation], { type: 'application/json' })
+      );
+      pendingSaveRef.current = null;
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
 
   // Get current layout from state
   const currentLayout = useMemo(() => {
@@ -378,8 +413,13 @@ export function DashboardLayoutProvider({ children }: DashboardLayoutProviderPro
       // Get default config for this widget type
       const defaultConfig = getDefaultWidgetConfig(widgetType);
 
-      // Create the new widget with MINIMUM dimensions
-      // Position at y: Infinity so react-grid-layout places it at the bottom
+      // Compute the bottom of existing widgets so the new one goes below them.
+      // Using Infinity would break JSON.stringify (Infinity → null).
+      const bottomY = baseLayoutData.widgets.reduce((max, ws) => {
+        const lgY = (ws.layout.lg?.y ?? 0) + (ws.layout.lg?.h ?? 0);
+        return Math.max(max, lgY);
+      }, 0);
+
       const newWidget: WidgetState = {
         instanceId,
         type: widgetType,
@@ -388,7 +428,7 @@ export function DashboardLayoutProvider({ children }: DashboardLayoutProviderPro
           lg: {
             i: instanceId,
             x: 0,
-            y: Infinity,
+            y: bottomY,
             w: lgLayout.minW ?? lgLayout.w,
             h: lgLayout.minH ?? lgLayout.h,
             minW: lgLayout.minW,
@@ -399,7 +439,7 @@ export function DashboardLayoutProvider({ children }: DashboardLayoutProviderPro
           md: {
             i: instanceId,
             x: 0,
-            y: Infinity,
+            y: bottomY,
             w: mdLayout.minW ?? mdLayout.w,
             h: mdLayout.minH ?? mdLayout.h,
             minW: mdLayout.minW,
@@ -410,7 +450,7 @@ export function DashboardLayoutProvider({ children }: DashboardLayoutProviderPro
           sm: {
             i: instanceId,
             x: 0,
-            y: Infinity,
+            y: bottomY,
             w: smLayout.minW ?? smLayout.w,
             h: smLayout.minH ?? smLayout.h,
             minW: smLayout.minW,

@@ -3,7 +3,7 @@ import { useMutation } from '@apollo/client';
 import { CREATE_SENSOR, UPDATE_SENSOR } from '~/graphql/Sensor';
 
 interface SensorPayload {
-  sensor: { id: number; name: string; model: string; isActive: boolean } | null;
+  sensor: { id: number; name: string; hostname: string; isActive: boolean } | null;
   success: boolean;
   message: string | null;
   errors: string[] | null;
@@ -13,7 +13,7 @@ interface SensorFormProps {
   sensor?: {
     id: number;
     name: string;
-    model: string;
+    hostname: string;
     isActive: boolean;
   };
   onSuccess: () => void;
@@ -27,7 +27,7 @@ export const SensorForm: React.FC<SensorFormProps> = ({
 }) => {
   const isEditing = !!sensor;
   const [name, setName] = useState(sensor?.name ?? '');
-  const [model, setModel] = useState(sensor?.model ?? '');
+  const [hostname, setHostname] = useState(sensor?.hostname ?? '');
   const [isActive, setIsActive] = useState(sensor?.isActive ?? true);
   const [errors, setErrors] = useState<string[]>([]);
 
@@ -69,8 +69,8 @@ export const SensorForm: React.FC<SensorFormProps> = ({
       return;
     }
 
-    if (!model.trim()) {
-      setErrors(['Model is required']);
+    if (!hostname.trim()) {
+      setErrors(['Hostname is required']);
       return;
     }
 
@@ -79,8 +79,8 @@ export const SensorForm: React.FC<SensorFormProps> = ({
       return;
     }
 
-    if (model.length > 100) {
-      setErrors(['Model cannot exceed 100 characters']);
+    if (hostname.length > 100) {
+      setErrors(['Hostname cannot exceed 100 characters']);
       return;
     }
 
@@ -90,7 +90,7 @@ export const SensorForm: React.FC<SensorFormProps> = ({
           input: {
             id: sensor.id,
             name: name.trim(),
-            model: model.trim(),
+            hostname: hostname.trim(),
             isActive,
           },
         },
@@ -100,7 +100,7 @@ export const SensorForm: React.FC<SensorFormProps> = ({
         variables: {
           input: {
             name: name.trim(),
-            model: model.trim(),
+            hostname: hostname.trim(),
           },
         },
       });
@@ -135,20 +135,20 @@ export const SensorForm: React.FC<SensorFormProps> = ({
       </div>
 
       <div>
-        <label htmlFor="model" className="block text-sm font-medium text-airq-dark mb-1">
-          model <span className="text-airq-tertiary">*</span>
+        <label htmlFor="hostname" className="block text-sm font-medium text-airq-dark mb-1">
+          hostname <span className="text-airq-tertiary">*</span>
         </label>
         <input
           type="text"
-          id="model"
-          value={model}
-          onChange={(e) => setModel(e.target.value)}
+          id="hostname"
+          value={hostname}
+          onChange={(e) => setHostname(e.target.value)}
           className="w-full px-3 py-2 border border-airq-dark bg-airq-light text-airq-dark text-sm focus:ring-1 focus:ring-airq-contrast focus:border-airq-contrast outline-none"
-          placeholder="e.g., SCD4x, SCD30, MH-Z19B"
+          placeholder="e.g., airq-basement, airq-main-floor"
           maxLength={100}
           disabled={loading}
         />
-        <p className="mt-1 text-xs text-airq-dark/50">{model.length}/100 characters</p>
+        <p className="mt-1 text-xs text-airq-dark/50">{hostname.length}/100 characters</p>
       </div>
 
       {isEditing && (

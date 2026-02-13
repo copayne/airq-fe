@@ -27,15 +27,6 @@ export interface Location {
   description?: string;
 }
 
-// Sensor type with basic sensor information
-export interface SensorInfo {
-  id: string;
-  name: string;
-  model: string;
-  isActive: boolean;
-  installationDate: string;
-}
-
 // Complete sensor reading with all related data
 export interface SensorReading {
   id: string;
@@ -44,7 +35,7 @@ export interface SensorReading {
   sensor: {
     id: string;
     name: string;
-    model?: string;
+    hostname?: string;
     isActive?: boolean;
     installationDate?: string;
   };
@@ -67,7 +58,7 @@ export interface SensorReading {
 // Sensor type with current location and optional last reading
 export interface Sensor {
   id: string;
-  model: string;
+  hostname: string;
   name: string;
   installationDate: Date;
   isActive: boolean;
@@ -99,48 +90,13 @@ export interface Sensor {
   };
 }
 
-// Input types for mutations
-export interface CreateSensorReadingInput {
-  sensorId: number;
-  humidityPercentage?: number;
-  temperatureCelsius?: number;
-  co2Ppm?: number;
-}
-
 // GraphQL response types
 export interface GetFilteredSensorReadingsData {
   filteredSensorReadings: SensorReading[];
 }
 
-export interface RecentSensorReadingsData {
-  sensorReadings: SensorReading[];
-}
-
 export interface GetSensorsData {
   sensors: Sensor[];
-}
-
-export interface CO2ReadingsData {
-  co2Readings: CO2Reading[];
-}
-
-export interface TemperatureReadingsData {
-  temperatureReadings: TemperatureReading[];
-}
-
-export interface HumidityReadingsData {
-  humidityReadings: HumidityReading[];
-}
-
-export interface CreateSensorReadingPayload {
-  success: boolean;
-  message: string;
-  errors: string[];
-  sensorReading?: SensorReading;
-}
-
-export interface CreateSensorReadingData {
-  createSensorReading: CreateSensorReadingPayload;
 }
 
 // Air quality distribution data

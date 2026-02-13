@@ -52,9 +52,9 @@ export function getCO2ColorClasses(value: number | null): ExtendedColorClasses {
 /**
  * Get color classes based on temperature in Fahrenheit
  * Thresholds:
- * - < 68°F (20°C): Good (primary/green)
- * - 68-80°F (20-27°C): Moderate (secondary/yellow)
- * - >= 81°F (27°C): Poor (tertiary/red)
+ * - < 74°F (23.3°C): Good (primary/green)
+ * - 74-76°F (23.3-25°C): Moderate (secondary/yellow)
+ * - >= 77°F (25°C): Poor (tertiary/red)
  */
 export function getTemperatureFahrenheitColorClasses(fahrenheit: number | null): ExtendedColorClasses {
   if (fahrenheit === null) {
@@ -65,7 +65,7 @@ export function getTemperatureFahrenheitColorClasses(fahrenheit: number | null):
     };
   }
 
-  if (fahrenheit < 68) {
+  if (fahrenheit < 74) {
     return {
       inner: 'bg-airq-primary text-airq-light',
       outer: 'bg-airq-primary/25',
@@ -73,7 +73,7 @@ export function getTemperatureFahrenheitColorClasses(fahrenheit: number | null):
     };
   }
 
-  if (fahrenheit < 81) {
+  if (fahrenheit < 77) {
     return {
       inner: 'bg-airq-secondary text-airq-dark',
       outer: 'bg-airq-secondary/25',
@@ -91,9 +91,9 @@ export function getTemperatureFahrenheitColorClasses(fahrenheit: number | null):
 /**
  * Get color classes based on temperature in Celsius
  * Thresholds:
- * - < 20°C: Good (primary/green)
- * - 20-26°C: Moderate (secondary/yellow)
- * - >= 27°C: Poor (tertiary/red)
+ * - < 23.33°C (74°F): Good (primary/green)
+ * - 23.33-24.99°C (74-76°F): Moderate (secondary/yellow)
+ * - >= 25°C (77°F): Poor (tertiary/red)
  */
 export function getTemperatureCelsiusColorClasses(celsius: number | null): ColorClasses {
   if (celsius === null) {
@@ -103,14 +103,14 @@ export function getTemperatureCelsiusColorClasses(celsius: number | null): Color
     };
   }
 
-  if (celsius < 20) {
+  if (celsius < 23.33) {
     return {
       inner: 'bg-airq-primary text-airq-light',
       outer: 'bg-airq-primary/25'
     };
   }
 
-  if (celsius <= 26) {
+  if (celsius < 25) {
     return {
       inner: 'bg-airq-secondary text-airq-dark',
       outer: 'bg-airq-secondary/25'

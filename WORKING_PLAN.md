@@ -328,6 +328,33 @@ src/components/common/
 
 ---
 
+### 8.6 Settings Gaps (Post-1.0)
+**Goal**: Fill remaining settings/configuration gaps identified at 1.0 launch
+
+**8.6.1 Sensor Network Configuration UI** — MEDIUM PRIORITY
+- `ip_address`, `health_check_port`, and `calibration_port` fields exist on the Sensor model and the `updateSensorNetwork` mutation is implemented, but there's no frontend form to set them
+- [ ] **PENDING**: Add network config fields to sensor edit form or a dedicated network settings panel
+- [ ] **PENDING**: Display current network config in sensor detail/list views
+
+**8.6.2 User Role Management UI** — LOW PRIORITY
+- Users have `admin`/`user`/`viewer` roles in the backend model but no admin UI to manage them
+- [ ] **PENDING**: Admin-only user management page listing all users with their roles
+- [ ] **PENDING**: Ability to change a user's role (admin only)
+- [ ] **PENDING**: Role-based UI visibility (hide admin-only settings from non-admins)
+
+**8.6.3 Per-User Alert/Notification Preferences** — LOW PRIORITY
+- CO2 alert thresholds exist but users can't configure their own notification preferences
+- [ ] **PENDING**: Per-user opt-in/out for alert notifications by sensor or location
+- [ ] **PENDING**: Notification channel preferences (email toggle, future: push notifications)
+- [ ] **PENDING**: Alert digest preferences (immediate vs. daily summary)
+
+**8.6.4 Centralized Reading Interval Management** — LOW PRIORITY
+- Each Pi has `AIRQ_READING_INTERVAL` in local config but there's no way to view or adjust this from the dashboard
+- [ ] **PENDING**: Display current reading interval per sensor in sensor detail view
+- [ ] **PENDING**: Remote interval configuration via API (requires Pi-side polling or push mechanism)
+
+---
+
 ## ❌ REMOVED FROM INITIAL PLAN
 
 ### Overengineered Features (Not Needed)

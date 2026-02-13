@@ -14,7 +14,7 @@ export interface BaseWidgetConfig {
   locationIds?: string[];
 }
 
-// Chart widget configuration (TEMPERATURE_CHART, CO2_CHART, HUMIDITY_CHART, MULTI_METRIC_CHART)
+// Chart widget configuration
 export interface ChartWidgetConfig extends BaseWidgetConfig {
   timeRange: TimeRangePreset;
   customStartDate?: string; // ISO date string, used when timeRange is 'custom'
@@ -60,31 +60,6 @@ export interface MetricsCardConfig extends BaseWidgetConfig {
   layout: '2x4' | '4x2' | 'compact';
 }
 
-// Ring snapshot configuration
-export interface RingSnapshotConfig {
-  deviceId?: string;
-  autoRefresh: boolean;
-  refreshInterval: number; // seconds
-  showTimestamp: boolean;
-  showCaptureButton: boolean;
-}
-
-// Ring contact sensors configuration
-export interface RingContactSensorsConfig {
-  deviceIds?: string[];
-  layout: 'grid' | 'list' | 'compact';
-  showBattery: boolean;
-  showLastUpdate: boolean;
-}
-
-// Ring events configuration
-export interface RingEventsConfig {
-  limit: number;
-  refreshInterval: number; // milliseconds
-  eventTypes: ('motion' | 'ding' | 'on_demand' | 'alarm')[];
-  deviceIds?: string[];
-}
-
 // Historical trends configuration
 export interface HistoricalTrendsConfig extends BaseWidgetConfig {
   timeRange: TimeRangePreset;
@@ -104,13 +79,6 @@ export interface SensorComparisonConfig extends BaseWidgetConfig {
   showLegend: boolean;
 }
 
-// Quick actions configuration
-export interface QuickActionsConfig {
-  actions: ('capture' | 'sensors' | 'ring' | 'all')[];
-  layout: '2x2' | '1x4' | '4x1';
-  showLabels: boolean;
-}
-
 // Union type for all widget configs
 export type WidgetConfig =
   | ChartWidgetConfig
@@ -119,20 +87,10 @@ export type WidgetConfig =
   | AirQualityHeatmapConfig
   | TableWidgetConfig
   | MetricsCardConfig
-  | RingSnapshotConfig
-  | RingContactSensorsConfig
-  | RingEventsConfig
   | HistoricalTrendsConfig
-  | SensorComparisonConfig
-  | QuickActionsConfig;
+  | SensorComparisonConfig;
 
 // Default configurations for each widget type
-export const DEFAULT_CHART_CONFIG: ChartWidgetConfig = {
-  timeRange: '24h',
-  showLegend: false,
-  showGrid: true,
-};
-
 export const DEFAULT_MULTI_METRIC_CONFIG: MultiMetricChartConfig = {
   timeRange: '24h',
   metrics: ['co2', 'temperature'],
@@ -162,25 +120,6 @@ export const DEFAULT_METRICS_CARD_CONFIG: MetricsCardConfig = {
   layout: '2x4',
 };
 
-export const DEFAULT_RING_SNAPSHOT_CONFIG: RingSnapshotConfig = {
-  autoRefresh: false,
-  refreshInterval: 300, // 5 minutes
-  showTimestamp: true,
-  showCaptureButton: true,
-};
-
-export const DEFAULT_RING_CONTACT_SENSORS_CONFIG: RingContactSensorsConfig = {
-  layout: 'grid',
-  showBattery: true,
-  showLastUpdate: true,
-};
-
-export const DEFAULT_RING_EVENTS_CONFIG: RingEventsConfig = {
-  limit: 40,
-  refreshInterval: 60000,
-  eventTypes: ['motion', 'ding', 'on_demand', 'alarm'],
-};
-
 export const DEFAULT_HISTORICAL_TRENDS_CONFIG: HistoricalTrendsConfig = {
   timeRange: '90d',
   metric: 'co2',
@@ -194,19 +133,9 @@ export const DEFAULT_SENSOR_COMPARISON_CONFIG: SensorComparisonConfig = {
   showLegend: true,
 };
 
-export const DEFAULT_QUICK_ACTIONS_CONFIG: QuickActionsConfig = {
-  actions: ['capture', 'sensors', 'ring', 'all'],
-  layout: '2x2',
-  showLabels: true,
-};
-
 // Helper to get default config for a widget type
 export function getDefaultWidgetConfig(widgetType: string): Record<string, unknown> {
   switch (widgetType) {
-    case 'TEMPERATURE_CHART':
-    case 'CO2_CHART':
-    case 'HUMIDITY_CHART':
-      return { ...DEFAULT_CHART_CONFIG };
     case 'MULTI_METRIC_CHART':
       return { ...DEFAULT_MULTI_METRIC_CONFIG };
     case 'AIR_QUALITY_DISTRIBUTION':
@@ -217,18 +146,10 @@ export function getDefaultWidgetConfig(widgetType: string): Record<string, unkno
       return { ...DEFAULT_TABLE_CONFIG };
     case 'METRICS_CARD':
       return { ...DEFAULT_METRICS_CARD_CONFIG };
-    case 'RING_SNAPSHOT':
-      return { ...DEFAULT_RING_SNAPSHOT_CONFIG };
-    case 'RING_CONTACT_SENSORS':
-      return { ...DEFAULT_RING_CONTACT_SENSORS_CONFIG };
-    case 'RING_EVENTS':
-      return { ...DEFAULT_RING_EVENTS_CONFIG };
     case 'HISTORICAL_TRENDS':
       return { ...DEFAULT_HISTORICAL_TRENDS_CONFIG };
     case 'SENSOR_COMPARISON':
       return { ...DEFAULT_SENSOR_COMPARISON_CONFIG };
-    case 'QUICK_ACTIONS':
-      return { ...DEFAULT_QUICK_ACTIONS_CONFIG };
     default:
       return {};
   }

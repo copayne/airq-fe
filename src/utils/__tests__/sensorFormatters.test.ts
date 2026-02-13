@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatSensorDetails, formatNumericValue } from '../sensorFormatters';
+import { formatSensorDetails } from '../sensorFormatters';
 import type { Sensor } from '~/types/sensors';
 
 describe('formatSensorDetails', () => {
@@ -83,32 +83,3 @@ describe('formatSensorDetails', () => {
   });
 });
 
-describe('formatNumericValue', () => {
-  it('returns fallback for null', () => {
-    expect(formatNumericValue(null)).toBe('--');
-  });
-
-  it('returns fallback for undefined', () => {
-    expect(formatNumericValue(undefined)).toBe('--');
-  });
-
-  it('returns custom fallback', () => {
-    expect(formatNumericValue(null, 1, 'N/A')).toBe('N/A');
-  });
-
-  it('formats with default precision (1)', () => {
-    expect(formatNumericValue(3.456)).toBe('3.5');
-  });
-
-  it('formats with custom precision', () => {
-    expect(formatNumericValue(3.456, 2)).toBe('3.46');
-  });
-
-  it('formats zero', () => {
-    expect(formatNumericValue(0)).toBe('0.0');
-  });
-
-  it('formats negative numbers', () => {
-    expect(formatNumericValue(-5.5, 0)).toBe('-6');
-  });
-});

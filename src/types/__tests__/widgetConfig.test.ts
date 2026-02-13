@@ -2,22 +2,14 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import {
   getDefaultWidgetConfig,
   getDateRangeFromPreset,
-  DEFAULT_CHART_CONFIG,
   DEFAULT_MULTI_METRIC_CONFIG,
   DEFAULT_TABLE_CONFIG,
-  DEFAULT_RING_SNAPSHOT_CONFIG,
-  DEFAULT_QUICK_ACTIONS_CONFIG,
 } from '../widgetConfig';
 
 describe('getDefaultWidgetConfig', () => {
   const widgetTypeToDefault: [string, object][] = [
-    ['TEMPERATURE_CHART', DEFAULT_CHART_CONFIG],
-    ['CO2_CHART', DEFAULT_CHART_CONFIG],
-    ['HUMIDITY_CHART', DEFAULT_CHART_CONFIG],
     ['MULTI_METRIC_CHART', DEFAULT_MULTI_METRIC_CONFIG],
     ['TABLE', DEFAULT_TABLE_CONFIG],
-    ['RING_SNAPSHOT', DEFAULT_RING_SNAPSHOT_CONFIG],
-    ['QUICK_ACTIONS', DEFAULT_QUICK_ACTIONS_CONFIG],
   ];
 
   it.each(widgetTypeToDefault)('%s returns correct defaults', (widgetType, expectedConfig) => {

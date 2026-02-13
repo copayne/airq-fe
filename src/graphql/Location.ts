@@ -15,22 +15,6 @@ export const GET_LOCATIONS = gql`
   }
 `;
 
-export const GET_LOCATION = gql`
-  query GetLocation($id: Int!) {
-    location(id: $id) {
-      id
-      name
-      description
-      currentSensors {
-        id
-        name
-        model
-        isActive
-      }
-    }
-  }
-`;
-
 export const CREATE_LOCATION = gql`
   mutation CreateLocation($input: CreateLocationInput!) {
     createLocation(input: $input) {

@@ -58,26 +58,6 @@ export const GET_ME = gql`
   ${USER_FRAGMENT}
 `;
 
-// Get all users query (admin only)
-export const GET_USERS = gql`
-  query GetUsers {
-    users {
-      ...UserData
-    }
-  }
-  ${USER_FRAGMENT}
-`;
-
-// Get user by ID query (admin only)
-export const GET_USER = gql`
-  query GetUser($id: Int!) {
-    user(id: $id) {
-      ...UserData
-    }
-  }
-  ${USER_FRAGMENT}
-`;
-
 // Email verification mutation
 export const VERIFY_EMAIL = gql`
   mutation VerifyEmail($input: EmailVerificationInput!) {

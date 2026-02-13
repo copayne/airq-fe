@@ -54,8 +54,6 @@ export interface ValidationResult {
   errors: AuthError[];
 }
 
-export type AuthFormType = 'login' | 'register';
-
 export interface EmailVerificationInput {
   token: string;
 }
@@ -95,8 +93,3 @@ export interface PasswordResetFormData {
   confirmPassword?: string;
 }
 
-export interface EmailVerificationStatus {
-  isVerified: boolean;
-  canResend: boolean;
-  lastSentAt?: Date;
-}

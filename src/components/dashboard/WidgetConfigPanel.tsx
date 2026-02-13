@@ -24,13 +24,25 @@ interface WidgetConfigPanelProps {
   onConfigChange: (widgetId: string, config: Record<string, unknown>) => void;
 }
 
+// Helper to get default widget title from type
+const getWidgetTitle = (type: string): string => {
+  const titles: Record<string, string> = {
+    'TABLE': 'Sensor Readings',
+    'MULTI_METRIC_CHART': 'Multi-Metric Chart',
+    'AIR_QUALITY_DISTRIBUTION': 'Air Quality Distribution',
+    'AIR_QUALITY_HEATMAP': 'Air Quality Heatmap',
+    'METRICS_CARD': 'Metrics',
+    'SENSOR_COMPARISON': 'Sensor Comparison',
+  };
+  return titles[type] ?? type;
+};
+
 // Widget types that support configuration
 const CONFIGURABLE_WIDGETS = [
   'MULTI_METRIC_CHART',
   'TABLE',
   'AIR_QUALITY_DISTRIBUTION',
   'AIR_QUALITY_HEATMAP',
-  'HISTORICAL_TRENDS',
   'SENSOR_COMPARISON',
   'METRICS_CARD',
 ];
@@ -132,6 +144,18 @@ export const WidgetConfigPanel: React.FC<WidgetConfigPanelProps> = ({
 
           {/* Config Options */}
           <div className="p-3 space-y-3">
+            {/* Display Name */}
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Display Name</label>
+              <input
+                type="text"
+                value={(localConfig.displayName as string) ?? ''}
+                onChange={(e) => updateConfig('displayName', e.target.value)}
+                placeholder={getWidgetTitle(widgetType)}
+                className="w-full text-xs border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-airq-primary bg-white text-gray-900"
+              />
+            </div>
+
             {/* Time Range - for charts and table */}
             {(widgetType.includes('CHART') || widgetType === 'TABLE') && (
               <TimeRangeSelect
@@ -221,42 +245,6 @@ export const WidgetConfigPanel: React.FC<WidgetConfigPanelProps> = ({
                   { value: '730', label: '2 years' },
                 ]}
                 onChange={(value) => updateConfig('days', parseInt(value))}
-              />
-            )}
-
-            {/* Historical Trends: Metric */}
-            {widgetType === 'HISTORICAL_TRENDS' && (
-              <SelectField
-                label="Metric"
-                value={(localConfig.metric as string) ?? 'co2'}
-                options={[
-                  { value: 'co2', label: 'CO2 (PPM)' },
-                  { value: 'temperature', label: 'Temperature' },
-                  { value: 'humidity', label: 'Humidity' },
-                ]}
-                onChange={(value) => updateConfig('metric', value)}
-              />
-            )}
-
-            {/* Historical Trends: Aggregation */}
-            {widgetType === 'HISTORICAL_TRENDS' && (
-              <SelectField
-                label="Aggregation"
-                value={(localConfig.aggregation as string) ?? 'daily'}
-                options={[
-                  { value: 'daily', label: 'Daily Average' },
-                  { value: 'weekly', label: 'Weekly Average' },
-                ]}
-                onChange={(value) => updateConfig('aggregation', value)}
-              />
-            )}
-
-            {/* Historical Trends: Show Trend Line */}
-            {widgetType === 'HISTORICAL_TRENDS' && (
-              <CheckboxField
-                label="Show trend line"
-                checked={(localConfig.showTrendLine as boolean) ?? true}
-                onChange={(checked) => updateConfig('showTrendLine', checked)}
               />
             )}
 
@@ -426,19 +414,6 @@ export const WidgetConfigPanel: React.FC<WidgetConfigPanelProps> = ({
               />
             )}
 
-            {/* Metrics Card: Layout */}
-            {widgetType === 'METRICS_CARD' && (
-              <SelectField
-                label="Layout"
-                value={(localConfig.layout as string) ?? '2x4'}
-                options={[
-                  { value: '2x4', label: '2 columns x 4 rows' },
-                  { value: '4x2', label: '4 columns x 2 rows' },
-                  { value: 'compact', label: 'Compact' },
-                ]}
-                onChange={(value) => updateConfig('layout', value)}
-              />
-            )}
 
           </div>
 

@@ -42,7 +42,6 @@ const getWidgetTitle = (type: string): string => {
     'AIR_QUALITY_DISTRIBUTION': 'Air Quality Distribution',
     'AIR_QUALITY_HEATMAP': 'Air Quality Heatmap',
     'METRICS_CARD': 'Metrics',
-    'HISTORICAL_TRENDS': 'Historical Trends',
     'SENSOR_COMPARISON': 'Sensor Comparison',
   };
   return titles[type] ?? type;
@@ -181,7 +180,6 @@ const DashboardCanvas = memo(() => {
     AIR_QUALITY_DISTRIBUTION: React.lazy(() => import('./widgets/charts/AirQualityDistributionChart')),
     AIR_QUALITY_HEATMAP: React.lazy(() => import('./widgets/charts/AirQualityHeatmap')),
     METRICS_CARD: React.lazy(() => import('./widgets/cards/MetricsCard')),
-    HISTORICAL_TRENDS: React.lazy(() => import('./widgets/charts/HistoricalTrendsChart')),
     SENSOR_COMPARISON: React.lazy(() => import('./widgets/charts/SensorComparisonChart')),
   }), []);
 
@@ -203,7 +201,7 @@ const DashboardCanvas = memo(() => {
       const defaultConfig = getDefaultWidgetConfig(ws.type);
       return {
         id: ws.instanceId,
-        title: getWidgetTitle(ws.type),
+        title: (ws.config?.displayName as string) || getWidgetTitle(ws.type),
         type: ws.type,
         config: { ...defaultConfig, ...ws.config },
         props: ws.props,

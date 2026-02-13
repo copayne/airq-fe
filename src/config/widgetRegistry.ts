@@ -14,7 +14,6 @@ import {
   Table,
   Calendar,
   GitCompareArrows,
-  TrendingUp,
 } from 'lucide-react';
 
 export type WidgetCategory = 'air-quality' | 'data';
@@ -92,18 +91,6 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
     },
   },
 
-  {
-    id: 'HISTORICAL_TRENDS',
-    name: 'Historical Trends',
-    category: 'air-quality',
-    icon: TrendingUp,
-    description: 'Daily/weekly averaged trends over long periods',
-    defaultLayouts: {
-      lg: { w: 10, h: 5, minW: 6, minH: 3 },
-      md: { w: 12, h: 5, minW: 6, minH: 3 },
-      sm: { w: 12, h: 4, minW: 8, minH: 3 },
-    },
-  },
   {
     id: 'SENSOR_COMPARISON',
     name: 'Sensor Comparison',

@@ -55,19 +55,7 @@ export interface TableWidgetConfig extends BaseWidgetConfig {
 
 // Metrics card configuration
 export interface MetricsCardConfig extends BaseWidgetConfig {
-  metrics: ('co2_1d' | 'co2_30d' | 'co2_high' | 'co2_low' | 'temp_1d' | 'temp_30d' | 'temp_high' | 'temp_low')[];
   temperatureUnit: 'celsius' | 'fahrenheit';
-  layout: '2x4' | '4x2' | 'compact';
-}
-
-// Historical trends configuration
-export interface HistoricalTrendsConfig extends BaseWidgetConfig {
-  timeRange: TimeRangePreset;
-  customStartDate?: string;
-  customEndDate?: string;
-  metric: 'co2' | 'temperature' | 'humidity';
-  aggregation: 'daily' | 'weekly';
-  showTrendLine: boolean;
 }
 
 // Sensor comparison configuration
@@ -87,7 +75,6 @@ export type WidgetConfig =
   | AirQualityHeatmapConfig
   | TableWidgetConfig
   | MetricsCardConfig
-  | HistoricalTrendsConfig
   | SensorComparisonConfig;
 
 // Default configurations for each widget type
@@ -115,16 +102,7 @@ export const DEFAULT_TABLE_CONFIG: TableWidgetConfig = {
 };
 
 export const DEFAULT_METRICS_CARD_CONFIG: MetricsCardConfig = {
-  metrics: ['co2_1d', 'temp_1d', 'co2_30d', 'temp_30d', 'co2_high', 'temp_high', 'co2_low', 'temp_low'],
   temperatureUnit: 'fahrenheit',
-  layout: '2x4',
-};
-
-export const DEFAULT_HISTORICAL_TRENDS_CONFIG: HistoricalTrendsConfig = {
-  timeRange: '90d',
-  metric: 'co2',
-  aggregation: 'daily',
-  showTrendLine: true,
 };
 
 export const DEFAULT_SENSOR_COMPARISON_CONFIG: SensorComparisonConfig = {
@@ -146,8 +124,6 @@ export function getDefaultWidgetConfig(widgetType: string): Record<string, unkno
       return { ...DEFAULT_TABLE_CONFIG };
     case 'METRICS_CARD':
       return { ...DEFAULT_METRICS_CARD_CONFIG };
-    case 'HISTORICAL_TRENDS':
-      return { ...DEFAULT_HISTORICAL_TRENDS_CONFIG };
     case 'SENSOR_COMPARISON':
       return { ...DEFAULT_SENSOR_COMPARISON_CONFIG };
     default:

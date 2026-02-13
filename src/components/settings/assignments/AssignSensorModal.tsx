@@ -6,7 +6,7 @@ import { Modal } from '~/components/common/Modal';
 interface Sensor {
   id: number;
   name: string;
-  model: string;
+  hostname: string;
 }
 
 interface Location {
@@ -128,7 +128,7 @@ export const AssignSensorModal: React.FC<AssignSensorModalProps> = ({
                 <option value="">select a sensor...</option>
                 {unassignedSensors.map((sensor) => (
                   <option key={sensor.id} value={sensor.id}>
-                    {sensor.name} ({sensor.model})
+                    {sensor.name} ({sensor.hostname})
                   </option>
                 ))}
               </select>

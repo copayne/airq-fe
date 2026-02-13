@@ -38,18 +38,10 @@ interface WidgetRendererProps {
 const getWidgetTitle = (type: string): string => {
   const titles: Record<string, string> = {
     'TABLE': 'Sensor Readings',
-    'TEMPERATURE_CHART': 'Temperature Trends',
-    'CO2_CHART': 'CO2 Trends',
-    'HUMIDITY_CHART': 'Humidity Trends',
     'MULTI_METRIC_CHART': 'Multi-Metric Chart',
     'AIR_QUALITY_DISTRIBUTION': 'Air Quality Distribution',
     'AIR_QUALITY_HEATMAP': 'Air Quality Heatmap',
     'METRICS_CARD': 'Metrics',
-    'RING_SNAPSHOT': 'Camera',
-    'RING_CONTACT_SENSORS': 'Door Sensors',
-    'RING_STATUS': 'Ring Status',
-    'QUICK_ACTIONS': 'Quick Actions',
-    'RING_EVENTS': 'Ring Events',
     'HISTORICAL_TRENDS': 'Historical Trends',
     'SENSOR_COMPARISON': 'Sensor Comparison',
   };
@@ -185,18 +177,10 @@ const DashboardCanvas = memo(() => {
   // Widget components with lazy loading - stable reference
   const WIDGETS = useMemo(() => ({
     TABLE: React.lazy(() => import('./widgets/tables/SensorReadingTable')),
-    TEMPERATURE_CHART: React.lazy(() => import('./widgets/charts/MetricChart').then(m => ({ default: m.TemperatureChart }))),
-    CO2_CHART: React.lazy(() => import('./widgets/charts/MetricChart').then(m => ({ default: m.CO2Chart }))),
-    HUMIDITY_CHART: React.lazy(() => import('./widgets/charts/MetricChart').then(m => ({ default: m.HumidityChart }))),
     MULTI_METRIC_CHART: React.lazy(() => import('./widgets/charts/MetricChart').then(m => ({ default: m.MultiMetricChart }))),
     AIR_QUALITY_DISTRIBUTION: React.lazy(() => import('./widgets/charts/AirQualityDistributionChart')),
     AIR_QUALITY_HEATMAP: React.lazy(() => import('./widgets/charts/AirQualityHeatmap')),
     METRICS_CARD: React.lazy(() => import('./widgets/cards/MetricsCard')),
-    RING_SNAPSHOT: React.lazy(() => import('./widgets/cards/RingSnapshotCard')),
-    RING_CONTACT_SENSORS: React.lazy(() => import('./widgets/RingContactSensorCard')),
-    RING_STATUS: React.lazy(() => import('./widgets/RingStatusCard')),
-    QUICK_ACTIONS: React.lazy(() => import('./widgets/cards/QuickActionsCard')),
-    RING_EVENTS: React.lazy(() => import('./widgets/cards/RingEventsCard')),
     HISTORICAL_TRENDS: React.lazy(() => import('./widgets/charts/HistoricalTrendsChart')),
     SENSOR_COMPARISON: React.lazy(() => import('./widgets/charts/SensorComparisonChart')),
   }), []);

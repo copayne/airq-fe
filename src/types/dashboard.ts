@@ -81,22 +81,3 @@ export interface UpdateDashboardLayoutInput {
   layoutData?: string; // JSON string
 }
 
-// Context Types
-
-export interface DashboardLayoutState {
-  layouts: DashboardLayout[];
-  currentLayoutId: string | null;
-  isLoading: boolean;
-  isSaving: boolean;
-  error: string | null;
-}
-
-export type DashboardLayoutAction =
-  | { type: 'SET_LAYOUTS'; payload: DashboardLayout[] }
-  | { type: 'SET_CURRENT_LAYOUT'; payload: string | null }
-  | { type: 'ADD_LAYOUT'; payload: DashboardLayout }
-  | { type: 'UPDATE_LAYOUT'; payload: DashboardLayout }
-  | { type: 'REMOVE_LAYOUT'; payload: string }
-  | { type: 'SET_LOADING'; payload: boolean }
-  | { type: 'SET_SAVING'; payload: boolean }
-  | { type: 'SET_ERROR'; payload: string | null };

@@ -11,7 +11,7 @@ import { ConfirmDialog } from '~/components/common/ConfirmDialog';
 interface Sensor {
   id: number;
   name: string;
-  model: string;
+  hostname: string;
   isActive: boolean;
   currentLocation: {
     id: number;
@@ -160,7 +160,7 @@ export const AssignmentList: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="text-sm font-medium text-airq-dark">{sensor.name}</h3>
-                    <p className="text-xs text-airq-dark/60">{sensor.model}</p>
+                    <p className="text-xs text-airq-dark/60">{sensor.hostname}</p>
                   </div>
                 </div>
 

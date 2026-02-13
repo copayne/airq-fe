@@ -26,20 +26,13 @@ interface WidgetConfigPanelProps {
 
 // Widget types that support configuration
 const CONFIGURABLE_WIDGETS = [
-  'TEMPERATURE_CHART',
-  'CO2_CHART',
-  'HUMIDITY_CHART',
   'MULTI_METRIC_CHART',
   'TABLE',
-  'RING_EVENTS',
-  'RING_SNAPSHOT',
-  'RING_CONTACT_SENSORS',
   'AIR_QUALITY_DISTRIBUTION',
   'AIR_QUALITY_HEATMAP',
   'HISTORICAL_TRENDS',
   'SENSOR_COMPARISON',
   'METRICS_CARD',
-  'QUICK_ACTIONS',
 ];
 
 export const WidgetConfigPanel: React.FC<WidgetConfigPanelProps> = ({
@@ -212,21 +205,6 @@ export const WidgetConfigPanel: React.FC<WidgetConfigPanelProps> = ({
                   { value: 'celsius', label: 'Celsius (°C)' },
                 ]}
                 onChange={(value) => updateConfig('temperatureUnit', value)}
-              />
-            )}
-
-            {/* Ring Events: Limit */}
-            {widgetType === 'RING_EVENTS' && (
-              <SelectField
-                label="Max events"
-                value={String((localConfig.limit as number) ?? 40)}
-                options={[
-                  { value: '10', label: '10' },
-                  { value: '20', label: '20' },
-                  { value: '40', label: '40' },
-                  { value: '60', label: '60' },
-                ]}
-                onChange={(value) => updateConfig('limit', parseInt(value))}
               />
             )}
 
@@ -462,123 +440,6 @@ export const WidgetConfigPanel: React.FC<WidgetConfigPanelProps> = ({
               />
             )}
 
-            {/* Ring Snapshot: Auto Refresh */}
-            {widgetType === 'RING_SNAPSHOT' && (
-              <>
-                <CheckboxField
-                  label="Auto-refresh snapshot"
-                  checked={(localConfig.autoRefresh as boolean) ?? false}
-                  onChange={(checked) => updateConfig('autoRefresh', checked)}
-                />
-                {(localConfig.autoRefresh as boolean) && (
-                  <SelectField
-                    label="Refresh interval"
-                    value={String((localConfig.refreshInterval as number) ?? 300)}
-                    options={[
-                      { value: '60', label: '1 minute' },
-                      { value: '300', label: '5 minutes' },
-                      { value: '600', label: '10 minutes' },
-                      { value: '900', label: '15 minutes' },
-                    ]}
-                    onChange={(value) => updateConfig('refreshInterval', parseInt(value))}
-                  />
-                )}
-                <CheckboxField
-                  label="Show timestamp"
-                  checked={(localConfig.showTimestamp as boolean) ?? true}
-                  onChange={(checked) => updateConfig('showTimestamp', checked)}
-                />
-                <CheckboxField
-                  label="Show capture button"
-                  checked={(localConfig.showCaptureButton as boolean) ?? true}
-                  onChange={(checked) => updateConfig('showCaptureButton', checked)}
-                />
-              </>
-            )}
-
-            {/* Ring Events: Event Type Filters */}
-            {widgetType === 'RING_EVENTS' && (
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Event Types</label>
-                <div className="flex flex-wrap gap-1">
-                  {[
-                    { value: 'motion', label: 'Motion' },
-                    { value: 'ding', label: 'Doorbell' },
-                    { value: 'on_demand', label: 'Live View' },
-                    { value: 'alarm', label: 'Alarm' },
-                  ].map(eventType => {
-                    const selected = (localConfig.eventTypes as string[]) ?? ['motion', 'ding', 'on_demand', 'alarm'];
-                    const isSelected = selected.includes(eventType.value);
-                    return (
-                      <button
-                        key={eventType.value}
-                        onClick={() => {
-                          if (isSelected && selected.length > 1) {
-                            updateConfig('eventTypes', selected.filter(e => e !== eventType.value));
-                          } else if (!isSelected) {
-                            updateConfig('eventTypes', [...selected, eventType.value]);
-                          }
-                        }}
-                        className={`px-2 py-1 text-xs rounded border ${
-                          isSelected
-                            ? 'bg-airq-primary text-white border-airq-primary'
-                            : 'bg-white text-gray-700 border-gray-300 hover:border-airq-primary'
-                        }`}
-                      >
-                        {eventType.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Ring Contact Sensors: Layout */}
-            {widgetType === 'RING_CONTACT_SENSORS' && (
-              <>
-                <SelectField
-                  label="Layout"
-                  value={(localConfig.layout as string) ?? 'grid'}
-                  options={[
-                    { value: 'grid', label: 'Grid' },
-                    { value: 'list', label: 'List' },
-                    { value: 'compact', label: 'Compact' },
-                  ]}
-                  onChange={(value) => updateConfig('layout', value)}
-                />
-                <CheckboxField
-                  label="Show battery level"
-                  checked={(localConfig.showBattery as boolean) ?? true}
-                  onChange={(checked) => updateConfig('showBattery', checked)}
-                />
-                <CheckboxField
-                  label="Show last update time"
-                  checked={(localConfig.showLastUpdate as boolean) ?? true}
-                  onChange={(checked) => updateConfig('showLastUpdate', checked)}
-                />
-              </>
-            )}
-
-            {/* Quick Actions: Layout */}
-            {widgetType === 'QUICK_ACTIONS' && (
-              <>
-                <SelectField
-                  label="Layout"
-                  value={(localConfig.layout as string) ?? '2x2'}
-                  options={[
-                    { value: '2x2', label: '2x2 Grid' },
-                    { value: '1x4', label: '1 Row' },
-                    { value: '4x1', label: '1 Column' },
-                  ]}
-                  onChange={(value) => updateConfig('layout', value)}
-                />
-                <CheckboxField
-                  label="Show labels"
-                  checked={(localConfig.showLabels as boolean) ?? true}
-                  onChange={(checked) => updateConfig('showLabels', checked)}
-                />
-              </>
-            )}
           </div>
 
       {/* Footer */}

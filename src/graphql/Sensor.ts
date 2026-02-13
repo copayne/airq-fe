@@ -7,7 +7,7 @@ export const GET_SENSORS_BASIC = gql`
     sensors {
       id
       name
-      model
+      hostname
       isActive
       installationDate
       currentLocation {
@@ -25,7 +25,7 @@ export const GET_SENSORS = gql`
       ...SensorWithLastReading @include(if: $includeLastReading)
       id @skip(if: $includeLastReading)
       name @skip(if: $includeLastReading)
-      model @skip(if: $includeLastReading)
+      hostname @skip(if: $includeLastReading)
       isActive @skip(if: $includeLastReading)
       installationDate @skip(if: $includeLastReading)
       currentLocation @skip(if: $includeLastReading) {
@@ -37,29 +37,13 @@ export const GET_SENSORS = gql`
   ${SENSOR_WITH_LAST_READING_FRAGMENT}
 `;
 
-export const GET_SENSOR = gql`
-  query GetSensor($id: Int!) {
-    sensor(id: $id) {
-      id
-      name
-      model
-      isActive
-      installationDate
-      currentLocation {
-        id
-        name
-      }
-    }
-  }
-`;
-
 export const CREATE_SENSOR = gql`
   mutation CreateSensor($input: CreateSensorInput!) {
     createSensor(input: $input) {
       sensor {
         id
         name
-        model
+        hostname
         isActive
         installationDate
       }
@@ -76,7 +60,7 @@ export const UPDATE_SENSOR = gql`
       sensor {
         id
         name
-        model
+        hostname
         isActive
       }
       success

@@ -11,28 +11,6 @@ export const GET_SENSOR_LOCATIONS = gql`
   ${SENSOR_LOCATION_FRAGMENT}
 `;
 
-// Get current assignments only
-export const GET_CURRENT_ASSIGNMENTS = gql`
-  query GetCurrentAssignments {
-    sensorLocations {
-      id
-      startTime
-      endTime
-      isCurrent
-      sensor {
-        id
-        name
-        model
-        isActive
-      }
-      location {
-        id
-        name
-      }
-    }
-  }
-`;
-
 export const ASSIGN_SENSOR_TO_LOCATION = gql`
   mutation AssignSensorToLocation($input: AssignSensorLocationInput!) {
     assignSensorToLocation(input: $input) {

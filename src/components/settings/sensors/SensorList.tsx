@@ -10,7 +10,7 @@ import { Modal } from '~/components/common/Modal';
 interface Sensor {
   id: number;
   name: string;
-  model: string;
+  hostname: string;
   isActive: boolean;
   installationDate: string;
   currentLocation: {
@@ -179,7 +179,7 @@ export const SensorList: React.FC = () => {
                       <h3 className="text-sm font-medium text-airq-dark">{sensor.name}</h3>
                       <SensorStatusBadge isActive={sensor.isActive} />
                     </div>
-                    <p className="text-sm text-airq-dark/60">{sensor.model}</p>
+                    <p className="text-sm text-airq-dark/60">{sensor.hostname}</p>
                     <p className="text-xs text-airq-dark/50 mt-1">
                       {sensor.currentLocation
                         ? `Located at: ${sensor.currentLocation.name}`

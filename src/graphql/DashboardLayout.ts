@@ -22,16 +22,6 @@ export const GET_DASHBOARD_LAYOUTS = gql`
   ${DASHBOARD_LAYOUT_FRAGMENT}
 `;
 
-// Get a single dashboard layout by ID
-export const GET_DASHBOARD_LAYOUT = gql`
-  query GetDashboardLayout($id: ID!) {
-    dashboardLayout(id: $id) {
-      ...DashboardLayoutData
-    }
-  }
-  ${DASHBOARD_LAYOUT_FRAGMENT}
-`;
-
 // Get the last used dashboard layout
 export const GET_LAST_USED_LAYOUT = gql`
   query GetLastUsedDashboardLayout {

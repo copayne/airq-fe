@@ -77,31 +77,3 @@ export function formatSensorDetails(sensor: Sensor | undefined): FormattedSensor
   };
 }
 
-/**
- * Formats a timestamp for display
- *
- * @param timestamp ISO 8601 timestamp string
- * @returns Formatted date/time string in locale format
- */
-export function formatReadingTime(timestamp: string): string {
-  return formatDateTime(timestamp);
-}
-
-/**
- * Formats a number to a fixed precision or returns a fallback
- *
- * @param value The numeric value to format
- * @param precision Number of decimal places (default: 1)
- * @param fallback Fallback string when value is null/undefined (default: '--')
- * @returns Formatted number string or fallback
- */
-export function formatNumericValue(
-  value: number | null | undefined,
-  precision = 1,
-  fallback = '--'
-): string {
-  if (value === null || value === undefined) {
-    return fallback;
-  }
-  return value.toFixed(precision);
-}

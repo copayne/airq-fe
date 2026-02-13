@@ -15,7 +15,7 @@ export const WidgetMenu: React.FC = () => {
 
   const [isOpen, setIsOpen] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Set<WidgetCategory>>(
-    new Set(['air-quality', 'ring', 'data', 'actions'])
+    new Set(['air-quality', 'data'] as WidgetCategory[])
   );
 
   const menuRef = useRef<HTMLDivElement>(null);

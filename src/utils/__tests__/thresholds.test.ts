@@ -31,10 +31,10 @@ describe('getTemperatureFahrenheitColorClasses', () => {
   const cases: { value: number | null; expected: string }[] = [
     { value: null, expected: 'bg-airq-light' },
     { value: 60, expected: 'bg-airq-primary' },
-    { value: 67, expected: 'bg-airq-primary' },   // < 68 is good
-    { value: 68, expected: 'bg-airq-secondary' },  // boundary
-    { value: 80, expected: 'bg-airq-secondary' },
-    { value: 81, expected: 'bg-airq-tertiary' },
+    { value: 73, expected: 'bg-airq-primary' },    // < 74 is good
+    { value: 74, expected: 'bg-airq-secondary' },   // boundary
+    { value: 76, expected: 'bg-airq-secondary' },
+    { value: 77, expected: 'bg-airq-tertiary' },
     { value: 100, expected: 'bg-airq-tertiary' },
   ];
 
@@ -47,10 +47,10 @@ describe('getTemperatureCelsiusColorClasses', () => {
   const cases: { value: number | null; expected: string }[] = [
     { value: null, expected: 'bg-airq-light' },
     { value: 15, expected: 'bg-airq-primary' },
-    { value: 19, expected: 'bg-airq-primary' },    // < 20 is good
-    { value: 20, expected: 'bg-airq-secondary' },   // boundary
-    { value: 26, expected: 'bg-airq-secondary' },   // <= 26 is moderate
-    { value: 27, expected: 'bg-airq-tertiary' },
+    { value: 23, expected: 'bg-airq-primary' },    // < 23.33 is good
+    { value: 24, expected: 'bg-airq-secondary' },   // 23.33-24.99 moderate
+    { value: 25, expected: 'bg-airq-tertiary' },    // >= 25 is poor
+    { value: 30, expected: 'bg-airq-tertiary' },
   ];
 
   it.each(cases)('$value°C → $expected', ({ value, expected }) => {

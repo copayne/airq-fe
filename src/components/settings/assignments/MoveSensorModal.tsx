@@ -7,7 +7,7 @@ import { ArrowRight } from 'lucide-react';
 interface Sensor {
   id: number;
   name: string;
-  model: string;
+  hostname: string;
   currentLocation: {
     id: number;
     name: string;
@@ -120,7 +120,7 @@ export const MoveSensorModal: React.FC<MoveSensorModalProps> = ({
           <div className="flex items-center space-x-3">
             <div>
               <p className="font-medium text-airq-dark">{sensor.name}</p>
-              <p className="text-sm text-airq-dark/60">{sensor.model}</p>
+              <p className="text-sm text-airq-dark/60">{sensor.hostname}</p>
             </div>
           </div>
           <div className="flex items-center mt-3 pt-3 border-t border-airq-dark/20">

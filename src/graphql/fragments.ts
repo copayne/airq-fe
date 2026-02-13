@@ -5,7 +5,7 @@ export const SENSOR_CORE_FRAGMENT = gql`
   fragment SensorCore on SensorObject {
     id
     name
-    model
+    hostname
     isActive
     installationDate
   }
@@ -83,17 +83,6 @@ export const SENSOR_WITH_LAST_READING_FRAGMENT = gql`
   ${READING_MEASUREMENTS_FRAGMENT}
 `;
 
-// Error log fragment
-export const ERROR_LOG_FRAGMENT = gql`
-  fragment ErrorLogInfo on ErrorLogObject {
-    id
-    readingId
-    errorType
-    errorMessage
-    createdAt
-  }
-`;
-
 // Sensor location fragment
 export const SENSOR_LOCATION_FRAGMENT = gql`
   fragment SensorLocationInfo on SensorLocationObject {
@@ -114,27 +103,3 @@ export const SENSOR_LOCATION_FRAGMENT = gql`
   ${LOCATION_FRAGMENT}
 `;
 
-// Individual measurement fragments
-export const CO2_READING_FRAGMENT = gql`
-  fragment CO2ReadingInfo on CO2ReadingObject {
-    id
-    readingId
-    co2Ppm
-  }
-`;
-
-export const TEMPERATURE_READING_FRAGMENT = gql`
-  fragment TemperatureReadingInfo on TemperatureReadingObject {
-    id
-    readingId
-    temperatureCelsius
-  }
-`;
-
-export const HUMIDITY_READING_FRAGMENT = gql`
-  fragment HumidityReadingInfo on HumidityReadingObject {
-    id
-    readingId
-    humidityPercentage
-  }
-`;

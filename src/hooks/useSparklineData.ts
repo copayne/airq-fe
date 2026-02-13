@@ -1,6 +1,6 @@
 import { useQuery } from '@apollo/client';
 import { useMemo } from 'react';
-import { GET_FILTERED_SENSOR_READINGS_BASIC } from '~/graphql/SensorReading';
+import { GET_FILTERED_SENSOR_READINGS } from '~/graphql/SensorReading';
 import { aggregateHourly, calculateTrend, type TrendDirection } from '~/utils/sparklineAggregator';
 import type { SensorReading } from '~/types/sensors';
 import { env } from '~/env.js';
@@ -33,7 +33,7 @@ export function useSparklineData(sensorId: string | undefined): SparklineDataRes
   }, []);
 
   const { data, loading, error } = useQuery<GetFilteredSensorReadingsBasicData>(
-    GET_FILTERED_SENSOR_READINGS_BASIC,
+    GET_FILTERED_SENSOR_READINGS,
     {
       variables: {
         input: {

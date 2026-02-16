@@ -7,9 +7,15 @@ import { SensorDataProvider } from '../context/SensorDataContext';
 import { RingProvider } from '../context/RingContext';
 import { ToastProvider } from '../components/common/Toast';
 import { GlanceableStatus } from '../components/common/GlanceableStatus';
+import { useRealtimeCacheUpdater } from '../hooks/useRealtimeCacheUpdater';
 import client from '../lib/apolloClient';
 
 import "~/styles/globals.css";
+
+function RealtimeBridge({ children }: { children: React.ReactNode }) {
+  useRealtimeCacheUpdater();
+  return <>{children}</>;
+}
 
 const jetBrainsFont = JetBrains_Mono({
   weight: ['600', '500', '400', '300', '200'],
@@ -36,14 +42,16 @@ const MyApp: AppType = ({ Component, pageProps }) => {
       <ApolloProvider client={client}>
         <AuthProvider>
           <RealtimeProvider>
-            <ToastProvider>
-              <SensorDataProvider>
-                <RingProvider>
-                  <GlanceableStatus />
-                  <Component {...pageProps} />
-                </RingProvider>
-              </SensorDataProvider>
-            </ToastProvider>
+            <RealtimeBridge>
+              <ToastProvider>
+                <SensorDataProvider>
+                  <RingProvider>
+                    <GlanceableStatus />
+                    <Component {...pageProps} />
+                  </RingProvider>
+                </SensorDataProvider>
+              </ToastProvider>
+            </RealtimeBridge>
           </RealtimeProvider>
         </AuthProvider>
       </ApolloProvider>

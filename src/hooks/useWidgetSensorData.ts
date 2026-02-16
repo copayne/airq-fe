@@ -8,7 +8,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { GET_FILTERED_SENSOR_READINGS } from '../graphql/SensorReading';
 import { getDateRangeFromPreset, type TimeRangePreset } from '~/types/widgetConfig';
 import type { GetFilteredSensorReadingsData } from '~/types/sensors';
-import { env } from '~/env.js';
+import { useAdaptivePollInterval } from './useAdaptivePollInterval';
 
 interface WidgetConfig {
   timeRange?: TimeRangePreset;
@@ -30,6 +30,7 @@ export const useWidgetSensorData = ({ config, skip = false }: UseWidgetSensorDat
   // Serialize arrays to strings for stable dependency comparison
   const sensorIdsKey = config?.sensorIds?.join(',') ?? '';
   const locationIdsKey = config?.locationIds?.join(',') ?? '';
+  const pollInterval = useAdaptivePollInterval(120_000, 60_000);
 
   // Time-based state that updates on each poll interval to ensure relative time ranges
   // (e.g., "last 6 hours") are recalculated with fresh timestamps
@@ -43,10 +44,10 @@ export const useWidgetSensorData = ({ config, skip = false }: UseWidgetSensorDat
 
     const intervalId = setInterval(() => {
       setTimeRefreshKey(prev => prev + 1);
-    }, env.NEXT_PUBLIC_POLL_INTERVAL_MS);
+    }, pollInterval);
 
     return () => clearInterval(intervalId);
-  }, [config?.timeRange]);
+  }, [config?.timeRange, pollInterval]);
 
   // Build query variables - recalculated when config changes OR time passes
   const variables = useMemo(() => {
@@ -98,7 +99,7 @@ export const useWidgetSensorData = ({ config, skip = false }: UseWidgetSensorDat
       variables,
       skip,
       fetchPolicy: 'network-only', // Always fetch fresh data
-      pollInterval: env.NEXT_PUBLIC_POLL_INTERVAL_MS,
+      pollInterval,
       notifyOnNetworkStatusChange: true,
     }
   );

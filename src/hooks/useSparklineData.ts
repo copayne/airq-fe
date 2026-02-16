@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import { GET_FILTERED_SENSOR_READINGS } from '~/graphql/SensorReading';
 import { aggregateHourly, calculateTrend, type TrendDirection } from '~/utils/sparklineAggregator';
 import type { SensorReading } from '~/types/sensors';
-import { env } from '~/env.js';
+import { useAdaptivePollInterval } from './useAdaptivePollInterval';
 
 interface SparklineDataResult {
   co2Data: number[];
@@ -25,6 +25,8 @@ interface GetFilteredSensorReadingsBasicData {
  * Returns hourly-averaged data points for all three metrics.
  */
 export function useSparklineData(sensorId: string | undefined): SparklineDataResult {
+  const pollInterval = useAdaptivePollInterval(120_000, 60_000);
+
   // Calculate 24 hours ago
   const startDate = useMemo(() => {
     const date = new Date();
@@ -44,7 +46,7 @@ export function useSparklineData(sensorId: string | undefined): SparklineDataRes
       },
       skip: !sensorId,
       fetchPolicy: 'cache-first',
-      pollInterval: env.NEXT_PUBLIC_POLL_INTERVAL_MS,
+      pollInterval,
     }
   );
 

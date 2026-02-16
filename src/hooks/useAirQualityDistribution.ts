@@ -11,7 +11,7 @@ import { useMemo, useRef, useEffect } from 'react';
 import { GET_AIR_QUALITY_DISTRIBUTION } from '~/graphql/AirQuality';
 import type { GetAirQualityDistributionData, AirQualityDistribution } from '~/types/sensors';
 import { CACHE_FIRST_OPTIONS } from '~/lib/apolloDefaults';
-import { env } from '~/env.js';
+import { useAdaptivePollInterval } from './useAdaptivePollInterval';
 
 // Global cache to track initial fetch across component unmounts/remounts
 const distributionFetchCache = new Map<string, boolean>();
@@ -38,12 +38,13 @@ export interface UseAirQualityDistributionResult {
 export function useAirQualityDistribution(): UseAirQualityDistributionResult {
   // Track if we've already fetched on mount to prevent re-fetch on re-render
   const hasFetchedOnMount = useRef(false);
+  const pollInterval = useAdaptivePollInterval(300_000, 120_000);
 
   const { data, loading, error, refetch }: QueryResult<GetAirQualityDistributionData> = useQuery(
     GET_AIR_QUALITY_DISTRIBUTION,
     {
       ...CACHE_FIRST_OPTIONS,
-      pollInterval: env.NEXT_PUBLIC_POLL_INTERVAL_MS, // Poll at configured interval (10 minutes)
+      pollInterval,
       skip: !hasFetchedOnMount.current && distributionFetchCache.get('initial-fetch') === true, // Skip if already fetched globally
     }
   );

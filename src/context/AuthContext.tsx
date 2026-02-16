@@ -4,6 +4,7 @@ import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { User } from '~/types/auth';
 import { jwtDecode } from 'jwt-decode';
+import { env } from '~/env.js';
 
 interface AuthState {
   user: User | null;
@@ -96,6 +97,47 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
   }
 }
 
+/** Auto-login via direct GraphQL call. Bypasses Apollo to avoid circular deps. */
+async function autoLogin(): Promise<{ token: string; user: User } | null> {
+  try {
+    const res = await fetch(env.NEXT_PUBLIC_GRAPHQL_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: `mutation LoginUser($input: LoginInput!) {
+          loginUser(input: $input) {
+            success
+            message
+            token
+            user {
+              id username email firstName lastName fullName
+              role isActive emailVerified createdAt updatedAt lastLogin
+            }
+          }
+        }`,
+        variables: {
+          input: {
+            usernameOrEmail: 'copayne',
+            password: 'dork-modem-alien',
+          },
+        },
+      }),
+    });
+
+    const json = await res.json() as {
+      data?: { loginUser: { success: boolean; token: string; user: User } };
+    };
+    const payload = json.data?.loginUser;
+
+    if (payload?.success && payload.token && payload.user) {
+      return { token: payload.token, user: payload.user };
+    }
+  } catch (err) {
+    console.error('Auto-login failed:', err);
+  }
+  return null;
+}
+
 interface AuthProviderProps {
   children: ReactNode;
 }
@@ -103,79 +145,53 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  // Check for existing token on mount
+  // Check for existing token on mount, auto-login if missing/expired
   useEffect(() => {
-    const checkExistingToken = () => {
+    const initAuth = async () => {
       try {
         const token = localStorage.getItem('auth_token');
         const userData = localStorage.getItem('auth_user');
-        
+
         if (token && userData) {
-          // Verify token hasn't expired
           const decoded = jwtDecode<JWTPayload>(token);
           const currentTime = Date.now() / 1000;
-          
+
           if (decoded.exp > currentTime) {
             const user = JSON.parse(userData) as User;
-            dispatch({
-              type: 'LOGIN_SUCCESS',
-              payload: { token, user }
-            });
-          } else {
-            // Token expired, clear storage
-            localStorage.removeItem('auth_token');
-            localStorage.removeItem('auth_user');
-            dispatch({ type: 'TOKEN_EXPIRED' });
+            dispatch({ type: 'LOGIN_SUCCESS', payload: { token, user } });
+            return;
           }
+        }
+
+        // No valid token - auto-login
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('auth_user');
+
+        const result = await autoLogin();
+        if (result) {
+          localStorage.setItem('auth_token', result.token);
+          localStorage.setItem('auth_user', JSON.stringify(result.user));
+          dispatch({ type: 'LOGIN_SUCCESS', payload: result });
         } else {
           dispatch({ type: 'SET_LOADING', payload: false });
         }
       } catch (error) {
-        console.error('Error checking existing token:', error);
-        // Clear potentially corrupted data
+        console.error('Error during auth init:', error);
         localStorage.removeItem('auth_token');
         localStorage.removeItem('auth_user');
         dispatch({ type: 'SET_LOADING', payload: false });
       }
     };
 
-    checkExistingToken();
+    void initAuth();
   }, []);
-
-  // Set up token expiration check
-  useEffect(() => {
-    if (state.token) {
-      try {
-        const decoded = jwtDecode<JWTPayload>(state.token);
-        const currentTime = Date.now() / 1000;
-        const timeUntilExpiry = (decoded.exp - currentTime) * 1000;
-
-        if (timeUntilExpiry > 0) {
-          const timeoutId = setTimeout(() => {
-            localStorage.removeItem('auth_token');
-            localStorage.removeItem('auth_user');
-            dispatch({ type: 'TOKEN_EXPIRED' });
-          }, timeUntilExpiry);
-
-          return () => clearTimeout(timeoutId);
-        } else {
-          // Token already expired
-          localStorage.removeItem('auth_token');
-          localStorage.removeItem('auth_user');
-          dispatch({ type: 'TOKEN_EXPIRED' });
-        }
-      } catch (error) {
-        console.error('Error setting up token expiration check:', error);
-      }
-    }
-  }, [state.token]);
 
   const login = (token: string, user: User) => {
     try {
       // Store in localStorage for persistence
       localStorage.setItem('auth_token', token);
       localStorage.setItem('auth_user', JSON.stringify(user));
-      
+
       dispatch({
         type: 'LOGIN_SUCCESS',
         payload: { token, user }

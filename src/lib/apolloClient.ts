@@ -32,19 +32,11 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
         path: path ? JSON.stringify(path) : undefined
       });
 
-      // Handle authentication errors
-      if (message === 'Authentication required' || 
+      // Log auth errors but don't redirect - AuthContext handles auto-login
+      if (message === 'Authentication required' ||
           message.includes('Insufficient permissions') ||
           extensions?.code === 'UNAUTHENTICATED') {
-        // Clear authentication data on auth errors
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('auth_token');
-          localStorage.removeItem('auth_user');
-          // Redirect to login page if not already there
-          if (window.location.pathname !== '/login') {
-            window.location.href = '/login?message=session_expired';
-          }
-        }
+        console.warn('Auth error on query - AuthContext will handle re-authentication');
       }
     });
   }
@@ -57,15 +49,9 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
       console.error('Server appears to be unreachable');
     }
 
-    // Handle 401 Unauthorized responses
+    // Log 401 but don't redirect - AuthContext handles auto-login
     if ('statusCode' in networkError && networkError.statusCode === 401) {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('auth_user');
-        if (window.location.pathname !== '/login') {
-          window.location.href = '/login?message=session_expired';
-        }
-      }
+      console.warn('401 response - AuthContext will handle re-authentication');
     }
   }
 });

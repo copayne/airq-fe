@@ -1,6 +1,7 @@
 import React, { memo, useState, useCallback } from 'react';
 import { DoorClosed, DoorOpen, Battery, WifiOff, Clock } from 'lucide-react';
 import { useSensors } from '~/hooks/useSensors';
+import { useAdaptivePollInterval } from '~/hooks/useAdaptivePollInterval';
 import { useRing } from '~/context/RingContext';
 import type { Sensor } from '~/types/sensors';
 import type { RingDeviceData } from '~/services/RingController';
@@ -258,19 +259,30 @@ const RingDoorSensorsSection: React.FC = memo(() => {
 
 RingDoorSensorsSection.displayName = 'RingDoorSensorsSection';
 
-const SensorSidebar: React.FC = memo(() => {
+interface SensorSidebarProps {
+  compact?: boolean;
+}
+
+const SensorSidebar: React.FC<SensorSidebarProps> = memo(({ compact = false }) => {
+  const sidebarPollInterval = useAdaptivePollInterval(120_000, 30_000);
   const { sensors, loading } = useSensors({
     fetchPolicy: 'cache-and-network',
-    pollInterval: 30000, // Poll every 30 seconds for fresh data
+    pollInterval: sidebarPollInterval,
   });
 
   // Filter to only show active sensors with locations
   const activeSensors = sensors?.filter(s => s.isActive) ?? [];
 
+  const outerClass = compact
+    ? 'w-full flex-shrink-0 bg-airq-light/50 flex flex-col'
+    : 'w-56 flex-shrink-0 border-r border-airq-dark bg-airq-light/50 flex flex-col';
+
+  const innerPadding = compact ? 'p-2 space-y-2' : 'p-3 space-y-3';
+
   if (loading && !sensors?.length) {
     return (
-      <div className="w-56 flex-shrink-0 border-r border-airq-dark bg-airq-light/50">
-        <div className="p-3 space-y-3">
+      <div className={compact ? 'w-full flex-shrink-0 bg-airq-light/50' : 'w-56 flex-shrink-0 border-r border-airq-dark bg-airq-light/50'}>
+        <div className={innerPadding}>
           <div className="text-xs font-semibold text-airq-dark/30 uppercase tracking-wide">
             Air Quality
           </div>
@@ -283,9 +295,9 @@ const SensorSidebar: React.FC = memo(() => {
   }
 
   return (
-    <div className="w-56 flex-shrink-0 border-r border-airq-dark bg-airq-light/50 flex flex-col">
+    <div className={outerClass}>
       {/* Sensor cards list */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-3">
+      <div className={`flex-1 overflow-y-auto ${innerPadding}`}>
         {/* CO2 Sensors Section */}
         {activeSensors.length === 0 ? (
           <div className="text-center py-4">

@@ -172,7 +172,11 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = memo(({ widget, children, on
 });
 WidgetWrapper.displayName = 'WidgetWrapper';
 
-const DashboardCanvas = memo(() => {
+interface DashboardCanvasProps {
+  compact?: boolean;
+}
+
+const DashboardCanvas = memo(({ compact = false }: DashboardCanvasProps) => {
   // Widget components with lazy loading - stable reference
   const WIDGETS = useMemo(() => ({
     TABLE: React.lazy(() => import('./widgets/tables/SensorReadingTable')),
@@ -212,9 +216,9 @@ const DashboardCanvas = memo(() => {
   // Derive grid layouts from context layout data
   // Always use registry min values so constraint updates apply to existing widgets
   const layouts = useMemo((): Layouts => {
-    if (!currentLayoutData?.widgets) return { lg: [], md: [], sm: [] };
+    if (!currentLayoutData?.widgets) return { lg: [], md: [], sm: [], xs: [] };
 
-    const result: Layouts = { lg: [], md: [], sm: [] };
+    const result: Layouts = { lg: [], md: [], sm: [], xs: [] };
 
     currentLayoutData.widgets.forEach((ws: WidgetState) => {
       // Look up the widget's registry definition for authoritative min constraints
@@ -240,6 +244,15 @@ const DashboardCanvas = memo(() => {
           ...toLayout(ws.layout.sm),
           minH: registryLayouts?.sm.minH ?? ws.layout.sm.minH,
           minW: registryLayouts?.sm.minW ?? ws.layout.sm.minW,
+        });
+        // xs derives from sm: full-width stacked, clamped to 6 cols
+        const smLayout = ws.layout.sm;
+        result.xs?.push({
+          ...toLayout(smLayout),
+          x: 0,
+          w: 6,
+          minW: Math.min(registryLayouts?.sm.minW ?? smLayout.minW ?? 6, 6),
+          minH: registryLayouts?.sm.minH ?? smLayout.minH,
         });
       }
     });
@@ -436,15 +449,19 @@ const DashboardCanvas = memo(() => {
     );
   }
 
+  const gridPadding = compact ? 'p-2' : 'p-2 sm:p-4';
+  const rowHeight = compact ? 48 : 55;
+  const gridMargin: [number, number] = compact ? [6, 6] : [8, 8];
+
   return (
-    <div className="h-full w-full p-4 overflow-hidden">
+    <div className={`h-full w-full ${gridPadding} overflow-hidden`}>
       <ResponsiveGridLayout
         className="layout"
         layouts={layouts}
-        breakpoints={{ lg: 1100, md: 900, sm: 768 }}
-        cols={{ lg: 24, md: 16, sm: 12 }}
-        rowHeight={55}
-        margin={[8, 8]}
+        breakpoints={{ lg: 1100, md: 900, sm: 768, xs: 0 }}
+        cols={{ lg: 24, md: 16, sm: 12, xs: 6 }}
+        rowHeight={rowHeight}
+        margin={gridMargin}
         onDragStop={handleDragOrResizeStop}
         onResizeStop={handleDragOrResizeStop}
         isDraggable={true}

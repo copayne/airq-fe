@@ -1,12 +1,13 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import type { Socket } from 'socket.io-client';
-import { getSocket, disconnectSocket, type SensorReadingEvent, type AlertEvent } from '~/lib/socketClient';
+import { getSocket, disconnectSocket, type SensorReadingEvent, type AlertEvent, type SensorHealthEvent } from '~/lib/socketClient';
 import { useAuth } from './AuthContext';
 
 interface RealtimeContextValue {
   connected: boolean;
   onSensorReading: (handler: (data: SensorReadingEvent) => void) => () => void;
   onAlert: (handler: (data: AlertEvent) => void) => () => void;
+  onSensorHealth: (handler: (data: SensorHealthEvent) => void) => () => void;
 }
 
 const RealtimeContext = createContext<RealtimeContextValue>({
@@ -15,6 +16,8 @@ const RealtimeContext = createContext<RealtimeContextValue>({
   onSensorReading: () => () => { /* noop */ },
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   onAlert: () => () => { /* noop */ },
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  onSensorHealth: () => () => { /* noop */ },
 });
 
 export function RealtimeProvider({ children }: { children: React.ReactNode }) {
@@ -61,8 +64,15 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     return () => { sock.off('alert', handler); };
   }, []);
 
+  const onSensorHealth = useCallback((handler: (data: SensorHealthEvent) => void) => {
+    const sock = socketRef.current;
+    if (!sock) return () => { /* noop */ };
+    sock.on('sensor_health', handler);
+    return () => { sock.off('sensor_health', handler); };
+  }, []);
+
   return (
-    <RealtimeContext.Provider value={{ connected, onSensorReading, onAlert }}>
+    <RealtimeContext.Provider value={{ connected, onSensorReading, onAlert, onSensorHealth }}>
       {children}
     </RealtimeContext.Provider>
   );

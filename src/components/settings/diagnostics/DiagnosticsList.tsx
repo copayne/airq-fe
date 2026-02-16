@@ -1,9 +1,10 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
 import { Activity, RefreshCw, Wifi, WifiOff, Clock, AlertTriangle, CheckCircle, XCircle, Cpu, Thermometer } from 'lucide-react';
 import { GET_ALL_SENSOR_HEALTH, PING_SENSOR } from '~/graphql/SensorHealth';
 import { HealthReportModal } from './HealthReportModal';
 import { HealthHistoryModal } from './HealthHistoryModal';
+import { useRealtime } from '~/context/RealtimeContext';
 
 interface SensorHealth {
   sensorId: number;
@@ -84,11 +85,19 @@ export const DiagnosticsList: React.FC = () => {
   const [showHistory, setShowHistory] = useState(false);
   const [pingingId, setPingingId] = useState<number | null>(null);
   const isPingingRef = useRef(false);
+  const { onSensorHealth } = useRealtime();
 
   const { data, loading, error, refetch } = useQuery<{ allSensorHealth: SensorHealth[] }>(
     GET_ALL_SENSOR_HEALTH,
     { fetchPolicy: 'network-only' }
   );
+
+  // Auto-refresh when a new health report arrives via WebSocket
+  useEffect(() => {
+    return onSensorHealth(() => {
+      void refetch();
+    });
+  }, [onSensorHealth, refetch]);
 
   const [pingSensor, { loading: pingSensorLoading }] = useMutation<{ pingSensor: PingResult }>(PING_SENSOR, {
     onCompleted: (data) => {

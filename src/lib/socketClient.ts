@@ -18,6 +18,12 @@ export interface AlertEvent {
   location: string;
 }
 
+export interface SensorHealthEvent {
+  sensor_id: number;
+  health_status: string;
+  report_time: string;
+}
+
 let socket: Socket | null = null;
 
 function getWsEndpoint(): string {

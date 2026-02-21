@@ -13,16 +13,16 @@ interface AirQualityDashboardProps {
 
 const AirQualityDashboard = ({ compact = false, bare = false }: AirQualityDashboardProps) => {
   const containerClass = compact
-    ? 'h-full flex flex-row justify-center px-1 py-1 gap-1'
-    : 'h-full flex justify-center px-2 py-1 sm:px-6 sm:py-2 md:px-12 md:py-4';
+    ? 'h-full flex flex-row justify-center px-2 py-2 gap-2'
+    : 'h-full flex justify-center sm:px-6 sm:py-2 md:px-12 md:py-4';
 
   const sidebarClass = compact
-    ? 'w-[180px] h-full overflow-hidden flex-shrink-0 bg-airq-light/95 rounded border-airq-dark border pt-2'
-    : 'hidden sm:block max-w-[250px] h-full overflow-hidden bg-airq-light/95 mr-2 rounded border-airq-dark border pt-3';
+    ? 'w-[280px] h-full overflow-hidden flex-shrink-0 bg-airq-light/95 rounded border-airq-dark border pt-2'
+    : 'w-full h-full overflow-hidden sm:max-w-[250px] sm:bg-airq-light/95 sm:mr-2 sm:rounded sm:border-airq-dark sm:border pt-3';
 
   const canvasContainerClass = compact
     ? 'flex w-full h-full bg-airq-light/95 rounded border-airq-dark border overflow-hidden'
-    : 'w-full max-w-[1700px] h-full bg-airq-light/95 rounded border-airq-dark border flex overflow-hidden';
+    : 'hidden sm:flex w-full max-w-[1700px] h-full bg-airq-light/95 rounded border-airq-dark border overflow-hidden';
 
   const content = (
     <DashboardLayoutProvider>

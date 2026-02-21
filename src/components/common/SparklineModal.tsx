@@ -19,6 +19,7 @@ const METRIC_LABELS: Record<SparklineMetric, string> = {
 };
 
 const TIME_RANGE_OPTIONS: { value: TimeRangePreset; label: string }[] = [
+  { value: '6h', label: '6h' },
   { value: '24h', label: '24h' },
   { value: '7d', label: '7d' },
   { value: '30d', label: '30d' },
@@ -31,7 +32,7 @@ const SparklineModal: React.FC<SparklineModalProps> = memo(({
   sensorId,
   sensorName,
 }) => {
-  const [timeRange, setTimeRange] = useState<TimeRangePreset>('24h');
+  const [timeRange, setTimeRange] = useState<TimeRangePreset>('6h');
 
   // Handle ESC key
   useEffect(() => {

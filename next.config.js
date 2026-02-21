@@ -1,9 +1,3 @@
-// Polyfill File global for Node 18 compatibility (required by undici/ring-client-api)
-if (typeof globalThis.File === 'undefined') {
-  const { File } = await import('node:buffer');
-  globalThis.File = File;
-}
-
 /**
  * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially useful
  * for Docker builds.
@@ -21,7 +15,8 @@ const graphqlEndpoint = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || 'http://loca
 const apiUrl = new URL(graphqlEndpoint);
 const apiHostname = apiUrl.hostname;
 const apiPort = apiUrl.port || (apiUrl.protocol === 'https:' ? '443' : '80');
-const apiProtocol = apiUrl.protocol.replace(':', '');
+/** @type {"http" | "https"} */
+const apiProtocol = /** @type {"http" | "https"} */ (apiUrl.protocol.replace(':', ''));
 
 /** @type {import("next").NextConfig} */
 const config = {
@@ -42,9 +37,7 @@ const config = {
     optimizePackageImports: ['lucide-react'],
   },
 
-  compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
-  },
+  compiler: {},
 
   images: {
     remotePatterns: [

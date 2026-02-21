@@ -16,7 +16,7 @@
     "lint": "next lint",
     "test": "vitest",
     "test:run": "vitest run",
-    "start": "next start",
+    "start": "next start -H 0.0.0.0",
     "start:staging": "NODE_ENV=staging next start",
     "start:production": "NODE_ENV=production next start"
   },

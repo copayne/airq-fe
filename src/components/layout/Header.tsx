@@ -13,7 +13,7 @@ const Header: React.FC = memo(() => {
 
   return (
     <header className="bg-airq-light border-b-airq-dark border-b-[1px] z-20 h-16 drop-shadow-md">
-      <div className="flex items-center justify-center px-6 relative h-full">
+      <div className="flex items-center justify-start sm:justify-center px-6 relative h-full">
         {/* Centered title */}
         <Link href="/dash">
           <h1 className="text-3xl text-airq-dark">Hudson Dash</h1>

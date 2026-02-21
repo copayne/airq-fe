@@ -23,6 +23,7 @@ interface Widget {
 
 interface WidgetWrapperProps {
   widget: Widget;
+  compact?: boolean;
   children: React.ReactNode;
   onRemove: (id: string) => void;
   onConfigChange: (widgetId: string, config: Record<string, unknown>) => void;
@@ -135,25 +136,26 @@ const WidgetRenderer: React.FC<WidgetRendererProps> = memo(({ widget, widgetComp
 WidgetRenderer.displayName = 'WidgetRenderer';
 
 // Widget wrapper - memoized with custom comparison
-const WidgetWrapper: React.FC<WidgetWrapperProps> = memo(({ widget, children, onRemove, onConfigChange }) => (
+const WidgetWrapper: React.FC<WidgetWrapperProps> = memo(({ widget, compact = false, children, onRemove, onConfigChange }) => (
   <div className="h-full w-full border-black border-[1px] shadow-airq-dark shadow-card flex flex-col overflow-hidden">
-    <div className="bg-airq-dark text-airq-light px-2 py-1 flex justify-between items-center border-b-[1px] border-airq-dark">
-      <p className="h-[18px] text-xs font-semibold flex-1 align-baseline widget-drag-handle cursor-grab">
+    <div className={`bg-airq-dark text-airq-light flex justify-between items-center border-b-[1px] border-airq-dark ${compact ? 'px-3 py-1.5' : 'px-2 py-1'}`}>
+      <p className={`font-semibold flex-1 align-baseline widget-drag-handle cursor-grab ${compact ? 'text-sm' : 'h-[18px] text-xs'}`}>
         {widget.title}
       </p>
-      <div className="flex items-center gap-0.5">
+      <div className={`flex items-center ${compact ? 'gap-1' : 'gap-0.5'}`}>
         <WidgetConfigPanel
           widgetId={widget.id}
           widgetType={widget.type}
           config={widget.config}
           onConfigChange={onConfigChange}
+          compact={compact}
         />
         <button
           onClick={() => onRemove(widget.id)}
-          className="text-airq-light hover:text-airq-light/80 focus:outline-none p-0.5"
+          className={`text-airq-light hover:text-airq-light/80 focus:outline-none ${compact ? 'p-2 min-w-[44px] min-h-[44px] flex items-center justify-center' : 'p-0.5'}`}
           title="Remove"
         >
-          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg className={compact ? 'h-5 w-5' : 'h-3 w-3'} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
@@ -162,12 +164,11 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = memo(({ widget, children, on
     <div className="flex-1 overflow-hidden">{children}</div>
   </div>
 ), (prevProps, nextProps) => {
-  // Custom comparison: only re-render if widget id, title, type, or config VALUES change
   if (prevProps.widget.id !== nextProps.widget.id) return false;
   if (prevProps.widget.title !== nextProps.widget.title) return false;
   if (prevProps.widget.type !== nextProps.widget.type) return false;
+  if (prevProps.compact !== nextProps.compact) return false;
   if (!areConfigsEqual(prevProps.widget.config, nextProps.widget.config)) return false;
-  // Callback references don't matter for rendering - assume they're stable
   return true;
 });
 WidgetWrapper.displayName = 'WidgetWrapper';
@@ -443,8 +444,8 @@ const DashboardCanvas = memo(({ compact = false }: DashboardCanvasProps) => {
           <p className="text-airq-dark mb-4">No dashboard layout found.</p>
           <p className="text-airq-dark/70 text-sm">Use the layout menu to load or create a layout.</p>
         </div>
-        <LayoutMenu />
-        <WidgetMenu />
+        <LayoutMenu compact={compact} />
+        <WidgetMenu compact={compact} />
       </div>
     );
   }
@@ -476,15 +477,15 @@ const DashboardCanvas = memo(({ compact = false }: DashboardCanvasProps) => {
       >
         {widgets.map(widget => (
           <div key={widget.id}>
-            <WidgetWrapper widget={widget} onRemove={removeWidget} onConfigChange={updateWidgetConfig}>
+            <WidgetWrapper widget={widget} compact={compact} onRemove={removeWidget} onConfigChange={updateWidgetConfig}>
               <WidgetRenderer widget={widget} widgetComponents={WIDGETS} />
             </WidgetWrapper>
           </div>
         ))}
       </ResponsiveGridLayout>
 
-      <LayoutMenu />
-      <WidgetMenu />
+      <LayoutMenu compact={compact} />
+      <WidgetMenu compact={compact} />
     </div>
   );
 });

@@ -27,9 +27,10 @@ const SPARKLINE_COLORS = {
 
 interface CompactSensorCardProps {
   sensor: Sensor;
+  compact?: boolean;
 }
 
-const CompactSensorCard: React.FC<CompactSensorCardProps> = memo(({ sensor }) => {
+const CompactSensorCard: React.FC<CompactSensorCardProps> = memo(({ sensor, compact = false }) => {
   const [modalMetric, setModalMetric] = useState<SparklineMetric | null>(null);
 
   const {
@@ -73,22 +74,22 @@ const CompactSensorCard: React.FC<CompactSensorCardProps> = memo(({ sensor }) =>
     <>
       <div className="border border-airq-dark shadow-card bg-airq-light">
         {/* Header with location name */}
-        <div className="bg-airq-dark text-airq-light px-2 py-1 flex items-center justify-between">
-          <span className="text-xs font-semibold truncate">{locationName}</span>
-          <span className="text-[10px] text-airq-light/60">{getRelativeTime(lastReading)}</span>
+        <div className={`bg-airq-dark text-airq-light flex items-center justify-between ${compact ? 'px-3 py-2' : 'px-2 py-1'}`}>
+          <span className={`font-semibold truncate ${compact ? 'text-sm' : 'text-xs'}`}>{locationName}</span>
+          <span className={compact ? 'text-xs text-airq-light/60' : 'text-[10px] text-airq-light/60'}>{getRelativeTime(lastReading)}</span>
         </div>
 
         {/* Metrics row with sparklines */}
         <div className="flex divide-x divide-airq-dark/30">
-          <div className={`flex-1 min-w-0 px-2 py-1.5 text-center overflow-hidden ${co2Colors.inner}`}>
-            <p className="text-[10px] uppercase">co2</p>
-            <p className="text-sm font-medium">
+          <div className={`flex-1 min-w-0 text-center overflow-hidden ${compact ? 'px-3 py-3' : 'px-2 py-1.5'} ${co2Colors.inner}`}>
+            <p className={compact ? 'text-xs uppercase tracking-wide text-airq-dark/60' : 'text-[10px] uppercase'}>co2</p>
+            <p className={compact ? 'text-lg font-semibold leading-tight' : 'text-sm font-medium'}>
               {co2Raw !== null ? (
                 <AnimatedNumber value={co2Raw} />
               ) : (
                 co2
               )}
-              <span className="text-[10px]">ppm</span>
+              <span className={compact ? 'text-xs ml-0.5' : 'text-[10px]'}>ppm</span>
             </p>
             <Sparkline
               data={co2Data}
@@ -97,15 +98,15 @@ const CompactSensorCard: React.FC<CompactSensorCardProps> = memo(({ sensor }) =>
               onClick={() => openModal('co2')}
             />
           </div>
-          <div className={`flex-1 min-w-0 px-2 py-1.5 text-center overflow-hidden ${tempColors.inner}`}>
-            <p className="text-[10px] uppercase">temp</p>
-            <p className="text-sm font-medium">
+          <div className={`flex-1 min-w-0 text-center overflow-hidden ${compact ? 'px-3 py-3' : 'px-2 py-1.5'} ${tempColors.inner}`}>
+            <p className={compact ? 'text-xs uppercase tracking-wide text-airq-dark/60' : 'text-[10px] uppercase'}>temp</p>
+            <p className={compact ? 'text-lg font-semibold leading-tight' : 'text-sm font-medium'}>
               {tempRaw !== null && tempRaw !== undefined ? (
                 <AnimatedNumber value={tempRaw * 9/5 + 32} />
               ) : (
                 temperatureFahrenheit
               )}
-              <span className="text-[10px]">f</span>
+              <span className={compact ? 'text-xs ml-0.5' : 'text-[10px]'}>f</span>
             </p>
             <Sparkline
               data={temperatureData}
@@ -114,15 +115,15 @@ const CompactSensorCard: React.FC<CompactSensorCardProps> = memo(({ sensor }) =>
               onClick={() => openModal('temperature')}
             />
           </div>
-          <div className={`flex-1 min-w-0 px-2 py-1.5 text-center overflow-hidden ${humidityColors.inner}`}>
-            <p className="text-[10px] uppercase">hum</p>
-            <p className="text-sm font-medium">
+          <div className={`flex-1 min-w-0 text-center overflow-hidden ${compact ? 'px-3 py-3' : 'px-2 py-1.5'} ${humidityColors.inner}`}>
+            <p className={compact ? 'text-xs uppercase tracking-wide text-airq-dark/60' : 'text-[10px] uppercase'}>hum</p>
+            <p className={compact ? 'text-lg font-semibold leading-tight' : 'text-sm font-medium'}>
               {humidityRaw !== null && humidityRaw !== undefined ? (
                 <AnimatedNumber value={humidityRaw} />
               ) : (
                 humidity
               )}
-              <span className="text-[10px]">%</span>
+              <span className={compact ? 'text-xs ml-0.5' : 'text-[10px]'}>%</span>
             </p>
             <Sparkline
               data={humidityData}
@@ -153,13 +154,14 @@ CompactSensorCard.displayName = 'CompactSensorCard';
 // Ring Door Sensor compact card - matches RingContactSensorCard SensorStatus style
 interface CompactRingDoorCardProps {
   device: RingDeviceData;
+  compact?: boolean;
 }
 
 function formatTimeAgo(timestamp: string | null): string {
   return getRelativeTimeUtil(timestamp, 'Never');
 }
 
-const CompactRingDoorCard: React.FC<CompactRingDoorCardProps> = memo(({ device }) => {
+const CompactRingDoorCard: React.FC<CompactRingDoorCardProps> = memo(({ device, compact = false }) => {
   const isOpen = device.status === 'open';
   const isOffline = !device.lastUpdate;
 
@@ -192,36 +194,36 @@ const CompactRingDoorCard: React.FC<CompactRingDoorCardProps> = memo(({ device }
 
   return (
     <div className={`flex flex-col items-center border border-airq-dark shadow-card ${statusClasses}`}>
-      <div className="flex w-full items-center justify-between border-b border-airq-dark px-2 py-1">
-        <span className="text-xs font-medium text-airq-dark truncate">
+      <div className={`flex w-full items-center justify-between border-b border-airq-dark ${compact ? 'px-3 py-2' : 'px-2 py-1'}`}>
+        <span className={`font-medium text-airq-dark truncate ${compact ? 'text-sm' : 'text-xs'}`}>
           {device.name}
         </span>
         {device.batteryLevel !== null && (
-          <div className="flex items-center gap-1">
-            <Battery className={`h-3 w-3 ${batteryColor}`} />
-            <span className={`text-xs ${batteryColor}`}>
+          <div className={`flex items-center ${compact ? 'gap-1.5' : 'gap-1'}`}>
+            <Battery className={`${compact ? 'h-4 w-4' : 'h-3 w-3'} ${batteryColor}`} />
+            <span className={`${compact ? 'text-sm' : 'text-xs'} ${batteryColor}`}>
               {device.batteryLevel}%
             </span>
           </div>
         )}
       </div>
 
-      <div className="flex flex-col items-center justify-center py-2">
+      <div className={`flex flex-col items-center justify-center ${compact ? 'py-3' : 'py-2'}`}>
         {isOffline ? (
-          <WifiOff className={`h-6 w-6 ${iconClasses}`} />
+          <WifiOff className={`${compact ? 'h-8 w-8' : 'h-6 w-6'} ${iconClasses}`} />
         ) : isOpen ? (
-          <DoorOpen className={`h-6 w-6 ${iconClasses}`} />
+          <DoorOpen className={`${compact ? 'h-8 w-8' : 'h-6 w-6'} ${iconClasses}`} />
         ) : (
-          <DoorClosed className={`h-6 w-6 ${iconClasses}`} />
+          <DoorClosed className={`${compact ? 'h-8 w-8' : 'h-6 w-6'} ${iconClasses}`} />
         )}
 
-        <span className={`text-xs font-semibold mt-1 ${textClasses}`}>
+        <span className={`font-semibold ${compact ? 'text-sm mt-1.5' : 'text-xs mt-1'} ${textClasses}`}>
           {isOffline ? 'OFFLINE' : isOpen ? 'OPEN' : 'CLOSED'}
         </span>
       </div>
 
-      <div className="flex items-center gap-1 text-xs text-gray-500 border-t border-airq-dark w-full justify-center py-1">
-        <Clock className="h-3 w-3" />
+      <div className={`flex items-center text-gray-500 border-t border-airq-dark w-full justify-center ${compact ? 'gap-1.5 text-sm py-2' : 'gap-1 text-xs py-1'}`}>
+        <Clock className={compact ? 'h-4 w-4' : 'h-3 w-3'} />
         <span>{formatTimeAgo(device.lastUpdate)}</span>
       </div>
     </div>
@@ -231,7 +233,7 @@ const CompactRingDoorCard: React.FC<CompactRingDoorCardProps> = memo(({ device }
 CompactRingDoorCard.displayName = 'CompactRingDoorCard';
 
 // Ring Door Sensors section
-const RingDoorSensorsSection: React.FC = memo(() => {
+const RingDoorSensorsSection: React.FC<{ compact?: boolean }> = memo(({ compact = false }) => {
   const { devices, isInitialized } = useRing();
 
   const contactSensors = devices.filter(
@@ -247,11 +249,11 @@ const RingDoorSensorsSection: React.FC = memo(() => {
 
   return (
     <div className="space-y-2">
-      <div className="text-xs font-semibold text-airq-dark/70 uppercase tracking-wide">
+      <div className={`font-semibold text-airq-dark/70 uppercase tracking-wide ${compact ? 'text-sm' : 'text-xs'}`}>
         Door Sensors
       </div>
       {contactSensors.map((device) => (
-        <CompactRingDoorCard key={device.deviceId} device={device} />
+        <CompactRingDoorCard key={device.deviceId} device={device} compact={compact} />
       ))}
     </div>
   );
@@ -275,15 +277,18 @@ const SensorSidebar: React.FC<SensorSidebarProps> = memo(({ compact = false }) =
 
   const outerClass = compact
     ? 'w-full flex-shrink-0 bg-airq-light/50 flex flex-col'
-    : 'w-56 flex-shrink-0 border-r border-airq-dark bg-airq-light/50 flex flex-col';
+    : 'w-full sm:w-56 flex-shrink-0 sm:border-r sm:border-airq-dark bg-airq-light/80 sm:bg-airq-light/50 flex flex-col';
 
-  const innerPadding = compact ? 'p-2 space-y-2' : 'p-3 space-y-3';
+  const innerPadding = compact ? 'p-3 space-y-3' : 'p-3 space-y-3';
+  const headingClass = compact
+    ? 'text-sm font-semibold text-airq-dark/70 uppercase tracking-wide'
+    : 'text-xs font-semibold text-airq-dark/70 uppercase tracking-wide';
 
   if (loading && !sensors?.length) {
     return (
-      <div className={compact ? 'w-full flex-shrink-0 bg-airq-light/50' : 'w-56 flex-shrink-0 border-r border-airq-dark bg-airq-light/50'}>
+      <div className={compact ? 'w-full flex-shrink-0 bg-airq-light/50' : 'w-full sm:w-56 flex-shrink-0 sm:border-r sm:border-airq-dark bg-airq-light/80 sm:bg-airq-light/50'}>
         <div className={innerPadding}>
-          <div className="text-xs font-semibold text-airq-dark/30 uppercase tracking-wide">
+          <div className={compact ? 'text-sm font-semibold text-airq-dark/30 uppercase tracking-wide' : 'text-xs font-semibold text-airq-dark/30 uppercase tracking-wide'}>
             Air Quality
           </div>
           {[1, 2].map((i) => (
@@ -305,17 +310,17 @@ const SensorSidebar: React.FC<SensorSidebarProps> = memo(({ compact = false }) =
           </div>
         ) : (
           <div className="space-y-2">
-            <div className="text-xs font-semibold text-airq-dark/70 uppercase tracking-wide">
+            <div className={headingClass}>
               Air Quality
             </div>
             {activeSensors.map((sensor) => (
-              <CompactSensorCard key={sensor.id} sensor={sensor} />
+              <CompactSensorCard key={sensor.id} sensor={sensor} compact={compact} />
             ))}
           </div>
         )}
 
         {/* Ring Door Sensors Section */}
-        <RingDoorSensorsSection />
+        <RingDoorSensorsSection compact={compact} />
       </div>
     </div>
   );

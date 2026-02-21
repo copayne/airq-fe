@@ -22,6 +22,7 @@ interface WidgetConfigPanelProps {
   widgetType: string;
   config: Record<string, unknown>;
   onConfigChange: (widgetId: string, config: Record<string, unknown>) => void;
+  compact?: boolean;
 }
 
 // Helper to get default widget title from type
@@ -52,6 +53,7 @@ export const WidgetConfigPanel: React.FC<WidgetConfigPanelProps> = ({
   widgetType,
   config,
   onConfigChange,
+  compact = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [localConfig, setLocalConfig] = useState<Record<string, unknown>>({});
@@ -137,8 +139,8 @@ export const WidgetConfigPanel: React.FC<WidgetConfigPanelProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 bg-gray-50 sticky top-0">
         <span className="text-sm font-medium text-airq-dark">Widget Settings</span>
-        <button onClick={closePanel} className="text-gray-500 hover:text-gray-700">
-          <X className="h-4 w-4" />
+        <button onClick={closePanel} className={compact ? 'text-gray-500 hover:text-gray-700 p-1 min-w-[44px] min-h-[44px] flex items-center justify-center' : 'text-gray-500 hover:text-gray-700'}>
+          <X className={compact ? 'h-5 w-5' : 'h-4 w-4'} />
         </button>
       </div>
 
@@ -421,15 +423,15 @@ export const WidgetConfigPanel: React.FC<WidgetConfigPanelProps> = ({
       <div className="flex justify-end gap-2 px-3 py-2 border-t border-gray-200 bg-gray-50 sticky bottom-0">
         <button
           onClick={closePanel}
-          className="px-3 py-1 text-xs text-gray-600 hover:text-gray-800"
+          className={compact ? 'px-4 py-2 text-sm text-gray-600 hover:text-gray-800 min-h-[44px]' : 'px-3 py-1 text-xs text-gray-600 hover:text-gray-800'}
         >
           Cancel
         </button>
         <button
           onClick={handleSave}
-          className="px-3 py-1 text-xs bg-airq-primary text-white rounded hover:bg-airq-primary/90 flex items-center gap-1"
+          className={compact ? 'px-4 py-2 text-sm bg-airq-primary text-white rounded hover:bg-airq-primary/90 flex items-center gap-1.5 min-h-[44px]' : 'px-3 py-1 text-xs bg-airq-primary text-white rounded hover:bg-airq-primary/90 flex items-center gap-1'}
         >
-          <Check className="h-3 w-3" />
+          <Check className={compact ? 'h-4 w-4' : 'h-3 w-3'} />
           Apply
         </button>
       </div>
@@ -443,10 +445,10 @@ export const WidgetConfigPanel: React.FC<WidgetConfigPanelProps> = ({
       <button
         ref={buttonRef}
         onClick={isOpen ? closePanel : openPanel}
-        className="text-airq-light hover:text-airq-light/80 focus:outline-none p-0.5"
+        className={`text-airq-light hover:text-airq-light/80 focus:outline-none ${compact ? 'p-2 min-w-[44px] min-h-[44px] flex items-center justify-center' : 'p-0.5'}`}
         title="Widget Settings"
       >
-        <Settings className="h-3 w-3" />
+        <Settings className={compact ? 'h-5 w-5' : 'h-3 w-3'} />
       </button>
 
       {/* Config Panel rendered via Portal */}

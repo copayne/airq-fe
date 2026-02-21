@@ -13,7 +13,7 @@ import { useAuth } from '~/context/AuthContext';
 import LayoutSaveDialog from './LayoutSaveDialog';
 import ConfirmDialog from '~/components/common/ConfirmDialog';
 
-export const LayoutMenu: React.FC = () => {
+export const LayoutMenu: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
   const { isAuthenticated } = useAuth();
   const {
     layouts,
@@ -98,23 +98,25 @@ export const LayoutMenu: React.FC = () => {
     : null;
 
   return (
-    <div ref={menuRef} className="fixed bottom-4 left-4 z-50">
+    <div ref={menuRef} className={`fixed z-50 ${compact ? 'bottom-5 left-5' : 'bottom-4 left-4'}`}>
       {/* Floating button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-10 h-10 flex items-center justify-center border border-airq-dark shadow-card transition-all ${
+        className={`flex items-center justify-center border border-airq-dark shadow-card transition-all ${
+          compact ? 'w-14 h-14 rounded-lg' : 'w-10 h-10'
+        } ${
           isOpen
             ? 'bg-airq-primary text-airq-light'
             : 'bg-airq-dark text-airq-light hover:bg-airq-primary'
         }`}
         title="Layout Manager"
       >
-        <Layers className="w-5 h-5" />
+        <Layers className={compact ? 'w-6 h-6' : 'w-5 h-5'} />
       </button>
 
       {/* Menu panel */}
       {isOpen && (
-        <div className="absolute bottom-12 left-0 w-56 bg-airq-light border border-airq-dark shadow-card">
+        <div className={`absolute left-0 bg-airq-light border border-airq-dark shadow-card ${compact ? 'bottom-16 w-64' : 'bottom-12 w-56'}`}>
           {/* Header */}
           <div className="px-3 py-2 bg-airq-dark text-airq-light text-sm font-medium">
             Layouts

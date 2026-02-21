@@ -9,7 +9,7 @@ import {
   type WidgetCategory,
 } from '~/config/widgetRegistry';
 
-export const WidgetMenu: React.FC = () => {
+export const WidgetMenu: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
   const { isAuthenticated } = useAuth();
   const { addWidget, setDroppingWidget, currentLayoutData } = useDashboardLayoutContext();
 
@@ -77,23 +77,25 @@ export const WidgetMenu: React.FC = () => {
   const canAddWidgets = !!currentLayoutData;
 
   return (
-    <div ref={menuRef} className="fixed bottom-4 left-16 z-50">
+    <div ref={menuRef} className={`fixed z-50 ${compact ? 'bottom-5 left-[84px]' : 'bottom-4 left-16'}`}>
       {/* Floating button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-10 h-10 flex items-center justify-center border border-airq-dark shadow-card transition-all ${
+        className={`flex items-center justify-center border border-airq-dark shadow-card transition-all ${
+          compact ? 'w-14 h-14 rounded-lg' : 'w-10 h-10'
+        } ${
           isOpen
             ? 'bg-airq-primary text-airq-light'
             : 'bg-airq-dark text-airq-light hover:bg-airq-primary'
         }`}
         title="Add Widget"
       >
-        <LayoutGrid className="w-5 h-5" />
+        <LayoutGrid className={compact ? 'w-6 h-6' : 'w-5 h-5'} />
       </button>
 
       {/* Menu panel */}
       {isOpen && (
-        <div className="absolute bottom-12 left-0 w-64 bg-airq-light border border-airq-dark shadow-card max-h-96 flex flex-col">
+        <div className={`absolute left-0 bg-airq-light border border-airq-dark shadow-card flex flex-col ${compact ? 'bottom-16 w-72 max-h-[420px]' : 'bottom-12 w-64 max-h-96'}`}>
           {/* Header */}
           <div className="px-3 py-2 bg-airq-dark text-airq-light text-sm font-medium flex-shrink-0">
             Add Widget

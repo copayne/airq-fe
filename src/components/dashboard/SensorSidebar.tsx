@@ -1,5 +1,6 @@
 import React, { memo, useState, useCallback } from 'react';
-import { DoorClosed, DoorOpen, Battery, WifiOff, Clock } from 'lucide-react';
+import Link from 'next/link';
+import { DoorClosed, DoorOpen, Battery, WifiOff, Clock, AlertTriangle } from 'lucide-react';
 import { useSensors } from '~/hooks/useSensors';
 import { useAdaptivePollInterval } from '~/hooks/useAdaptivePollInterval';
 import { useRing } from '~/context/RingContext';
@@ -234,13 +235,31 @@ CompactRingDoorCard.displayName = 'CompactRingDoorCard';
 
 // Ring Door Sensors section
 const RingDoorSensorsSection: React.FC<{ compact?: boolean }> = memo(({ compact = false }) => {
-  const { devices, isInitialized } = useRing();
+  const { devices, isInitialized, tokenExpired } = useRing();
 
   const contactSensors = devices.filter(
     (device: RingDeviceData) =>
       device.deviceType === 'contact_sensor' ||
       device.deviceType.includes('contact')
   );
+
+  // Show token expired warning instead of hiding silently
+  if (tokenExpired) {
+    return (
+      <div className="space-y-2">
+        <div className={`font-semibold text-airq-dark/70 uppercase tracking-wide ${compact ? 'text-sm' : 'text-xs'}`}>
+          Door Sensors
+        </div>
+        <Link
+          href="/settings/integrations"
+          className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-300 text-amber-800 text-xs hover:bg-amber-100 transition-colors"
+        >
+          <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+          <span>Ring token expired. Tap to reconnect.</span>
+        </Link>
+      </div>
+    );
+  }
 
   // Don't render section if not initialized or no sensors
   if (!isInitialized || contactSensors.length === 0) {

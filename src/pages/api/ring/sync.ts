@@ -22,6 +22,7 @@ export interface RingSyncResponse {
   success: boolean;
   devices?: RingDeviceData[];
   error?: string;
+  tokenExpired?: boolean;
 }
 
 export default async function handler(
@@ -162,10 +163,12 @@ export default async function handler(
     console.error('[Ring API] Error fetching devices:', error);
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const tokenExpired = errorMessage.includes('Refresh token is not valid');
 
-    return res.status(500).json({
+    return res.status(tokenExpired ? 401 : 500).json({
       success: false,
       error: errorMessage,
+      tokenExpired,
     });
   }
 }

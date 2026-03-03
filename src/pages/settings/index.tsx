@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { MapPin, Cpu, ArrowRightLeft, ChevronRight } from 'lucide-react';
+import { MapPin, Cpu, ArrowRightLeft, Link2, ChevronRight } from 'lucide-react';
 import { SettingsLayout } from '~/components/settings/SettingsLayout';
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute';
 
@@ -26,6 +26,13 @@ const settingsSections = [
     description: 'assign sensors to locations and track their placement history',
     color: 'secondary',
   },
+  {
+    href: '/settings/integrations',
+    icon: Link2,
+    title: 'integrations',
+    description: 'manage external service connections like Ring',
+    color: 'tertiary',
+  },
 ];
 
 const colorClasses = {
@@ -40,6 +47,10 @@ const colorClasses = {
   secondary: {
     bg: 'bg-airq-secondary/20',
     icon: 'text-airq-secondary',
+  },
+  tertiary: {
+    bg: 'bg-airq-dark/10',
+    icon: 'text-airq-dark/70',
   },
 };
 

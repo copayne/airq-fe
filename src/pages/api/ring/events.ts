@@ -125,7 +125,8 @@ export default async function handler(
     activeConnections--;
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    res.write(`data: ${JSON.stringify({ type: 'error', error: errorMessage })}\n\n`);
+    const tokenExpired = errorMessage.includes('Refresh token is not valid');
+    res.write(`data: ${JSON.stringify({ type: 'error', error: errorMessage, tokenExpired })}\n\n`);
     res.end();
   }
 }

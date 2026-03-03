@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { MapPin, Cpu, ArrowRightLeft, ChevronLeft, Activity, Bell, Crosshair } from 'lucide-react';
+import { MapPin, Cpu, ArrowRightLeft, ChevronLeft, Activity, Bell, Crosshair, Link2 } from 'lucide-react';
 import Layout from '../layout/Layout';
 
 interface SettingsLayoutProps {
@@ -17,6 +17,7 @@ const navItems = [
   { href: '/settings/diagnostics', label: 'diagnostics', icon: Activity },
   { href: '/settings/calibration', label: 'calibration', icon: Crosshair },
   { href: '/settings/alerts', label: 'alerts', icon: Bell },
+  { href: '/settings/integrations', label: 'integrations', icon: Link2 },
 ];
 
 export const SettingsLayout: React.FC<SettingsLayoutProps> = ({

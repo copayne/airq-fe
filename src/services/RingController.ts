@@ -31,6 +31,13 @@ export interface RingDeviceData {
   lastUpdate: string | null;
 }
 
+export interface RingTokenStatus {
+  status: string;
+  error?: string;
+  lastRefresh?: string;
+  hasToken: boolean;
+}
+
 export class RingController {
   private static instance: RingController | null = null;
 
@@ -39,6 +46,7 @@ export class RingController {
   private listeners = new Set<() => void>();
   private isInitialized = false;
   private eventSource: EventSource | null = null;
+  private tokenExpired = false;
 
   private constructor(config: RingControllerConfig) {
     this.apolloClient = config.apolloClient;
@@ -128,6 +136,11 @@ export class RingController {
 
           if (data.type === 'error') {
             console.error('[RingController] Event stream error:', data);
+            const eventData = data as { type: string; tokenExpired?: boolean };
+            if (eventData.tokenExpired) {
+              this.tokenExpired = true;
+              this.notifyListeners();
+            }
             return;
           }
 
@@ -205,11 +218,21 @@ export class RingController {
       clearTimeout(timeout);
 
       if (!response.ok) {
+        if (response.status === 401) {
+          this.tokenExpired = true;
+          this.notifyListeners();
+        }
         console.warn('[RingController] Failed to fetch live state, devices will update via SSE');
         return;
       }
 
-      const data = await response.json() as { success: boolean; devices?: RingDeviceData[]; error?: string };
+      const data = await response.json() as { success: boolean; devices?: RingDeviceData[]; error?: string; tokenExpired?: boolean };
+
+      if (data.tokenExpired) {
+        this.tokenExpired = true;
+        this.notifyListeners();
+        return;
+      }
 
       if (!data.success || !data.devices) {
         console.warn('[RingController] Live state fetch returned no devices');
@@ -341,10 +364,20 @@ export class RingController {
       const response = await fetch('/api/ring/sync');
 
       if (!response.ok) {
+        if (response.status === 401) {
+          this.tokenExpired = true;
+          this.notifyListeners();
+        }
         throw new Error(`Ring API request failed: ${response.statusText}`);
       }
 
-      const data = await response.json() as { success: boolean; devices?: RingDeviceData[]; error?: string };
+      const data = await response.json() as { success: boolean; devices?: RingDeviceData[]; error?: string; tokenExpired?: boolean };
+
+      if (data.tokenExpired) {
+        this.tokenExpired = true;
+        this.notifyListeners();
+        throw new Error('Ring refresh token expired');
+      }
 
       if (!data.success || !data.devices) {
         throw new Error(data.error ?? 'Failed to fetch Ring devices');
@@ -399,6 +432,51 @@ export class RingController {
     } catch (error) {
       console.error('[RingController] Failed to sync to database:', error);
       throw error;
+    }
+  }
+
+  getTokenExpired(): boolean {
+    return this.tokenExpired;
+  }
+
+  async updateToken(token: string): Promise<boolean> {
+    try {
+      const response = await fetch('/api/ring/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token }),
+      });
+
+      const data = await response.json() as { success: boolean };
+
+      if (data.success) {
+        this.tokenExpired = false;
+
+        // Close existing event stream so it reconnects with new credentials
+        if (this.eventSource) {
+          this.eventSource.close();
+          this.eventSource = null;
+        }
+
+        // Re-initialize: reload devices and reconnect SSE
+        this.isInitialized = false;
+        await this.initialize();
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error('[RingController] Failed to update token:', error);
+      return false;
+    }
+  }
+
+  async getTokenStatus(): Promise<RingTokenStatus> {
+    try {
+      const response = await fetch('/api/ring/token');
+      return await response.json() as RingTokenStatus;
+    } catch {
+      return { status: 'error', hasToken: false, error: 'Failed to fetch token status' };
     }
   }
 

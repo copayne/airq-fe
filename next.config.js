@@ -10,9 +10,13 @@ const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
 });
 
-// Parse API hostname/port from GraphQL endpoint for image configuration
+// Parse API hostname/port from GraphQL endpoint for image configuration.
+// Falls back to GRAPHQL_BACKEND_URL when the public endpoint is a relative proxy path.
 const graphqlEndpoint = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || 'http://localhost:5000/graphql';
-const apiUrl = new URL(graphqlEndpoint);
+const imageOrigin = graphqlEndpoint.startsWith('/')
+  ? (process.env.GRAPHQL_BACKEND_URL || 'http://localhost:5000')
+  : graphqlEndpoint;
+const apiUrl = new URL(imageOrigin);
 const apiHostname = apiUrl.hostname;
 const apiPort = apiUrl.port || (apiUrl.protocol === 'https:' ? '443' : '80');
 /** @type {"http" | "https"} */

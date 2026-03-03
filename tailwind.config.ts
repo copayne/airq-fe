@@ -1,5 +1,6 @@
 import { type Config } from "tailwindcss";
 import { fontFamily } from "tailwindcss/defaultTheme";
+import typography from "@tailwindcss/typography";
 
 export default {
   content: ["./src/**/*.tsx"],
@@ -17,13 +18,13 @@ export default {
           'textDark': '#1A2520',
         },
         'airq': {
-          'background': '#999',
-          'dark': '#28262C',
-          'light': '#F3F4FF',
-          'primary': '#137547',
-          'secondary': '#FFC914',
-          'tertiary': '#ED4C4C',
-          'contrast': '#2E2EAB',
+          'background': 'rgb(var(--airq-bg) / <alpha-value>)',
+          'dark': 'rgb(var(--airq-dark) / <alpha-value>)',
+          'light': 'rgb(var(--airq-light) / <alpha-value>)',
+          'primary': 'rgb(var(--airq-primary) / <alpha-value>)',
+          'secondary': 'rgb(var(--airq-secondary) / <alpha-value>)',
+          'tertiary': 'rgb(var(--airq-tertiary) / <alpha-value>)',
+          'contrast': 'rgb(var(--airq-contrast) / <alpha-value>)',
         },
       },
       boxShadow: {
@@ -55,5 +56,5 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [typography],
 } satisfies Config;

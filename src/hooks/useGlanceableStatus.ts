@@ -1,9 +1,18 @@
 import { useEffect, useRef } from 'react';
 import { useSensors } from './useSensors';
-import { updateFavicon, getAirQualityLevel, type AirQualityLevel } from '~/utils/faviconGenerator';
+import { useIsNewsSite } from './useIsNewsSite';
+import { updateFavicon, setNewsFavicon, getAirQualityLevel, type AirQualityLevel } from '~/utils/faviconGenerator';
+import { useRSS } from '~/context/RSSContext';
 import { env } from '~/env.js';
 
-const DEFAULT_TITLE = 'AirQ Dashboard';
+const DEFAULT_TITLE = 'Hudson Air';
+
+function getQualityLabel(avgCo2: number): string {
+  if (avgCo2 <= 500) return 'Great';
+  if (avgCo2 <= 800) return 'Good';
+  if (avgCo2 < 1000) return 'Average';
+  return 'Bad';
+}
 
 interface GlanceableStatusResult {
   worstCo2: number | null;
@@ -13,12 +22,18 @@ interface GlanceableStatusResult {
 /**
  * Hook that provides glanceable status by updating:
  * - Browser favicon color based on air quality (green/yellow/red)
- * - Browser tab title with current CO2 reading
+ * - Browser tab title based on current route:
+ *   - News: "(N) Puryear Gazette" or "Puryear Gazette"
+ *   - Dash: "Hudson Air - Great/Good/Average/Bad"
  *
- * Uses the worst air quality reading across all active sensors.
+ * Uses the worst air quality reading across all active sensors for favicon.
+ * Uses the average CO2 across all sensors for the quality label.
  * Returns the current worst CO2 reading for use with haptic/streak features.
  */
 export function useGlanceableStatus(): GlanceableStatusResult {
+  const isNews = useIsNewsSite();
+  const { totalUnread } = useRSS();
+
   const { sensors } = useSensors({
     includeLastReading: true,
     pollInterval: env.NEXT_PUBLIC_POLL_INTERVAL_MS,
@@ -31,13 +46,28 @@ export function useGlanceableStatus(): GlanceableStatusResult {
   const currentLevelRef = useRef<AirQualityLevel>('unknown');
 
   useEffect(() => {
-    // Skip if no sensors or running on server
     if (typeof window === 'undefined') return;
 
+    // News pages: newspaper favicon + unread count in title
+    if (isNews) {
+      if (lastLevelRef.current !== 'news' as AirQualityLevel) {
+        setNewsFavicon();
+        lastLevelRef.current = 'news' as AirQualityLevel;
+      }
+      const newTitle = totalUnread > 0
+        ? `(${totalUnread}) Puryear Gazette`
+        : 'Puryear Gazette';
+      if (newTitle !== lastTitleRef.current) {
+        document.title = newTitle;
+        lastTitleRef.current = newTitle;
+      }
+      return;
+    }
+
+    // Dash pages: show quality label based on average CO2
     const activeSensors = sensors?.filter(s => s.isActive && s.lastReading) ?? [];
 
     if (activeSensors.length === 0) {
-      // No active sensors - show unknown state
       if (lastLevelRef.current !== 'unknown') {
         updateFavicon('unknown');
         lastLevelRef.current = 'unknown';
@@ -51,36 +81,32 @@ export function useGlanceableStatus(): GlanceableStatusResult {
       return;
     }
 
-    // Get CO2 readings from all active sensors
     const co2Readings = activeSensors
       .map(s => s.lastReading?.co2Reading?.co2Ppm)
       .filter((ppm): ppm is number => ppm !== undefined && ppm !== null);
 
-    if (co2Readings.length === 0) {
-      return;
-    }
+    if (co2Readings.length === 0) return;
 
-    // Use the worst (highest) CO2 reading for both favicon and title
+    // Worst reading for favicon color
     const worstCo2 = Math.max(...co2Readings);
     currentWorstCo2Ref.current = worstCo2;
 
-    // Determine air quality level based on worst reading
     const level = getAirQualityLevel(worstCo2);
     currentLevelRef.current = level;
 
-    // Update favicon only if level changed
     if (level !== lastLevelRef.current) {
       updateFavicon(level);
       lastLevelRef.current = level;
     }
 
-    // Update title with highest CO2
-    const newTitle = `${worstCo2} ppm — AirQ`;
+    // Average reading for quality label in title
+    const avgCo2 = Math.round(co2Readings.reduce((a, b) => a + b, 0) / co2Readings.length);
+    const newTitle = `Hudson Air - ${getQualityLabel(avgCo2)}`;
     if (newTitle !== lastTitleRef.current) {
       document.title = newTitle;
       lastTitleRef.current = newTitle;
     }
-  }, [sensors]);
+  }, [sensors, isNews, totalUnread]);
 
   // Cleanup: restore default title on unmount
   useEffect(() => {

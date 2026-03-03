@@ -31,6 +31,10 @@ export const env = createEnv({
     NEXT_PUBLIC_DEFAULT_QUERY_LIMIT: z.string().transform((val) => parseInt(val, 10)).pipe(z.number().min(100)).optional(),
     // Optional WebSocket endpoint (defaults to deriving from GraphQL endpoint)
     NEXT_PUBLIC_WS_ENDPOINT: z.string().url().optional(),
+    // FreshRSS integration (optional — News page disabled if URL not set)
+    NEXT_PUBLIC_FRESHRSS_URL: z.string().url().optional(),
+    NEXT_PUBLIC_FRESHRSS_USER: z.string().min(1).optional(),
+    NEXT_PUBLIC_FRESHRSS_API_PASSWORD: z.string().min(1).optional(),
   },
 
   /**
@@ -51,6 +55,9 @@ export const env = createEnv({
     NEXT_PUBLIC_DEFAULT_MAX_HUMIDITY: process.env.NEXT_PUBLIC_DEFAULT_MAX_HUMIDITY,
     NEXT_PUBLIC_DEFAULT_QUERY_LIMIT: process.env.NEXT_PUBLIC_DEFAULT_QUERY_LIMIT,
     NEXT_PUBLIC_WS_ENDPOINT: process.env.NEXT_PUBLIC_WS_ENDPOINT,
+    NEXT_PUBLIC_FRESHRSS_URL: process.env.NEXT_PUBLIC_FRESHRSS_URL,
+    NEXT_PUBLIC_FRESHRSS_USER: process.env.NEXT_PUBLIC_FRESHRSS_USER,
+    NEXT_PUBLIC_FRESHRSS_API_PASSWORD: process.env.NEXT_PUBLIC_FRESHRSS_API_PASSWORD,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

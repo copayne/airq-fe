@@ -2,6 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --airq-bg: 153 153 153;
+  --airq-dark: 40 38 44;
+  --airq-light: 243 244 255;
+  --airq-primary: 19 117 71;
+  --airq-secondary: 255 201 20;
+  --airq-tertiary: 237 76 76;
+  --airq-contrast: 46 46 171;
+}
+
+.theme-news {
+  --airq-bg: 139 129 120;
+  --airq-dark: 48 62 64;
+  --airq-light: 245 240 237;
+  --airq-primary: 74 103 65;
+  --airq-secondary: 0 42 96;
+  --airq-tertiary: 168 64 50;
+  --airq-contrast: 233 64 31
+}
+
 @layer components {
   .notebook {
     background-color: #fff;
@@ -19,7 +39,7 @@
   }
 
   .blueprint {
-    background-color:#269;
+    background-color:rgba(48, 62, 64, 0.90);
     background-image: linear-gradient(white 2px, transparent 2px),
     linear-gradient(90deg, white 2px, transparent 2px),
     linear-gradient(rgba(255,255,255,.3) 1px, transparent 1px),

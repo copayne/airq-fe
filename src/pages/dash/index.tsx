@@ -9,7 +9,6 @@ export default function Dashboard() {
       <Head>
         <title>Hudson Air Quality Dashboard</title>
         <meta name="description" content="Hudson Air Quality Project Dashboard" />
-        <link rel="icon" href="/favicon.ico" />
       </Head>
       <ProtectedRoute requiredRole="viewer">
         <AirQualityDashboard />

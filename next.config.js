@@ -13,14 +13,21 @@ const withBundleAnalyzer = bundleAnalyzer({
 // Parse API hostname/port from GraphQL endpoint for image configuration.
 // Falls back to GRAPHQL_BACKEND_URL when the public endpoint is a relative proxy path.
 const graphqlEndpoint = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || 'http://localhost:5000/graphql';
-const imageOrigin = graphqlEndpoint.startsWith('/')
-  ? (process.env.GRAPHQL_BACKEND_URL || 'http://localhost:5000')
-  : graphqlEndpoint;
-const apiUrl = new URL(imageOrigin);
-const apiHostname = apiUrl.hostname;
-const apiPort = apiUrl.port || (apiUrl.protocol === 'https:' ? '443' : '80');
+let apiHostname = 'localhost';
+let apiPort = '5000';
 /** @type {"http" | "https"} */
-const apiProtocol = /** @type {"http" | "https"} */ (apiUrl.protocol.replace(':', ''));
+let apiProtocol = /** @type {"http" | "https"} */ ('http');
+try {
+  const apiUrl = new URL(graphqlEndpoint);
+  apiHostname = apiUrl.hostname;
+  apiPort = apiUrl.port || (apiUrl.protocol === 'https:' ? '443' : '80');
+  apiProtocol = /** @type {"http" | "https"} */ (apiUrl.protocol.replace(':', ''));
+} catch {
+  // Relative URL (e.g. /api/graphql-proxy in dev mode) — use defaults
+}
+
+// Backend GraphQL target for rewrites (server-side only, not exposed to browser)
+const graphqlBackend = process.env.GRAPHQL_BACKEND_URL || 'http://airq-api:5000';
 
 /** @type {import("next").NextConfig} */
 const config = {
@@ -42,6 +49,19 @@ const config = {
   },
 
   compiler: {},
+
+  async rewrites() {
+    return [
+      {
+        source: '/api/graphql-proxy',
+        destination: `${graphqlBackend}/graphql`,
+      },
+      {
+        source: '/api/ring-snapshots/:path*',
+        destination: `${graphqlBackend}/api/ring-snapshots/:path*`,
+      },
+    ];
+  },
 
   images: {
     remotePatterns: [

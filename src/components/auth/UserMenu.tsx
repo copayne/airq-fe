@@ -1,10 +1,20 @@
 'use client';
 
-import { ChevronDown, LogOut, Settings } from 'lucide-react';
+import { ChevronDown, ExternalLink, LogOut, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { useLogout } from '~/hooks/useAuthMutations';
+import { useIsNewsSite } from '~/hooks/useIsNewsSite';
 import type { User as UserType } from '~/types/auth';
+
+function getSiteUrl(site: 'air' | 'news'): string {
+  if (typeof window === 'undefined') return site === 'air' ? '/dash' : '/news';
+  const { hostname, protocol } = window.location;
+  if (hostname.endsWith('.mini.local')) {
+    return `${protocol}//${site}.mini.local`;
+  }
+  return site === 'air' ? '/dash' : '/news';
+}
 
 interface UserMenuProps {
   user: UserType;
@@ -12,6 +22,7 @@ interface UserMenuProps {
 
 export function UserMenu({ user }: UserMenuProps) {
   const { logoutUser, loading: logoutLoading } = useLogout();
+  const isNews = useIsNewsSite();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -84,17 +95,33 @@ export function UserMenu({ user }: UserMenuProps) {
                 <Settings className="w-4 h-4 mr-2" />
                 Profile Settings
               </Link>
-              
-              {/* {user.role === 'admin' && (
-                <Link
-                  href="/admin"
+            </div>
+
+            {/* Site links */}
+            <div className="border-t border-airq-dark">
+              {isNews ? (
+                <a
+                  href={getSiteUrl('air')}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-airq-contrast/70 hover:text-airq-light active:bg-airq-contrast/90"
                   onClick={() => setIsOpen(false)}
                 >
-                  <Settings className="w-4 h-4 mr-2" />
-                  Admin Panel
-                </Link>
-              )} */}
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Hudson Air
+                </a>
+              ) : (
+                <a
+                  href={getSiteUrl('news')}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-airq-contrast/70 hover:text-airq-light active:bg-airq-contrast/90"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Puryear Gazette
+                </a>
+              )}
             </div>
             {/* Logout */}
             <div className="border-t border-airq-dark">

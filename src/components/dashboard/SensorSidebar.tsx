@@ -178,12 +178,6 @@ const CompactRingDoorCard: React.FC<CompactRingDoorCardProps> = memo(({ device, 
       ? 'text-red-600'
       : 'text-green-600';
 
-  const textClasses = isOffline
-    ? 'text-gray-600'
-    : isOpen
-      ? 'text-red-700'
-      : 'text-green-700';
-
   const batteryColor =
     device.batteryLevel === null
       ? 'text-gray-400'
@@ -193,14 +187,19 @@ const CompactRingDoorCard: React.FC<CompactRingDoorCardProps> = memo(({ device, 
           ? 'text-yellow-600'
           : 'text-red-600';
 
+  const StatusIcon = isOffline ? WifiOff : isOpen ? DoorOpen : DoorClosed;
+
   return (
-    <div className={`flex flex-col items-center border border-airq-dark shadow-card ${statusClasses}`}>
-      <div className={`flex w-full items-center justify-between border-b border-airq-dark ${compact ? 'px-3 py-2' : 'px-2 py-1'}`}>
-        <span className={`font-medium text-airq-dark truncate ${compact ? 'text-sm' : 'text-xs'}`}>
-          {device.name}
-        </span>
+    <div className={`flex flex-col border border-airq-dark shadow-card ${statusClasses}`}>
+      <div className={`flex w-full items-center justify-between ${compact ? 'px-3 py-2' : 'px-2 py-1'}`}>
+        <div className="flex items-center gap-1.5 min-w-0">
+          <StatusIcon className={`${compact ? 'h-5 w-5' : 'h-4 w-4'} flex-shrink-0 ${iconClasses}`} />
+          <span className={`font-medium text-airq-dark truncate ${compact ? 'text-sm' : 'text-xs'}`}>
+            {device.name}
+          </span>
+        </div>
         {device.batteryLevel !== null && (
-          <div className={`flex items-center ${compact ? 'gap-1.5' : 'gap-1'}`}>
+          <div className={`flex items-center flex-shrink-0 ${compact ? 'gap-1.5' : 'gap-1'}`}>
             <Battery className={`${compact ? 'h-4 w-4' : 'h-3 w-3'} ${batteryColor}`} />
             <span className={`${compact ? 'text-sm' : 'text-xs'} ${batteryColor}`}>
               {device.batteryLevel}%
@@ -209,21 +208,7 @@ const CompactRingDoorCard: React.FC<CompactRingDoorCardProps> = memo(({ device, 
         )}
       </div>
 
-      <div className={`flex flex-col items-center justify-center ${compact ? 'py-3' : 'py-2'}`}>
-        {isOffline ? (
-          <WifiOff className={`${compact ? 'h-8 w-8' : 'h-6 w-6'} ${iconClasses}`} />
-        ) : isOpen ? (
-          <DoorOpen className={`${compact ? 'h-8 w-8' : 'h-6 w-6'} ${iconClasses}`} />
-        ) : (
-          <DoorClosed className={`${compact ? 'h-8 w-8' : 'h-6 w-6'} ${iconClasses}`} />
-        )}
-
-        <span className={`font-semibold ${compact ? 'text-sm mt-1.5' : 'text-xs mt-1'} ${textClasses}`}>
-          {isOffline ? 'OFFLINE' : isOpen ? 'OPEN' : 'CLOSED'}
-        </span>
-      </div>
-
-      <div className={`flex items-center text-gray-500 border-t border-airq-dark w-full justify-center ${compact ? 'gap-1.5 text-sm py-2' : 'gap-1 text-xs py-1'}`}>
+      <div className={`flex items-center text-gray-500 border-t border-airq-dark/30 w-full justify-center ${compact ? 'gap-1.5 text-sm py-1.5' : 'gap-1 text-xs py-1'}`}>
         <Clock className={compact ? 'h-4 w-4' : 'h-3 w-3'} />
         <span>{formatTimeAgo(device.lastUpdate)}</span>
       </div>
@@ -296,7 +281,7 @@ const SensorSidebar: React.FC<SensorSidebarProps> = memo(({ compact = false }) =
 
   const outerClass = compact
     ? 'w-full flex-shrink-0 bg-airq-light/50 flex flex-col'
-    : 'w-full sm:w-56 flex-shrink-0 sm:border-r sm:border-airq-dark bg-airq-light/80 sm:bg-airq-light/50 flex flex-col';
+    : 'w-full sm:w-56 flex-shrink-0 bg-airq-light/80 sm:bg-airq-light/50 flex flex-col';
 
   const innerPadding = compact ? 'p-3 space-y-3' : 'p-3 space-y-3';
   const headingClass = compact
@@ -305,7 +290,7 @@ const SensorSidebar: React.FC<SensorSidebarProps> = memo(({ compact = false }) =
 
   if (loading && !sensors?.length) {
     return (
-      <div className={compact ? 'w-full flex-shrink-0 bg-airq-light/50' : 'w-full sm:w-56 flex-shrink-0 sm:border-r sm:border-airq-dark bg-airq-light/80 sm:bg-airq-light/50'}>
+      <div className={compact ? 'w-full flex-shrink-0 bg-airq-light/50' : 'w-full sm:w-56 flex-shrink-0 bg-airq-light/80 sm:bg-airq-light/50'}>
         <div className={innerPadding}>
           <div className={compact ? 'text-sm font-semibold text-airq-dark/30 uppercase tracking-wide' : 'text-xs font-semibold text-airq-dark/30 uppercase tracking-wide'}>
             Air Quality

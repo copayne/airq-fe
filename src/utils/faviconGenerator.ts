@@ -51,23 +51,49 @@ export function generateFavicon(level: AirQualityLevel): string {
 }
 
 /**
- * Update the browser favicon
+ * Generate a favicon from an emoji rendered on canvas
  */
-export function updateFavicon(level: AirQualityLevel): void {
-  const faviconUrl = generateFavicon(level);
-  if (!faviconUrl) return;
+function generateEmojiFavicon(emoji: string): string {
+  const canvas = document.createElement('canvas');
+  canvas.width = 32;
+  canvas.height = 32;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return '';
 
-  // Find existing favicon link or create one
+  ctx.font = '28px serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(emoji, 16, 18);
+
+  return canvas.toDataURL('image/png');
+}
+
+function setFaviconHref(href: string): void {
   let link = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
-
   if (!link) {
     link = document.createElement('link');
     link.rel = 'icon';
     link.type = 'image/png';
     document.head.appendChild(link);
   }
+  link.href = href;
+}
 
-  link.href = faviconUrl;
+/**
+ * Update the browser favicon to an air quality indicator
+ */
+export function updateFavicon(level: AirQualityLevel): void {
+  const faviconUrl = generateFavicon(level);
+  if (!faviconUrl) return;
+  setFaviconHref(faviconUrl);
+}
+
+/**
+ * Update the browser favicon to a newspaper emoji
+ */
+export function setNewsFavicon(): void {
+  const url = generateEmojiFavicon('\uD83D\uDCF0');
+  if (url) setFaviconHref(url);
 }
 
 /**

@@ -20,7 +20,7 @@ const TOAST_DURATION = 4000;
 
 const toastStyles: Record<ToastType, { bg: string; icon: React.ReactNode }> = {
   success: {
-    bg: 'bg-airq-primary',
+    bg: 'bg-airq-contrast',
     icon: <CheckCircle className="w-5 h-5" />,
   },
   error: {

@@ -13,7 +13,7 @@ const TabletLayout: React.FC<TabletLayoutProps> = memo(({ children }) => {
       <header className="bg-airq-light border-b border-airq-dark z-20 h-12 flex-shrink-0">
         <div className="flex items-center justify-center h-full px-3">
           <Link href="/dash">
-            <h1 className="text-xl text-airq-dark">Hudson Dash</h1>
+            <h1 className="text-xl text-airq-dark">Hudson Air</h1>
           </Link>
         </div>
       </header>

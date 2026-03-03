@@ -9,12 +9,16 @@ export default function Home() {
 
   useEffect(() => {
     if (isLoading) return;
-    
-    if (user) {
-      void router.push('/dash');
-    } else {
+
+    if (!user) {
       void router.push('/login');
+      return;
     }
+
+    // Route to the correct site based on hostname
+    const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+    const isNewsSite = hostname.startsWith('news.');
+    void router.push(isNewsSite ? '/news' : '/dash');
   }, [user, isLoading, router]);
 
   // Show a minimal loading state instead of null to prevent white flash

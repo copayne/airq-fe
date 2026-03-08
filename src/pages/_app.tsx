@@ -65,10 +65,14 @@ const MyApp: AppType = ({ Component, pageProps }) => {
               <ToastProvider>
                 <RSSProvider>
                   <SensorDataProvider>
-                    <RingProvider>
-                      <GlanceableStatus />
+                    {isNews ? (
                       <Component {...pageProps} />
-                    </RingProvider>
+                    ) : (
+                      <RingProvider>
+                        <GlanceableStatus />
+                        <Component {...pageProps} />
+                      </RingProvider>
+                    )}
                   </SensorDataProvider>
                 </RSSProvider>
               </ToastProvider>

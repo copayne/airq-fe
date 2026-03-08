@@ -3,6 +3,7 @@ const PROXY_BASE = '/api/rss';
 export const READ_TAG = 'user/-/state/com.google/read';
 export const STARRED_TAG = 'user/-/state/com.google/starred';
 export const STARRED_STREAM = 'user/-/state/com.google/starred';
+export const READING_LIST_STREAM = 'user/-/state/com.google/reading-list';
 
 export interface RSSFeed {
   id: string;
@@ -16,6 +17,7 @@ export interface RSSItem {
   id: string;
   title: string;
   published: number;
+  author?: string;
   canonical: { href: string }[];
   origin: { streamId: string; title: string; htmlUrl: string };
   summary: { content: string };
@@ -100,7 +102,7 @@ class FreshRSSService {
 
   async getItems(options: GetItemsOptions = {}): Promise<StreamContentsResponse> {
     const {
-      streamId = 'user/-/state/com.google/reading-list',
+      streamId = READING_LIST_STREAM,
       count = 50,
       excludeRead = false,
       continuation,
@@ -111,7 +113,7 @@ class FreshRSSService {
       n: String(count),
     });
     if (excludeRead) {
-      params.set('xt', 'user/-/state/com.google/read');
+      params.set('xt', READ_TAG);
     }
     if (continuation) {
       params.set('c', continuation);
@@ -136,10 +138,10 @@ class FreshRSSService {
     return (await res.text()).trim();
   }
 
-  async markAsRead(itemIds: string[]): Promise<void> {
+  private async editTag(action: 'a' | 'r', tag: string, itemIds: string[]): Promise<void> {
     const token = await this.getToken();
     const body = new URLSearchParams();
-    body.set('a', 'user/-/state/com.google/read');
+    body.set(action, tag);
     body.set('T', token);
     for (const id of itemIds) {
       body.append('i', id);
@@ -153,47 +155,19 @@ class FreshRSSService {
       },
       body: body.toString(),
     });
-    if (!res.ok) throw new Error(`markAsRead failed: ${res.status}`);
+    if (!res.ok) throw new Error(`editTag failed: ${res.status}`);
+  }
+
+  async markAsRead(itemIds: string[]): Promise<void> {
+    return this.editTag('a', READ_TAG, itemIds);
   }
 
   async starItem(itemIds: string[]): Promise<void> {
-    const token = await this.getToken();
-    const body = new URLSearchParams();
-    body.set('a', STARRED_TAG);
-    body.set('T', token);
-    for (const id of itemIds) {
-      body.append('i', id);
-    }
-
-    const res = await fetch(`${PROXY_BASE}/reader/api/0/edit-tag`, {
-      method: 'POST',
-      headers: {
-        ...this.authHeaders(),
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: body.toString(),
-    });
-    if (!res.ok) throw new Error(`starItem failed: ${res.status}`);
+    return this.editTag('a', STARRED_TAG, itemIds);
   }
 
   async unstarItem(itemIds: string[]): Promise<void> {
-    const token = await this.getToken();
-    const body = new URLSearchParams();
-    body.set('r', STARRED_TAG);
-    body.set('T', token);
-    for (const id of itemIds) {
-      body.append('i', id);
-    }
-
-    const res = await fetch(`${PROXY_BASE}/reader/api/0/edit-tag`, {
-      method: 'POST',
-      headers: {
-        ...this.authHeaders(),
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: body.toString(),
-    });
-    if (!res.ok) throw new Error(`unstarItem failed: ${res.status}`);
+    return this.editTag('r', STARRED_TAG, itemIds);
   }
 
   async markFeedAsRead(feedId: string): Promise<void> {
@@ -210,6 +184,39 @@ class FreshRSSService {
       body: body.toString(),
     });
     if (!res.ok) throw new Error(`markFeedAsRead failed: ${res.status}`);
+  }
+  private async editSubscriptionRequest(params: URLSearchParams): Promise<void> {
+    const token = await this.getToken();
+    params.set('T', token);
+
+    const res = await fetch(`${PROXY_BASE}/reader/api/0/subscription/edit`, {
+      method: 'POST',
+      headers: {
+        ...this.authHeaders(),
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: params.toString(),
+    });
+    if (!res.ok) throw new Error(`subscription/edit failed: ${res.status}`);
+  }
+
+  async subscribeFeed(feedUrl: string, title?: string, categoryId?: string): Promise<void> {
+    const params = new URLSearchParams({ ac: 'subscribe', s: `feed/${feedUrl}` });
+    if (title) params.set('t', title);
+    if (categoryId) params.set('a', categoryId);
+    return this.editSubscriptionRequest(params);
+  }
+
+  async editSubscription(feedId: string, title?: string, addCategory?: string, removeCategory?: string): Promise<void> {
+    const params = new URLSearchParams({ ac: 'edit', s: feedId });
+    if (title) params.set('t', title);
+    if (addCategory) params.set('a', addCategory);
+    if (removeCategory) params.set('r', removeCategory);
+    return this.editSubscriptionRequest(params);
+  }
+
+  async unsubscribeFeed(feedId: string): Promise<void> {
+    return this.editSubscriptionRequest(new URLSearchParams({ ac: 'unsubscribe', s: feedId }));
   }
 }
 

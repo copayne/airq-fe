@@ -1,7 +1,7 @@
 import React from 'react';
 import { CheckCircle, XCircle, Server, Cpu, HardDrive, Thermometer, Wifi, AlertTriangle } from 'lucide-react';
 import Modal from '~/components/common/Modal';
-import { formatDateTime } from '~/utils/dateUtils';
+import { formatDateTime, formatDuration } from '~/utils/dateUtils';
 
 interface SensorHealth {
   sensorId: number;
@@ -38,19 +38,6 @@ interface HealthReportModalProps {
   result: PingResult;
   onClose: () => void;
 }
-
-const formatDuration = (seconds: number): string => {
-  if (seconds < 60) return `${seconds} seconds`;
-  if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes`;
-  if (seconds < 86400) {
-    const hours = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    return `${hours}h ${mins}m`;
-  }
-  const days = Math.floor(seconds / 86400);
-  const hours = Math.floor((seconds % 86400) / 3600);
-  return `${days}d ${hours}h`;
-};
 
 
 const StatusBadge: React.FC<{ value: boolean | null; trueText: string; falseText: string }> = ({
@@ -136,7 +123,7 @@ export const HealthReportModal: React.FC<HealthReportModalProps> = ({
                   <p className="text-airq-dark/60 text-xs mb-1">Service Uptime</p>
                   <p className="text-airq-dark">
                     {result.serviceUptimeSeconds !== null
-                      ? formatDuration(result.serviceUptimeSeconds)
+                      ? formatDuration(result.serviceUptimeSeconds, true)
                       : 'Unknown'}
                   </p>
                 </div>
@@ -214,7 +201,7 @@ export const HealthReportModal: React.FC<HealthReportModalProps> = ({
                   <p className="text-airq-dark/60 text-xs mb-1">System Uptime</p>
                   <p className="text-airq-dark">
                     {result.systemUptimeSeconds !== null
-                      ? formatDuration(result.systemUptimeSeconds)
+                      ? formatDuration(result.systemUptimeSeconds, true)
                       : '--'}
                   </p>
                 </div>

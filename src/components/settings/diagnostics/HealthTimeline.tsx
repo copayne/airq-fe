@@ -11,8 +11,7 @@ import {
   Wind,
   AlertTriangle,
 } from 'lucide-react';
-import { formatDateTime } from '~/utils/dateUtils';
-import { parseUTCTimestamp } from '~/utils/dateUtils';
+import { formatDateTime, formatDuration, parseUTCTimestamp } from '~/utils/dateUtils';
 
 interface HealthReport {
   id: string;
@@ -35,19 +34,6 @@ interface HealthReport {
 interface HealthTimelineProps {
   reports: HealthReport[];
 }
-
-const formatDuration = (seconds: number): string => {
-  if (seconds < 60) return `${seconds}s`;
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
-  if (seconds < 86400) {
-    const hours = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    return `${hours}h ${mins}m`;
-  }
-  const days = Math.floor(seconds / 86400);
-  const hours = Math.floor((seconds % 86400) / 3600);
-  return `${days}d ${hours}h`;
-};
 
 type ReportStatus = 'healthy' | 'degraded' | 'error';
 

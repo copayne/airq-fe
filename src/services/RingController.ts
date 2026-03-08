@@ -90,12 +90,17 @@ export class RingController {
         }
       }
 
-      // Connect to real-time event stream for status updates
-      this.connectToEventStream();
+      // If token was detected as expired during sync, skip SSE and live fetch
+      if (this.tokenExpired) {
+        console.log('[RingController] Token expired, skipping SSE and live fetch');
+      } else {
+        // Connect to real-time event stream for status updates
+        this.connectToEventStream();
 
-      // Fetch live status from Ring API in the background (non-blocking).
-      // This populates status/battery/lastUpdate without delaying initialization.
-      void this.fetchLiveDeviceState();
+        // Fetch live status from Ring API in the background (non-blocking).
+        // This populates status/battery/lastUpdate without delaying initialization.
+        void this.fetchLiveDeviceState();
+      }
 
       this.isInitialized = true;
       console.log('[RingController] Initialized successfully with real-time websocket updates');
@@ -157,6 +162,16 @@ export class RingController {
 
       this.eventSource.onerror = (error) => {
         console.error('[RingController] Event stream error:', error);
+
+        // Don't reconnect if token is expired — wait for manual update
+        if (this.tokenExpired) {
+          console.log('[RingController] Token expired, stopping SSE reconnect');
+          if (this.eventSource) {
+            this.eventSource.close();
+            this.eventSource = null;
+          }
+          return;
+        }
 
         // Try to reconnect after a delay
         if (this.eventSource?.readyState === EventSource.CLOSED) {

@@ -1,25 +1,19 @@
 import React, { useMemo, useCallback, useState } from 'react';
-import { Rss, FolderOpen, Bookmark, RefreshCw } from 'lucide-react';
+import { Rss, FolderOpen, Bookmark, RefreshCw, BarChart3, Settings2 } from 'lucide-react';
 import { useRSS } from '~/context/RSSContext';
 import { useToast } from '~/components/common/Toast';
+import ReadingStats from './ReadingStats';
 
 const FeedSidebar: React.FC = () => {
-  const { state, selectFeed, selectCategory, setFilter, totalUnread, refreshFeeds } = useRSS();
+  const { state, selectFeed, selectCategory, setFilter, setView, totalUnread, refreshFeeds } = useRSS();
   const { feeds, categories, unreadCounts, selectedFeedId, selectedCategoryId, filter } = state;
   const { showToast } = useToast();
   const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const feedTotal = useMemo(() => {
-    let total = 0;
-    for (const feed of feeds) {
-      total += unreadCounts.get(feed.id) ?? 0;
-    }
-    return total;
-  }, [feeds, unreadCounts]);
+  const [showStats, setShowStats] = useState(false);
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    const oldTotal = feedTotal;
+    const oldTotal = totalUnread;
     try {
       const { newTotal } = await refreshFeeds();
       const diff = newTotal - oldTotal;
@@ -32,7 +26,7 @@ const FeedSidebar: React.FC = () => {
       showToast('error', 'Failed to refresh feeds');
     }
     setIsRefreshing(false);
-  }, [feedTotal, refreshFeeds, showToast]);
+  }, [totalUnread, refreshFeeds, showToast]);
 
   const categoryUnreadCounts = useMemo(() => {
     const counts = new Map<string, number>();
@@ -100,6 +94,32 @@ const FeedSidebar: React.FC = () => {
           <span className="flex items-center gap-2 text-sm font-mono truncate">
             <Bookmark className="w-3.5 h-3.5 flex-shrink-0" />
             Bookmarked
+          </span>
+        </button>
+
+        {/* Stats */}
+        <button
+          onClick={() => setShowStats(true)}
+          className="w-full flex items-center justify-between px-3 py-1.5 text-left rounded transition-colors hover:bg-airq-dark/5 border-l-2 border-l-transparent"
+        >
+          <span className="flex items-center gap-2 text-sm font-mono truncate">
+            <BarChart3 className="w-3.5 h-3.5 flex-shrink-0" />
+            Stats
+          </span>
+        </button>
+
+        {/* Manage Feeds */}
+        <button
+          onClick={() => setView(state.view === 'manage' ? 'feed' : 'manage')}
+          className={`w-full flex items-center justify-between px-3 py-1.5 text-left rounded transition-colors ${
+            state.view === 'manage'
+              ? 'bg-airq-dark/10 border-l-2 border-l-airq-secondary'
+              : 'hover:bg-airq-dark/5 border-l-2 border-l-transparent'
+          }`}
+        >
+          <span className="flex items-center gap-2 text-sm font-mono truncate">
+            <Settings2 className="w-3.5 h-3.5 flex-shrink-0" />
+            Manage Feeds
           </span>
         </button>
 
@@ -202,6 +222,7 @@ const FeedSidebar: React.FC = () => {
           Saved
         </button>
       </div>
+      <ReadingStats isOpen={showStats} onClose={() => setShowStats(false)} />
     </div>
   );
 };

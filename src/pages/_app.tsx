@@ -34,6 +34,13 @@ const crimsonTextFont = localFont({
   ],
   display: 'swap',
 });
+const playfairFont = localFont({
+  src: [
+    { path: '../fonts/PlayfairDisplay-Regular.ttf', weight: '400', style: 'normal' },
+    { path: '../fonts/PlayfairDisplay-Bold.ttf', weight: '700', style: 'normal' },
+  ],
+  display: 'swap',
+});
 
 const MyApp: AppType = ({ Component, pageProps }) => {
   const isNews = useIsNewsSite();
@@ -46,6 +53,9 @@ const MyApp: AppType = ({ Component, pageProps }) => {
         }
         h1 {
           font-family: ${crimsonTextFont.style.fontFamily};
+        }
+        .theme-news .masthead {
+          font-family: ${playfairFont.style.fontFamily};
         }
       `}</style>
       <ApolloProvider client={client}>

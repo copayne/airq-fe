@@ -1,10 +1,8 @@
 import React, { useCallback, useMemo } from 'react';
 import { Bookmark, Check, ExternalLink } from 'lucide-react';
 import type { RSSItem } from '~/services/FreshRSSService';
-import { STARRED_TAG } from '~/services/FreshRSSService';
-import { hasSubstantiveContent } from './ArticleReader';
-
-const READ_TAG = 'user/-/state/com.google/read';
+import { READ_TAG, STARRED_TAG } from '~/services/FreshRSSService';
+import { hasSubstantiveContent, estimateReadingTime } from '~/lib/articleUtils';
 
 function formatTimestamp(timestamp: number): string {
   const date = new Date(timestamp * 1000);
@@ -24,18 +22,22 @@ function formatTimestamp(timestamp: number): string {
 
 interface NewsItemProps {
   item: RSSItem;
+  alsoFrom?: string[];
+  isSelected?: boolean;
   onSelect: (item: RSSItem) => void;
   onBookmark: (itemId: string) => void;
   onMarkRead: (itemId: string) => void;
 }
 
-const NewsItem: React.FC<NewsItemProps> = React.memo(({ item, onSelect, onBookmark, onMarkRead }) => {
+const NewsItem: React.FC<NewsItemProps> = React.memo(({ item, alsoFrom, isSelected, onSelect, onBookmark, onMarkRead }) => {
   const isRead = item.categories.includes(READ_TAG);
   const isStarred = item.categories.includes(STARRED_TAG);
   const articleUrl = item.canonical?.[0]?.href ?? item.origin?.htmlUrl ?? '#';
   const feedName = item.origin?.title ?? '';
   const dateStr = formatTimestamp(item.published);
-  const isStub = useMemo(() => !hasSubstantiveContent(item.summary?.content ?? ''), [item.summary?.content]);
+  const content = item.summary?.content ?? '';
+  const isStub = useMemo(() => !hasSubstantiveContent(content), [content]);
+  const readingTime = useMemo(() => isStub ? null : estimateReadingTime(content), [content, isStub]);
 
   const handleClick = useCallback(() => {
     onSelect(item);
@@ -66,57 +68,112 @@ const NewsItem: React.FC<NewsItemProps> = React.memo(({ item, onSelect, onBookma
   );
 
   return (
-    <div
-      className={`flex items-center pt-2 pb-1.5 px-3 border-b border-airq-dark/10 hover:bg-airq-dark/5 cursor-pointer transition-colors ${
-        isRead ? 'opacity-60' : ''
-      } ${!isRead ? 'border-l-2 border-l-airq-primary' : 'border-l-2 border-l-transparent'}`}
-      onClick={handleClick}
-    >
-      {!isRead ? (
-        <button
-          onClick={handleMarkReadClick}
-          className="w-4 h-4 flex items-center justify-center flex-shrink-0 mr-1.5 text-airq-dark/20 hover:text-green-600 transition-colors"
-          title="Mark as read"
+    <>
+      {/* ── Mobile layout: headline + meta row ── */}
+      <div
+        className={`sm:hidden flex flex-col gap-0.5 pt-2 pb-1.5 px-3 border-b border-airq-dark/10 hover:bg-airq-dark/5 cursor-pointer transition-colors ${
+          isRead ? 'opacity-60' : ''
+        } ${!isRead ? 'border-l-2 border-l-airq-primary' : 'border-l-2 border-l-transparent'}`}
+        onClick={handleClick}
+      >
+        <span
+          className={`text-xs text-airq-dark font-mono truncate ${
+            !isRead ? 'font-medium' : ''
+          }`}
         >
-          <Check className="w-3 h-3" />
-        </button>
-      ) : (
-        <div className="w-4 h-4 flex-shrink-0 mr-1.5" />
-      )}
-      <div className="w-4 h-4 flex items-center justify-center flex-shrink-0 mr-1.5">
-        {isStub ? (
-          <ExternalLink className="w-3 h-3 text-airq-dark/30" />
-        ) : (
+          {item.title}
+        </span>
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-[11px] font-mono text-airq-secondary truncate min-w-0">
+            {feedName}{feedName && dateStr ? ' · ' : ''}{dateStr}{readingTime ? ` · ${readingTime}` : ''}
+            {alsoFrom && (
+              <span className="text-airq-dark/30" title={`Also from: ${alsoFrom.join(', ')}`}> +{alsoFrom.length}</span>
+            )}
+          </span>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {!isRead && (
+              <button
+                onClick={handleMarkReadClick}
+                className="p-0.5 text-airq-dark/20 hover:text-green-600 transition-colors"
+                title="Mark as read"
+              >
+                <Check className="w-3 h-3" />
+              </button>
+            )}
+            {isStub ? (
+              <ExternalLink className="w-3 h-3 text-airq-dark/30" />
+            ) : (
+              <button
+                onClick={handleBookmarkClick}
+                className={`p-0.5 transition-colors ${
+                  isStarred ? 'text-airq-contrast' : 'text-airq-dark/20 hover:text-airq-dark/50'
+                }`}
+                title={isStarred ? 'Remove bookmark' : 'Bookmark'}
+              >
+                <Bookmark className={`w-3 h-3 ${isStarred ? 'fill-current' : ''}`} />
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Desktop/tablet layout: headline + meta row ── */}
+      <div
+        className={`hidden sm:flex flex-col gap-0.5 pt-2 pb-1.5 px-3 border-b border-airq-dark/10 cursor-pointer transition-colors ${
+          isSelected ? 'bg-airq-dark/10' : 'hover:bg-airq-dark/5'
+        } ${isRead ? 'opacity-60' : ''} ${!isRead ? 'border-l-2 border-l-airq-primary' : 'border-l-2 border-l-transparent'}`}
+        onClick={handleClick}
+      >
+        <span
+          className={`text-sm text-airq-dark font-mono truncate ${
+            !isRead ? 'font-medium' : ''
+          }`}
+        >
+          {item.title}
+        </span>
+        <div className="flex items-center gap-2 text-[11px] font-mono">
+          {/* Actions */}
+          {!isRead && (
+            <button
+              onClick={handleMarkReadClick}
+              className="p-0.5 text-airq-dark/20 hover:text-green-600 transition-colors"
+              title="Mark as read"
+            >
+              <Check className="w-3 h-3" />
+            </button>
+          )}
+          {isStub ? (
+            <ExternalLink className="w-3 h-3 text-airq-dark/30" />
+          ) : (
+            <button
+              onClick={handleBookmarkClick}
+              className={`p-0.5 transition-colors ${
+                isStarred ? 'text-airq-contrast' : 'text-airq-dark/20 hover:text-airq-dark/50'
+              }`}
+              title={isStarred ? 'Remove bookmark' : 'Bookmark'}
+            >
+              <Bookmark className={`w-3 h-3 ${isStarred ? 'fill-current' : ''}`} />
+            </button>
+          )}
           <button
-            onClick={handleBookmarkClick}
-            className={`transition-colors ${
-              isStarred ? 'text-airq-contrast' : 'text-airq-dark/20 hover:text-airq-dark/50'
-            }`}
-            title={isStarred ? 'Remove bookmark' : 'Bookmark'}
+            onClick={handleExternalClick}
+            className="p-0.5 text-airq-dark/20 hover:text-airq-contrast transition-colors"
+            title="Open in new tab"
           >
-            <Bookmark className={`w-3 h-3 ${isStarred ? 'fill-current' : ''}`} />
+            <ExternalLink className="w-3 h-3" />
           </button>
-        )}
+          {/* Meta */}
+          <span className="text-airq-secondary truncate min-w-0">
+            {feedName}{feedName && dateStr ? ' · ' : ''}{dateStr}{readingTime ? ` · ${readingTime}` : ''}
+          </span>
+          {alsoFrom && (
+            <span className="text-airq-dark/30 flex-shrink-0" title={`Also from: ${alsoFrom.join(', ')}`}>
+              +{alsoFrom.length}
+            </span>
+          )}
+        </div>
       </div>
-      <div className="text-sm flex-shrink-0 font-mono flex items-center pr-3">
-        <p className="text-airq-secondary flex-shrink-0 pr-3">{dateStr}</p>
-        <p className="text-airq-secondary/80 truncate flex-1 min-w-0">{feedName}</p>
-      </div>
-      <span
-        className={`text-sm text-airq-dark flex-1 truncate font-mono min-w-0 ${
-          !isRead ? 'font-medium' : ''
-        }`}
-      >
-        {item.title}
-      </span>
-      <button
-        onClick={handleExternalClick}
-        className="text-airq-dark/30 hover:text-airq-contrast flex-shrink-0 ml-2 p-0.5 transition-colors"
-        title="Open in new tab"
-      >
-        <ExternalLink className="w-3.5 h-3.5" />
-      </button>
-    </div>
+    </>
   );
 });
 

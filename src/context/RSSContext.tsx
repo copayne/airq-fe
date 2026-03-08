@@ -9,17 +9,19 @@ import React, {
 } from 'react';
 import type { ReactNode } from 'react';
 import { freshRSSService } from '~/services/FreshRSSService';
-import { READ_TAG, STARRED_TAG, STARRED_STREAM } from '~/services/FreshRSSService';
+import { READ_TAG, STARRED_TAG, STARRED_STREAM, READING_LIST_STREAM } from '~/services/FreshRSSService';
 import type { RSSCategory, RSSFeed, RSSItem, UnreadCount } from '~/services/FreshRSSService';
 
 type FilterType = 'unread' | 'all' | 'starred';
 type SortOrder = 'newest' | 'oldest';
+type ViewType = 'feed' | 'manage';
 
 interface RSSState {
   isAuthenticated: boolean;
   feeds: RSSFeed[];
   categories: RSSCategory[];
   unreadCounts: Map<string, number>;
+  feedTimestamps: Map<string, number>;
   items: RSSItem[];
   selectedFeedId: string | null;
   selectedCategoryId: string | null;
@@ -30,6 +32,7 @@ interface RSSState {
   sortOrder: SortOrder;
   isInitialized: boolean;
   hiddenItemIds: Set<string>;
+  view: ViewType;
 }
 
 type RSSAction =
@@ -49,13 +52,15 @@ type RSSAction =
   | { type: 'HIDE_ITEM'; payload: string }
   | { type: 'TOGGLE_STAR'; payload: { itemId: string; starred: boolean } }
   | { type: 'SET_INITIALIZED' }
-  | { type: 'SET_SORT_ORDER'; payload: SortOrder };
+  | { type: 'SET_SORT_ORDER'; payload: SortOrder }
+  | { type: 'SET_VIEW'; payload: ViewType };
 
 const initialState: RSSState = {
   isAuthenticated: false,
   feeds: [],
   categories: [],
   unreadCounts: new Map(),
+  feedTimestamps: new Map(),
   items: [],
   selectedFeedId: null,
   selectedCategoryId: null,
@@ -66,6 +71,7 @@ const initialState: RSSState = {
   sortOrder: 'newest',
   isInitialized: false,
   hiddenItemIds: new Set(),
+  view: 'feed',
 };
 
 function rssReducer(state: RSSState, action: RSSAction): RSSState {
@@ -95,10 +101,14 @@ function rssReducer(state: RSSState, action: RSSAction): RSSState {
     }
     case 'SET_UNREAD_COUNTS': {
       const map = new Map<string, number>();
+      const timestamps = new Map<string, number>();
       for (const uc of action.payload) {
         map.set(uc.id, uc.count);
+        if (uc.newestItemTimestampUsec) {
+          timestamps.set(uc.id, Math.floor(Number(uc.newestItemTimestampUsec) / 1000));
+        }
       }
-      return { ...state, unreadCounts: map };
+      return { ...state, unreadCounts: map, feedTimestamps: timestamps };
     }
     case 'SET_ITEMS':
       return { ...state, items: action.payload.items, continuation: action.payload.continuation, isLoading: false, hiddenItemIds: new Set() };
@@ -184,6 +194,8 @@ function rssReducer(state: RSSState, action: RSSAction): RSSState {
       return { ...state, isInitialized: true };
     case 'SET_SORT_ORDER':
       return { ...state, sortOrder: action.payload };
+    case 'SET_VIEW':
+      return { ...state, view: action.payload };
     default:
       return state;
   }
@@ -202,6 +214,10 @@ interface RSSContextValue {
   refreshFeeds: () => Promise<{ newTotal: number }>;
   setFilter: (filter: FilterType) => void;
   setSortOrder: (sortOrder: SortOrder) => void;
+  setView: (view: ViewType) => void;
+  subscribeFeed: (url: string, title?: string, categoryId?: string) => Promise<void>;
+  editSubscription: (feedId: string, title?: string, addCategory?: string, removeCategory?: string) => Promise<void>;
+  unsubscribeFeed: (feedId: string) => Promise<void>;
   totalUnread: number;
 }
 
@@ -222,7 +238,7 @@ export function RSSProvider({ children }: { children: ReactNode }) {
         if (filter === 'starred') {
           streamId = STARRED_STREAM;
         } else {
-          streamId = feedId ?? categoryId ?? 'user/-/state/com.google/reading-list';
+          streamId = feedId ?? categoryId ?? READING_LIST_STREAM;
           excludeRead = filter === 'unread';
         }
 
@@ -414,6 +430,36 @@ export function RSSProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_SORT_ORDER', payload: sortOrder });
   }, []);
 
+  const setView = useCallback((view: ViewType) => {
+    dispatch({ type: 'SET_VIEW', payload: view });
+  }, []);
+
+  const subscribeFeedAction = useCallback(async (url: string, title?: string, categoryId?: string) => {
+    await freshRSSService.subscribeFeed(url, title, categoryId);
+    const [feeds, unreadCounts] = await Promise.all([
+      freshRSSService.getFeeds(),
+      freshRSSService.getUnreadCounts(),
+    ]);
+    dispatch({ type: 'SET_FEEDS', payload: feeds });
+    dispatch({ type: 'SET_UNREAD_COUNTS', payload: unreadCounts });
+  }, []);
+
+  const editSubscriptionAction = useCallback(async (feedId: string, title?: string, addCategory?: string, removeCategory?: string) => {
+    await freshRSSService.editSubscription(feedId, title, addCategory, removeCategory);
+    const feeds = await freshRSSService.getFeeds();
+    dispatch({ type: 'SET_FEEDS', payload: feeds });
+  }, []);
+
+  const unsubscribeFeedAction = useCallback(async (feedId: string) => {
+    await freshRSSService.unsubscribeFeed(feedId);
+    const [feeds, unreadCounts] = await Promise.all([
+      freshRSSService.getFeeds(),
+      freshRSSService.getUnreadCounts(),
+    ]);
+    dispatch({ type: 'SET_FEEDS', payload: feeds });
+    dispatch({ type: 'SET_UNREAD_COUNTS', payload: unreadCounts });
+  }, []);
+
   useEffect(() => {
     if (!state.isInitialized || !state.isAuthenticated) return;
 
@@ -448,9 +494,13 @@ export function RSSProvider({ children }: { children: ReactNode }) {
       refreshFeeds,
       setFilter,
       setSortOrder,
+      setView,
+      subscribeFeed: subscribeFeedAction,
+      editSubscription: editSubscriptionAction,
+      unsubscribeFeed: unsubscribeFeedAction,
       totalUnread,
     }),
-    [state, initialize, selectFeed, selectCategory, loadMore, hideFromList, commitMarkAsRead, markFeedAsRead, toggleStar, refreshFeeds, setFilter, setSortOrder, totalUnread],
+    [state, initialize, selectFeed, selectCategory, loadMore, hideFromList, commitMarkAsRead, markFeedAsRead, toggleStar, refreshFeeds, setFilter, setSortOrder, setView, subscribeFeedAction, editSubscriptionAction, unsubscribeFeedAction, totalUnread],
   );
 
   return <RSSContext.Provider value={contextValue}>{children}</RSSContext.Provider>;

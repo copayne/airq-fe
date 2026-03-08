@@ -1,19 +1,29 @@
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import { ArrowDownWideNarrow, ArrowUpNarrowWide, Loader2, RefreshCw } from 'lucide-react';
+import { ArrowDownWideNarrow, ArrowUpNarrowWide, Loader2, RefreshCw, Search, X } from 'lucide-react';
 import { useRSS } from '~/context/RSSContext';
 import { useToast } from '~/components/common/Toast';
 import NewsItem from './NewsItem';
-import ArticleReader, { hasSubstantiveContent } from './ArticleReader';
+import { hasSubstantiveContent } from '~/lib/articleUtils';
+import { normalizeText } from '~/lib/cleanArticleContent';
 import type { RSSItem } from '~/services/FreshRSSService';
+import { READING_LIST_STREAM } from '~/services/FreshRSSService';
+import { useReadingStats } from '~/hooks/useReadingStats';
 
-const ItemList: React.FC = () => {
-  const { state, loadMore, hideFromList, commitMarkAsRead, markFeedAsRead, toggleStar, refreshFeeds, setSortOrder, setFilter } = useRSS();
-  const { items, isLoading, continuation, selectedFeedId, selectedCategoryId, categories, feeds, filter, sortOrder, hiddenItemIds, unreadCounts } = state;
+interface ItemListProps {
+  selectedItemId: string | null;
+  onSelectItem: (itemId: string) => void;
+}
+
+const ItemList: React.FC<ItemListProps> = ({ selectedItemId, onSelectItem }) => {
+  const { state, loadMore, commitMarkAsRead, markFeedAsRead, toggleStar, refreshFeeds, setSortOrder, setFilter, totalUnread } = useRSS();
+  const { items, isLoading, continuation, selectedFeedId, selectedCategoryId, categories, feeds, filter, sortOrder, hiddenItemIds } = state;
   const { showToast } = useToast();
+  const { recordRead } = useReadingStats();
   const [isMobileRefreshing, setIsMobileRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
-  const selectedItemRef = useRef<RSSItem | null>(null);
 
   const selectedFeedName = selectedFeedId
     ? feeds.find((f) => f.id === selectedFeedId)?.title ?? 'Feed'
@@ -23,83 +33,68 @@ const ItemList: React.FC = () => {
         ? 'Bookmarked'
         : 'All Feeds';
 
-  const markAllStreamId = selectedFeedId ?? selectedCategoryId ?? 'user/-/state/com.google/reading-list';
+  const markAllStreamId = selectedFeedId ?? selectedCategoryId ?? READING_LIST_STREAM;
 
-  // Filter out hidden items in unread mode, then sort by published time
-  const visibleItems = useMemo(() => {
+  // Filter out hidden items, deduplicate, then sort by published time
+  const { visibleItems, alsoFrom } = useMemo(() => {
     let filtered = items;
     if (filter === 'unread' && hiddenItemIds.size > 0) {
       filtered = items.filter((item) => !hiddenItemIds.has(item.id));
     }
-    return [...filtered].sort((a, b) =>
+
+    // Group duplicates by canonical URL or normalized title
+    const groups = new Map<string, RSSItem[]>();
+    for (const item of filtered) {
+      const canonicalUrl = item.canonical?.[0]?.href;
+      const key = canonicalUrl ?? `title:${normalizeText(item.title)}`;
+      const existing = groups.get(key);
+      if (existing) {
+        existing.push(item);
+      } else {
+        groups.set(key, [item]);
+      }
+    }
+
+    const deduped: RSSItem[] = [];
+    const alsoFromMap = new Map<string, string[]>();
+    for (const group of groups.values()) {
+      group.sort((a, b) => a.published - b.published);
+      const primary = group[0]!;
+      deduped.push(primary);
+
+      if (group.length > 1) {
+        const otherFeeds = [...new Set(
+          group
+            .slice(1)
+            .map((item) => item.origin?.title)
+            .filter((name): name is string => !!name && name !== primary.origin?.title),
+        )];
+        if (otherFeeds.length > 0) {
+          alsoFromMap.set(primary.id, otherFeeds);
+        }
+      }
+    }
+
+    const searched = searchQuery
+      ? deduped.filter((item) => item.title.toLowerCase().includes(searchQuery.toLowerCase()))
+      : deduped;
+
+    searched.sort((a, b) =>
       sortOrder === 'newest' ? b.published - a.published : a.published - b.published,
     );
-  }, [items, hiddenItemIds, filter, sortOrder]);
 
-  // Look up selected item from full items array, falling back to ref for stability during refreshes
-  const selectedItem = useMemo(() => {
-    if (!selectedItemId) {
-      selectedItemRef.current = null;
-      return null;
-    }
-    const found = items.find((i) => i.id === selectedItemId) ?? null;
-    if (found) {
-      selectedItemRef.current = found;
-      return found;
-    }
-    // Item not in current items list (e.g. after background refresh) — use cached ref
-    return selectedItemRef.current;
-  }, [selectedItemId, items]);
+    return { visibleItems: searched, alsoFrom: alsoFromMap };
+  }, [items, hiddenItemIds, filter, sortOrder, searchQuery]);
 
-  // Close reader when user explicitly switches feeds, categories, or filters
+  // Clear search when user switches feeds, categories, or filters
   useEffect(() => {
-    if (selectedItemId) {
-      void commitMarkAsRead(selectedItemId);
-      setSelectedItemId(null);
-      selectedItemRef.current = null;
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setSearchQuery('');
+    setSearchOpen(false);
   }, [selectedFeedId, selectedCategoryId, filter]);
-
-  // Compute prev/next neighbors from the full items array, skipping hidden ones
-  const navInfo = useMemo(() => {
-    if (!selectedItemId) return { hasPrev: false, hasNext: false, prevId: null as string | null, nextId: null as string | null };
-
-    const origIdx = items.findIndex((i) => i.id === selectedItemId);
-    if (origIdx < 0) return { hasPrev: false, hasNext: false, prevId: null as string | null, nextId: null as string | null };
-
-    let prevId: string | null = null;
-    for (let i = origIdx - 1; i >= 0; i--) {
-      const candidate = items[i];
-      if (candidate && !hiddenItemIds.has(candidate.id)) {
-        prevId = candidate.id;
-        break;
-      }
-    }
-
-    let nextId: string | null = null;
-    for (let i = origIdx + 1; i < items.length; i++) {
-      const candidate = items[i];
-      if (candidate && !hiddenItemIds.has(candidate.id)) {
-        nextId = candidate.id;
-        break;
-      }
-    }
-
-    return { hasPrev: prevId !== null, hasNext: nextId !== null, prevId, nextId };
-  }, [selectedItemId, items, hiddenItemIds]);
-
-  const feedTotal = useMemo(() => {
-    let total = 0;
-    for (const feed of feeds) {
-      total += unreadCounts.get(feed.id) ?? 0;
-    }
-    return total;
-  }, [feeds, unreadCounts]);
 
   const handleMobileRefresh = useCallback(async () => {
     setIsMobileRefreshing(true);
-    const oldTotal = feedTotal;
+    const oldTotal = totalUnread;
     try {
       const { newTotal } = await refreshFeeds();
       const diff = newTotal - oldTotal;
@@ -112,7 +107,7 @@ const ItemList: React.FC = () => {
       showToast('error', 'Failed to refresh feeds');
     }
     setIsMobileRefreshing(false);
-  }, [feedTotal, refreshFeeds, showToast]);
+  }, [totalUnread, refreshFeeds, showToast]);
 
   const handleMarkAllRead = useCallback(() => {
     if (markAllStreamId) {
@@ -127,21 +122,16 @@ const ItemList: React.FC = () => {
   const handleSelect = useCallback(
     (item: RSSItem) => {
       const content = item.summary?.content ?? '';
+      recordRead(item.origin?.title ?? '', content);
+      void commitMarkAsRead(item.id);
       if (hasSubstantiveContent(content)) {
-        setSelectedItemId(item.id);
-        if (filter === 'unread') {
-          hideFromList(item.id);
-        }
+        onSelectItem(item.id);
       } else {
         const articleUrl = item.canonical?.[0]?.href ?? item.origin?.htmlUrl ?? '#';
         window.open(articleUrl, '_blank', 'noopener,noreferrer');
-        if (filter === 'unread') {
-          hideFromList(item.id);
-        }
-        void commitMarkAsRead(item.id);
       }
     },
-    [filter, hideFromList, commitMarkAsRead],
+    [commitMarkAsRead, recordRead, onSelectItem],
   );
 
   const handleBookmark = useCallback(
@@ -153,38 +143,9 @@ const ItemList: React.FC = () => {
 
   const handleMarkRead = useCallback(
     (itemId: string) => {
-      if (filter === 'unread') {
-        hideFromList(itemId);
-      }
       void commitMarkAsRead(itemId);
     },
-    [filter, hideFromList, commitMarkAsRead],
-  );
-
-  const handleCloseReader = useCallback(() => {
-    if (selectedItemId) {
-      void commitMarkAsRead(selectedItemId);
-    }
-    setSelectedItemId(null);
-    selectedItemRef.current = null;
-  }, [selectedItemId, commitMarkAsRead]);
-
-  const handleNavigate = useCallback(
-    (direction: 'prev' | 'next') => {
-      const targetId = direction === 'next' ? navInfo.nextId : navInfo.prevId;
-      if (!targetId) return;
-
-      // Commit read for the article we're navigating away from
-      if (selectedItemId) {
-        void commitMarkAsRead(selectedItemId);
-      }
-
-      setSelectedItemId(targetId);
-      if (filter === 'unread') {
-        hideFromList(targetId);
-      }
-    },
-    [navInfo, selectedItemId, commitMarkAsRead, filter, hideFromList],
+    [commitMarkAsRead],
   );
 
   // Infinite scroll
@@ -234,6 +195,39 @@ const ItemList: React.FC = () => {
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isMobileRefreshing ? 'animate-spin' : ''}`} />
           </button>
+          {/* Desktop search */}
+          {searchOpen ? (
+            <div className="hidden sm:flex items-center gap-1">
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    setSearchQuery('');
+                    setSearchOpen(false);
+                  }
+                }}
+                placeholder="search..."
+                className="w-40 text-xs font-mono bg-transparent border-b border-airq-dark/20 focus:border-airq-secondary outline-none py-0.5 text-airq-dark placeholder:text-airq-dark/30 transition-colors"
+              />
+              <button
+                onClick={() => { setSearchQuery(''); setSearchOpen(false); }}
+                className="p-1 text-airq-dark/30 hover:text-airq-dark/60 transition-colors"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => { setSearchOpen(true); setTimeout(() => searchInputRef.current?.focus(), 0); }}
+              className="hidden sm:block p-1 text-airq-dark/30 hover:text-airq-dark/60 transition-colors"
+              title="Search"
+            >
+              <Search className="w-3.5 h-3.5" />
+            </button>
+          )}
           {/* Sort toggle */}
           <button
             onClick={handleToggleSort}
@@ -263,7 +257,7 @@ const ItemList: React.FC = () => {
         {visibleItems.length === 0 && !isLoading ? (
           <div className="flex items-center justify-center h-32">
             <span className="text-airq-dark/40 text-sm font-mono">
-              {filter === 'unread' ? 'No unread items' : filter === 'starred' ? 'No bookmarked items' : 'No items'}
+              {searchQuery ? 'No matches' : filter === 'unread' ? 'No unread items' : filter === 'starred' ? 'No bookmarked items' : 'No items'}
             </span>
           </div>
         ) : (
@@ -272,6 +266,8 @@ const ItemList: React.FC = () => {
               <NewsItem
                 key={item.id}
                 item={item}
+                alsoFrom={alsoFrom.get(item.id)}
+                isSelected={item.id === selectedItemId}
                 onSelect={handleSelect}
                 onBookmark={handleBookmark}
                 onMarkRead={handleMarkRead}
@@ -285,18 +281,6 @@ const ItemList: React.FC = () => {
           </>
         )}
       </div>
-
-      {/* Article reading modal */}
-      {selectedItem && (
-        <ArticleReader
-          item={selectedItem}
-          onClose={handleCloseReader}
-          onNavigate={handleNavigate}
-          onBookmark={handleBookmark}
-          hasPrev={navInfo.hasPrev}
-          hasNext={navInfo.hasNext}
-        />
-      )}
     </div>
   );
 };

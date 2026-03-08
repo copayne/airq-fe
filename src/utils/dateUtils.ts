@@ -131,6 +131,50 @@ export function getRelativeTime(timestamp: string | null | undefined, fallback =
 }
 
 /**
+ * Formats a duration in seconds to a human-readable string.
+ * Compact format: "45s", "12m", "3h 15m", "2d 5h"
+ * Verbose format: "45 seconds", "12 minutes", "3h 15m", "2d 5h"
+ */
+export function formatDuration(seconds: number, verbose = false): string {
+  if (seconds < 60) return verbose ? `${seconds} seconds` : `${seconds}s`;
+  if (seconds < 3600) {
+    const m = Math.floor(seconds / 60);
+    return verbose ? `${m} minutes` : `${m}m`;
+  }
+  if (seconds < 86400) {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    return `${h}h ${m}m`;
+  }
+  const d = Math.floor(seconds / 86400);
+  const h = Math.floor((seconds % 86400) / 3600);
+  return `${d}d ${h}h`;
+}
+
+/**
+ * Formats a duration in minutes to a compact string: "45m", "2h 15m", "2h"
+ */
+export function formatMinutes(minutes: number): string {
+  if (minutes < 60) return `${minutes}m`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m > 0 ? `${h}h ${m}m` : `${h}h`;
+}
+
+/**
+ * Formats today's date as a newspaper-style dateline.
+ * e.g. "Saturday, March 7, 2026"
+ */
+export function formatDateline(): string {
+  return new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+
+/**
  * Gets time difference in minutes between a timestamp and now.
  *
  * @param timestamp - ISO 8601 timestamp string

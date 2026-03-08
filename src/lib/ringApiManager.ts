@@ -139,6 +139,11 @@ class RingApiManager {
       return this.ringApi;
     }
 
+    // Don't retry when token is expired — wait for manual update via UI
+    if (this.status === 'expired') {
+      throw new Error('Ring refresh token is expired. Update token via Settings > Integrations.');
+    }
+
     if (this.initPromise) {
       return this.initPromise;
     }

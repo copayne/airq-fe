@@ -6,6 +6,7 @@ import ItemList from './ItemList';
 import FeedManager from './FeedManager';
 import ArticleReader from './ArticleReader';
 import { useRSS } from '~/context/RSSContext';
+import { setNewsFavicon } from '~/utils/faviconGenerator';
 import type { RSSItem } from '~/services/FreshRSSService';
 
 function useIsDesktop() {
@@ -23,7 +24,7 @@ function useIsDesktop() {
 const PANEL = 'bg-airq-light/95 rounded border-airq-dark border overflow-hidden';
 
 const NewsFeed: React.FC = () => {
-  const { state, initialize, commitMarkAsRead, toggleStar } = useRSS();
+  const { state, initialize, commitMarkAsRead, toggleStar, totalUnread } = useRSS();
   const isDesktop = useIsDesktop();
 
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
@@ -32,6 +33,14 @@ const NewsFeed: React.FC = () => {
   useEffect(() => {
     void initialize();
   }, [initialize]);
+
+  // News favicon and dynamic unread-count title
+  useEffect(() => {
+    setNewsFavicon();
+    document.title = totalUnread > 0
+      ? `(${totalUnread}) Puryear Gazette`
+      : 'Puryear Gazette';
+  }, [totalUnread]);
 
   // Look up selected item from items array, with ref fallback for stability during refreshes
   const selectedItem = useMemo(() => {

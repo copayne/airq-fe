@@ -60,24 +60,24 @@ const MyApp: AppType = ({ Component, pageProps }) => {
       `}</style>
       <ApolloProvider client={client}>
         <AuthProvider>
-          <RealtimeProvider>
-            <RealtimeBridge>
-              <ToastProvider>
-                <RSSProvider>
+          <ToastProvider>
+            {isNews ? (
+              <RSSProvider>
+                <Component {...pageProps} />
+              </RSSProvider>
+            ) : (
+              <RealtimeProvider>
+                <RealtimeBridge>
                   <SensorDataProvider>
-                    {isNews ? (
+                    <RingProvider>
+                      <GlanceableStatus />
                       <Component {...pageProps} />
-                    ) : (
-                      <RingProvider>
-                        <GlanceableStatus />
-                        <Component {...pageProps} />
-                      </RingProvider>
-                    )}
+                    </RingProvider>
                   </SensorDataProvider>
-                </RSSProvider>
-              </ToastProvider>
-            </RealtimeBridge>
-          </RealtimeProvider>
+                </RealtimeBridge>
+              </RealtimeProvider>
+            )}
+          </ToastProvider>
         </AuthProvider>
       </ApolloProvider>
     </div>

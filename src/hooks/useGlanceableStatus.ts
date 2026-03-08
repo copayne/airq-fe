@@ -1,8 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useSensors } from './useSensors';
-import { useIsNewsSite } from './useIsNewsSite';
-import { updateFavicon, setNewsFavicon, getAirQualityLevel, type AirQualityLevel } from '~/utils/faviconGenerator';
-import { useRSS } from '~/context/RSSContext';
+import { updateFavicon, getAirQualityLevel, type AirQualityLevel } from '~/utils/faviconGenerator';
 import { env } from '~/env.js';
 
 const DEFAULT_TITLE = 'Hudson Air';
@@ -22,18 +20,14 @@ interface GlanceableStatusResult {
 /**
  * Hook that provides glanceable status by updating:
  * - Browser favicon color based on air quality (green/yellow/red)
- * - Browser tab title based on current route:
- *   - News: "(N) Puryear Gazette" or "Puryear Gazette"
- *   - Dash: "Hudson Air - Great/Good/Average/Bad"
+ * - Browser tab title: "Hudson Air - Great/Good/Average/Bad"
  *
+ * Only mounted on air quality pages (not news).
  * Uses the worst air quality reading across all active sensors for favicon.
  * Uses the average CO2 across all sensors for the quality label.
  * Returns the current worst CO2 reading for use with haptic/streak features.
  */
 export function useGlanceableStatus(): GlanceableStatusResult {
-  const isNews = useIsNewsSite();
-  const { totalUnread } = useRSS();
-
   const { sensors } = useSensors({
     includeLastReading: true,
     pollInterval: env.NEXT_PUBLIC_POLL_INTERVAL_MS,
@@ -48,23 +42,6 @@ export function useGlanceableStatus(): GlanceableStatusResult {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // News pages: newspaper favicon + unread count in title
-    if (isNews) {
-      if (lastLevelRef.current !== 'news' as AirQualityLevel) {
-        setNewsFavicon();
-        lastLevelRef.current = 'news' as AirQualityLevel;
-      }
-      const newTitle = totalUnread > 0
-        ? `(${totalUnread}) Puryear Gazette`
-        : 'Puryear Gazette';
-      if (newTitle !== lastTitleRef.current) {
-        document.title = newTitle;
-        lastTitleRef.current = newTitle;
-      }
-      return;
-    }
-
-    // Dash pages: show quality label based on average CO2
     const activeSensors = sensors?.filter(s => s.isActive && s.lastReading) ?? [];
 
     if (activeSensors.length === 0) {
@@ -106,7 +83,7 @@ export function useGlanceableStatus(): GlanceableStatusResult {
       document.title = newTitle;
       lastTitleRef.current = newTitle;
     }
-  }, [sensors, isNews, totalUnread]);
+  }, [sensors]);
 
   // Cleanup: restore default title on unmount
   useEffect(() => {

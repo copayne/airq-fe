@@ -96,6 +96,51 @@ export function setNewsFavicon(): void {
   if (url) setFaviconHref(url);
 }
 
+export function setSecurityFavicon(): void {
+  const canvas = document.createElement('canvas');
+  canvas.width = 32;
+  canvas.height = 32;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  ctx.fillStyle = '#0a0c10';
+  ctx.fillRect(0, 0, 32, 32);
+
+  // Shield shape
+  ctx.beginPath();
+  ctx.moveTo(16, 3);
+  ctx.lineTo(27, 8);
+  ctx.lineTo(27, 16);
+  ctx.quadraticCurveTo(27, 26, 16, 30);
+  ctx.quadraticCurveTo(5, 26, 5, 16);
+  ctx.lineTo(5, 8);
+  ctx.closePath();
+
+  ctx.fillStyle = 'rgba(0, 255, 136, 0.2)';
+  ctx.fill();
+
+  ctx.strokeStyle = '#00ff88';
+  ctx.lineWidth = 1.5;
+  ctx.shadowColor = '#00ff88';
+  ctx.shadowBlur = 4;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Lock body
+  ctx.fillStyle = 'rgba(0, 255, 136, 0.4)';
+  ctx.fillRect(12, 16, 8, 7);
+  ctx.strokeStyle = '#00ff88';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(12, 16, 8, 7);
+
+  // Lock shackle
+  ctx.beginPath();
+  ctx.arc(16, 15, 3.5, Math.PI, 0, false);
+  ctx.stroke();
+
+  setFaviconHref(canvas.toDataURL('image/png'));
+}
+
 /**
  * Determine air quality level based on CO2 PPM
  * Uses the same thresholds as the color system

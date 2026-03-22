@@ -1,6 +1,7 @@
 import { ApolloProvider } from '@apollo/client';
 import { type AppType } from "next/app";
 import localFont from 'next/font/local';
+import { Orbitron } from 'next/font/google';
 import { AuthProvider } from '../context/AuthContext';
 import { RealtimeProvider } from '../context/RealtimeContext';
 import { SensorDataProvider } from '../context/SensorDataContext';
@@ -9,7 +10,8 @@ import { RSSProvider } from '../context/RSSContext';
 import { ToastProvider } from '../components/common/Toast';
 import { GlanceableStatus } from '../components/common/GlanceableStatus';
 import { useRealtimeCacheUpdater } from '../hooks/useRealtimeCacheUpdater';
-import { useIsNewsSite } from '../hooks/useIsNewsSite';
+import { useCurrentSite } from '../hooks/useCurrentSite';
+import { SecurityProvider } from '../context/SecurityContext';
 import client from '../lib/apolloClient';
 
 import "~/styles/globals.css";
@@ -41,12 +43,18 @@ const playfairFont = localFont({
   ],
   display: 'swap',
 });
+const orbitronFont = Orbitron({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800', '900'],
+  display: 'swap',
+  variable: '--font-orbitron',
+});
 
 const MyApp: AppType = ({ Component, pageProps }) => {
-  const isNews = useIsNewsSite();
+  const site = useCurrentSite();
 
   return (
-    <div className={isNews ? 'theme-news' : ''}>
+    <div className={`${site === 'news' ? 'theme-news' : site === 'security' ? `theme-security ${orbitronFont.variable}` : ''}`}>
       <style jsx global>{`
         html {
           font-family: ${jetBrainsFont.style.fontFamily};
@@ -57,22 +65,33 @@ const MyApp: AppType = ({ Component, pageProps }) => {
         .theme-news .masthead {
           font-family: ${playfairFont.style.fontFamily};
         }
+        .theme-security .vfd-display {
+          font-family: var(--font-orbitron), ${jetBrainsFont.style.fontFamily};
+        }
       `}</style>
       <ApolloProvider client={client}>
         <AuthProvider>
           <ToastProvider>
-            {isNews ? (
+            {site === 'news' ? (
               <RSSProvider>
                 <Component {...pageProps} />
               </RSSProvider>
+            ) : site === 'security' ? (
+              <RealtimeProvider>
+                <RealtimeBridge>
+                  <RingProvider>
+                    <SecurityProvider>
+                      <Component {...pageProps} />
+                    </SecurityProvider>
+                  </RingProvider>
+                </RealtimeBridge>
+              </RealtimeProvider>
             ) : (
               <RealtimeProvider>
                 <RealtimeBridge>
                   <SensorDataProvider>
-                    <RingProvider>
-                      <GlanceableStatus />
-                      <Component {...pageProps} />
-                    </RingProvider>
+                    <GlanceableStatus />
+                    <Component {...pageProps} />
                   </SensorDataProvider>
                 </RealtimeBridge>
               </RealtimeProvider>

@@ -5,14 +5,16 @@ import {
 import Link from 'next/link';
 import React, { memo } from 'react';
 import { useAuth } from '~/context/AuthContext';
-import { useIsNewsSite } from '~/hooks/useIsNewsSite';
+import { useCurrentSite } from '~/hooks/useCurrentSite';
 import { formatDateline } from '~/utils/dateUtils';
 import { UserMenu } from '../auth/UserMenu';
 import AlertBell from './AlertBell';
 
 const Header: React.FC = memo(() => {
   const { isAuthenticated, user, isLoading } = useAuth();
-  const isNews = useIsNewsSite();
+  const site = useCurrentSite();
+  const isNews = site === 'news';
+  const isSecurity = site === 'security';
   const dateline = isNews ? formatDateline() : '';
 
   const authControls = (
@@ -29,7 +31,7 @@ const Header: React.FC = memo(() => {
               verify email
             </div>
           )}
-          {!isNews && (
+          {!isNews && !isSecurity && (
             <>
               <AlertBell />
               <Link
@@ -40,6 +42,15 @@ const Header: React.FC = memo(() => {
                 <Settings className="w-5 h-5" />
               </Link>
             </>
+          )}
+          {isSecurity && (
+            <Link
+              href="/security/settings"
+              className="p-2 text-gray-300 hover:text-white transition-colors"
+              title="Settings"
+            >
+              <Settings className="w-5 h-5" />
+            </Link>
           )}
           <UserMenu user={user} />
         </div>
@@ -56,6 +67,22 @@ const Header: React.FC = memo(() => {
       )}
     </div>
   );
+
+  if (isSecurity) {
+    return (
+      <header className="z-20 h-16" style={{ background: 'var(--vfd-bezel-bg)', borderBottom: '1px solid var(--vfd-border)' }}>
+        <div className="flex items-center justify-between px-6 h-full">
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="vfd-dot vfd-dot-on vfd-breathe" style={{ width: '5px', height: '5px' }} />
+            <h1 className="vfd-display text-base sm:text-lg font-semibold uppercase tracking-[0.25em] vfd-glow group-hover:opacity-80 transition-opacity">
+              HUD-GUARD
+            </h1>
+          </Link>
+          {authControls}
+        </div>
+      </header>
+    );
+  }
 
   if (isNews) {
     return (

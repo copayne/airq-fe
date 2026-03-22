@@ -77,28 +77,23 @@ export class RingController {
     console.log('[RingController] Initializing...');
 
     try {
-      // Load initial device list from database
+      // Load initial device list from database (no Ring API call)
       await this.loadDevicesFromDb();
 
-      // If no devices in DB, auto-sync from Ring API to populate the database
-      if (this.devices.size === 0) {
-        console.log('[RingController] No devices in database, auto-syncing from Ring API...');
-        try {
-          await this.syncToDatabase();
-        } catch (syncError) {
-          console.warn('[RingController] Auto-sync failed, continuing without DB devices:', syncError);
-        }
-      }
-
-      // If token was detected as expired during sync, skip SSE and live fetch
-      if (this.tokenExpired) {
-        console.log('[RingController] Token expired, skipping SSE and live fetch');
+      // Check token status from the server without hitting Ring API
+      const tokenStatus = await this.getTokenStatus();
+      if (tokenStatus.status === 'expired' || tokenStatus.status === 'error') {
+        console.log(`[RingController] Token ${tokenStatus.status}, skipping Ring API calls`);
+        this.tokenExpired = true;
+        this.notifyListeners();
+      } else if (this.tokenExpired) {
+        // Already marked expired from a previous attempt
+        console.log('[RingController] Token known expired, skipping Ring API calls');
       } else {
-        // Connect to real-time event stream for status updates
+        // Token is valid — connect to real-time event stream for status updates
         this.connectToEventStream();
 
-        // Fetch live status from Ring API in the background (non-blocking).
-        // This populates status/battery/lastUpdate without delaying initialization.
+        // Fetch live status from Ring API in the background (non-blocking)
         void this.fetchLiveDeviceState();
       }
 
@@ -496,7 +491,8 @@ export class RingController {
   }
 
   /**
-   * Cleanup and destroy controller instance
+   * Cleanup: close event stream and clear listeners, but preserve the singleton
+   * so we don't re-initialize and re-hit Ring API on every React mount cycle.
    */
   destroy(): void {
     // Close event stream connection
@@ -506,10 +502,9 @@ export class RingController {
       console.log('[RingController] Event stream closed');
     }
 
-    this.devices.clear();
     this.listeners.clear();
-    this.isInitialized = false;
-    RingController.instance = null;
-    console.log('[RingController] Destroyed');
+    // Do NOT clear devices, isInitialized, or the singleton reference.
+    // The next mount will reuse this instance and skip re-initialization.
+    console.log('[RingController] Cleaned up listeners and event stream');
   }
 }

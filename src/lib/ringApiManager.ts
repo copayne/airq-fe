@@ -13,8 +13,9 @@ import { RingApi } from 'ring-client-api';
 import fs from 'fs';
 import path from 'path';
 
-// Token storage file location (in project root, gitignored)
-const TOKEN_FILE_PATH = path.join(process.cwd(), '.ring-token');
+// Token storage: use /app/data in production (volume-mounted), project root in dev
+const DATA_DIR = path.join(process.cwd(), 'data');
+const TOKEN_FILE_PATH = path.join(DATA_DIR, '.ring-token');
 
 // Environment variable name for initial token
 const RING_TOKEN_ENV_VAR = 'NEXT_PUBLIC_RING_REFRESH_TOKEN';
@@ -88,6 +89,9 @@ class RingApiManager {
 
   private persistToken(token: string): void {
     try {
+      if (!fs.existsSync(DATA_DIR)) {
+        fs.mkdirSync(DATA_DIR, { recursive: true });
+      }
       fs.writeFileSync(TOKEN_FILE_PATH, token, 'utf-8');
       console.log('[RingApiManager] Token persisted to file');
     } catch (error) {
@@ -139,9 +143,13 @@ class RingApiManager {
       return this.ringApi;
     }
 
-    // Don't retry when token is expired — wait for manual update via UI
-    if (this.status === 'expired') {
-      throw new Error('Ring refresh token is expired. Update token via Settings > Integrations.');
+    // Don't retry when token is expired or errored — wait for manual update via UI
+    if (this.status === 'expired' || this.status === 'error') {
+      throw new Error(
+        this.status === 'expired'
+          ? 'Ring refresh token is expired. Update token via Settings > Integrations.'
+          : `Ring API error: ${this.lastError ?? 'Unknown error'}. Update token via Settings > Integrations.`
+      );
     }
 
     if (this.initPromise) {

@@ -87,14 +87,11 @@ export function RingProvider({ children }: RingProviderProps) {
 
     void initializeRing();
 
-    // Cleanup on unmount
+    // Cleanup on unmount — unsubscribe but don't destroy the singleton
     return () => {
-      console.log('[RingContext] Cleaning up Ring integration...');
+      console.log('[RingContext] Cleaning up Ring integration listeners...');
       if (unsubscribe) {
         unsubscribe();
-      }
-      if (ringController) {
-        ringController.destroy();
       }
     };
   }, [apolloClient]);

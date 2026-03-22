@@ -1,6 +1,5 @@
 import React from 'react';
 import { SettingsLayout } from '~/components/settings/SettingsLayout';
-import { RingIntegrationSettings } from '~/components/settings/integrations/RingIntegrationSettings';
 import { ProtectedRoute } from '~/components/auth/ProtectedRoute';
 
 const IntegrationsPage: React.FC = () => {
@@ -10,7 +9,9 @@ const IntegrationsPage: React.FC = () => {
         title="Integrations"
         description="Manage external service connections"
       >
-        <RingIntegrationSettings />
+        <div className="px-4 py-8 text-center text-airq-dark/50 text-sm">
+          No integrations configured. Ring integration has moved to Hudson Security.
+        </div>
       </SettingsLayout>
     </ProtectedRoute>
   );

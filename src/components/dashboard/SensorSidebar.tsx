@@ -1,11 +1,7 @@
 import React, { memo, useState, useCallback } from 'react';
-import Link from 'next/link';
-import { DoorClosed, DoorOpen, Battery, WifiOff, Clock, AlertTriangle } from 'lucide-react';
 import { useSensors } from '~/hooks/useSensors';
 import { useAdaptivePollInterval } from '~/hooks/useAdaptivePollInterval';
-import { useRing } from '~/context/RingContext';
 import type { Sensor } from '~/types/sensors';
-import type { RingDeviceData } from '~/services/RingController';
 import { formatSensorDetails } from '~/utils/sensorFormatters';
 import { getRelativeTime as getRelativeTimeUtil } from '~/utils/dateUtils';
 import {
@@ -152,119 +148,6 @@ const CompactSensorCard: React.FC<CompactSensorCardProps> = memo(({ sensor, comp
 
 CompactSensorCard.displayName = 'CompactSensorCard';
 
-// Ring Door Sensor compact card - matches RingContactSensorCard SensorStatus style
-interface CompactRingDoorCardProps {
-  device: RingDeviceData;
-  compact?: boolean;
-}
-
-function formatTimeAgo(timestamp: string | null): string {
-  return getRelativeTimeUtil(timestamp, 'Never');
-}
-
-const CompactRingDoorCard: React.FC<CompactRingDoorCardProps> = memo(({ device, compact = false }) => {
-  const isOpen = device.status === 'open';
-  const isOffline = !device.lastUpdate;
-
-  const statusClasses = isOffline
-    ? 'bg-gray-100'
-    : isOpen
-      ? 'bg-red-50'
-      : 'bg-green-50';
-
-  const iconClasses = isOffline
-    ? 'text-gray-400'
-    : isOpen
-      ? 'text-red-600'
-      : 'text-green-600';
-
-  const batteryColor =
-    device.batteryLevel === null
-      ? 'text-gray-400'
-      : device.batteryLevel > 50
-        ? 'text-green-600'
-        : device.batteryLevel > 20
-          ? 'text-yellow-600'
-          : 'text-red-600';
-
-  const StatusIcon = isOffline ? WifiOff : isOpen ? DoorOpen : DoorClosed;
-
-  return (
-    <div className={`flex flex-col border border-airq-dark shadow-card ${statusClasses}`}>
-      <div className={`flex w-full items-center justify-between ${compact ? 'px-3 py-2' : 'px-2 py-1'}`}>
-        <div className="flex items-center gap-1.5 min-w-0">
-          <StatusIcon className={`${compact ? 'h-5 w-5' : 'h-4 w-4'} flex-shrink-0 ${iconClasses}`} />
-          <span className={`font-medium text-airq-dark truncate ${compact ? 'text-sm' : 'text-xs'}`}>
-            {device.name}
-          </span>
-        </div>
-        {device.batteryLevel !== null && (
-          <div className={`flex items-center flex-shrink-0 ${compact ? 'gap-1.5' : 'gap-1'}`}>
-            <Battery className={`${compact ? 'h-4 w-4' : 'h-3 w-3'} ${batteryColor}`} />
-            <span className={`${compact ? 'text-sm' : 'text-xs'} ${batteryColor}`}>
-              {device.batteryLevel}%
-            </span>
-          </div>
-        )}
-      </div>
-
-      <div className={`flex items-center text-gray-500 border-t border-airq-dark/30 w-full justify-center ${compact ? 'gap-1.5 text-sm py-1.5' : 'gap-1 text-xs py-1'}`}>
-        <Clock className={compact ? 'h-4 w-4' : 'h-3 w-3'} />
-        <span>{formatTimeAgo(device.lastUpdate)}</span>
-      </div>
-    </div>
-  );
-});
-
-CompactRingDoorCard.displayName = 'CompactRingDoorCard';
-
-// Ring Door Sensors section
-const RingDoorSensorsSection: React.FC<{ compact?: boolean }> = memo(({ compact = false }) => {
-  const { devices, isInitialized, tokenExpired } = useRing();
-
-  const contactSensors = devices.filter(
-    (device: RingDeviceData) =>
-      device.deviceType === 'contact_sensor' ||
-      device.deviceType.includes('contact')
-  );
-
-  // Show token expired warning instead of hiding silently
-  if (tokenExpired) {
-    return (
-      <div className="space-y-2">
-        <div className={`font-semibold text-airq-dark/70 uppercase tracking-wide ${compact ? 'text-sm' : 'text-xs'}`}>
-          Door Sensors
-        </div>
-        <Link
-          href="/settings/integrations"
-          className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-300 text-amber-800 text-xs hover:bg-amber-100 transition-colors"
-        >
-          <AlertTriangle className="h-4 w-4 flex-shrink-0" />
-          <span>Ring token expired. Tap to reconnect.</span>
-        </Link>
-      </div>
-    );
-  }
-
-  // Don't render section if not initialized or no sensors
-  if (!isInitialized || contactSensors.length === 0) {
-    return null;
-  }
-
-  return (
-    <div className="space-y-2">
-      <div className={`font-semibold text-airq-dark/70 uppercase tracking-wide ${compact ? 'text-sm' : 'text-xs'}`}>
-        Door Sensors
-      </div>
-      {contactSensors.map((device) => (
-        <CompactRingDoorCard key={device.deviceId} device={device} compact={compact} />
-      ))}
-    </div>
-  );
-});
-
-RingDoorSensorsSection.displayName = 'RingDoorSensorsSection';
-
 interface SensorSidebarProps {
   compact?: boolean;
 }
@@ -322,9 +205,6 @@ const SensorSidebar: React.FC<SensorSidebarProps> = memo(({ compact = false }) =
             ))}
           </div>
         )}
-
-        {/* Ring Door Sensors Section */}
-        <RingDoorSensorsSection compact={compact} />
       </div>
     </div>
   );

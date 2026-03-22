@@ -41,6 +41,7 @@ yarn-error.log*
 
 # Ring API token file (auto-generated, contains refresh token)
 .ring-token
+data/
 
 # vercel
 .vercel

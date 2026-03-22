@@ -17,8 +17,15 @@ export default function Home() {
 
     // Route to the correct site based on hostname
     const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
-    const isNewsSite = hostname.startsWith('news.');
-    void router.push(isNewsSite ? '/news' : '/dash');
+    if (hostname.startsWith('security.')) {
+      void router.push('/security');
+      return;
+    }
+    if (hostname.startsWith('news.')) {
+      void router.push('/news');
+      return;
+    }
+    void router.push('/dash');
   }, [user, isLoading, router]);
 
   // Show a minimal loading state instead of null to prevent white flash

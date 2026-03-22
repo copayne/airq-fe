@@ -3,16 +3,18 @@ import React, {
   type ReactNode,
 } from 'react';
 import Header from './Header';
-import { useIsNewsSite } from '~/hooks/useIsNewsSite';
+import { useCurrentSite } from '~/hooks/useCurrentSite';
 
 interface LayoutProps {
   children: ReactNode;
 }
 
 const Layout: React.FC<LayoutProps> = memo(({ children }) => {
-  const isNews = useIsNewsSite();
+  const site = useCurrentSite();
+  const bgPattern = site === 'news' ? 'blueprint' : site === 'security' ? 'fiber' : 'stairs';
+  const themeClass = site === 'security' ? 'theme-security' : '';
   return (
-    <div className={`h-screen w-screen overflow-hidden ${isNews ? 'blueprint' : 'stairs'} flex flex-col`}>
+    <div className={`h-screen w-screen overflow-hidden ${bgPattern} ${themeClass} flex flex-col`}>
       <Header />
       <main className="flex-1 overflow-hidden">
         {children}

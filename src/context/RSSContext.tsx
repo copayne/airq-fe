@@ -357,11 +357,50 @@ export function RSSProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const itemsRef = useRef(state.items);
+  itemsRef.current = state.items;
+  const feedsRef = useRef(state.feeds);
+  feedsRef.current = state.feeds;
+
   const markFeedAsRead = useCallback(
     async (feedId: string) => {
+      // Determine which items are affected by this mark-all-as-read
+      const isReadingList = feedId.includes('/state/com.google/reading-list');
+      const isCategoryId = feedId.includes('/label/');
+      const affectedFeedIds = new Set<string>();
+      if (isReadingList) {
+        for (const feed of feedsRef.current) {
+          affectedFeedIds.add(feed.id);
+        }
+      } else if (isCategoryId) {
+        for (const feed of feedsRef.current) {
+          if (feed.categories.some((c) => c.id === feedId)) {
+            affectedFeedIds.add(feed.id);
+          }
+        }
+      } else {
+        affectedFeedIds.add(feedId);
+      }
+
+      const unreadIds = itemsRef.current
+        .filter(
+          (item) =>
+            affectedFeedIds.has(item.origin.streamId) &&
+            !item.categories.includes(READ_TAG) &&
+            !committedReadsRef.current.has(item.id),
+        )
+        .map((item) => item.id);
+
+      for (const id of unreadIds) committedReadsRef.current.add(id);
       dispatch({ type: 'MARK_FEED_READ', payload: feedId });
+
       try {
-        await freshRSSService.markFeedAsRead(feedId);
+        // Mark loaded items individually via edit-tag (reliable) and also
+        // call mark-all-as-read for any items beyond the loaded page
+        await Promise.all([
+          freshRSSService.markFeedAsRead(feedId),
+          unreadIds.length > 0 ? freshRSSService.markAsRead(unreadIds) : Promise.resolve(),
+        ]);
       } catch (err) {
         console.error('Failed to mark feed as read:', err);
       }

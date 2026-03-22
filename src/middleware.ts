@@ -10,6 +10,9 @@ export function middleware(request: NextRequest) {
     if (hostname.startsWith('news.')) {
       return NextResponse.rewrite(new URL('/news', request.url));
     }
+    if (hostname.startsWith('security.')) {
+      return NextResponse.rewrite(new URL('/security', request.url));
+    }
     return NextResponse.rewrite(new URL('/dash', request.url));
   }
 
